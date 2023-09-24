@@ -2,15 +2,6 @@
 #include <stdlib.h>
 #include <math.h>
 
-int validate_string_integer(char* str_int) {
-	for (int i = 0; str_int[i] != '\0'; ++i) {
-		if (i == 0 && str_int[i] == '-') continue;
-		if ('0' <= str_int[i] && str_int[i] <= '9') continue;
-		return 0;
-	}
-	return 1;
-}
-
 int validate_string_float(char* str_float) {
 	int dot_cnt = 0;
 	for (int i = 0; str_float[i] != '\0'; ++i) {
@@ -33,20 +24,6 @@ int is_prime(long long integer) {
 	for (int i = 3; i*i <= integer; i += 2)
 		if (integer % i == 0) return 0;
 	return 1;
-}
-
-double combination(int k, int n) {
-	if(k > n) return 0;
-	double res = 1.0;
-	//for(int i = k+1; i <= n; ++i) res *= i;
-	//for(int i = 2; i <= (n-k); ++i) res /= i;
-	
-	for(int i = 1; i <= k; ++i) {
-		res *= n - k + i;
-		res /= i;
-	}
-	
-	return res;
 }
 
 double calc_e_with_lim(double eps) {
@@ -221,37 +198,20 @@ double calc_gamma_with_lim(double eps) {
 		prev = cur;
 		cur = 0;
 		
-		double elem = 0; // second element of sum (first equal to 0)
-		
-		double* logarithms = malloc(sizeof(double)*(m+1));
-		logarithms[1] = 0;
-		for(int i = 2; i <= m; ++i) {
-			logarithms[i] = logarithms[i-1] + log(i);
-		}
-		
+		double elem = 0;
 		double comb = m;
-		
-		cur = 0;
+		double logarithm = 0;
 		
 		for(int k = 2; k <= m; ++k) {
 			
 			comb *= (m-k+1.0) / k;
+			logarithm += log(k);
 			
-			elem = comb * logarithms[k] / k;
+			elem = comb * logarithm / k;
 			if(k % 2) elem *= -1;
 			
-			
-			//if(k == 47) printf("CHECK %.15lf %.15lf %.15lf\n", comb, comb * logarithms[k], comb * logarithms[k] / k);
-			
 			cur += elem;
-			
-			//if(m == 47) printf("k=%d: %.15lf (+%.15lf)\n", k, cur, elem);
 		}
-		
-		free(logarithms);
-		
-		//printf("%d: %.10lf -> %.10lf (%.20lf)\n", m, prev, cur, fabs(cur-prev));
-		
 	} while (fabsl(cur - prev) >= eps);
 	return cur;
 }
@@ -282,8 +242,6 @@ double calc_gamma_with_equation(double eps) {
 	double prev = 0; 
 	double cur = -log(0.5 * log(2)); // function with t equal to 2
 	
-	//printf("%d: %lf\n", t, cur);
-	
 	do {
 		++t;
 		prev = cur;	
@@ -292,52 +250,20 @@ double calc_gamma_with_equation(double eps) {
 		
 		cur = -log(prod * log(t));
 
-		//printf("%d(%d): %lf\n", t, is_prime(t), cur);
-
 	} while (fabsl(cur - prev) >= eps);
 	return cur;
 }
 
 int main(int argc, char** argv) {
-	if (argc != 4) {
+	if (argc != 2) {
 		printf("Invalid input\n");
-		printf("Usage: command_name <constant_id> <flag> <eps>\n");
-		printf("application computes <constant> using method defined by flag with accuracy of <eps>\n");
-		printf("available constants:\n1: e    2: pi    3: ln2    4: sqrt2    5: gamma\n");
-		printf("flags:\n");
-		printf("-l  -  compute using a limit\n");
-		printf("-s  -  compute using a sum/product of series\n");
-		printf("-e  -  compute using an equation\n");
-		printf("-a  -  compute using all methods\n");
-		printf("-u  -  computes all constants using all methods\n");
+		printf("Usage: command_name <eps>\n");
+		printf("application computes such constants as e, pi, ln2, sqrt2, gamma using limit, series and equation with accuracy of <eps>\n");
 		return 1;
 	}
 	
-	char* string_const_id = argv[1];
-	char* flag = argv[2];
-	char* string_eps = argv[3];
-	
-	int const_id;
+	char* string_eps = argv[1];
 	double eps;
-	
-	if (!validate_string_integer(string_const_id)) {
-		printf("Invalid integer\n");
-		return 2;
-	}
-	
-	const_id = atoi(string_const_id);
-	
-	if(const_id < 1 || const_id > 5) {
-		printf("Invalid constant id");
-		return 4;
-	}
-	
-	if (((flag[0] != '-') && (flag[0] != '/')) || flag[2] != '\0' 
-			|| (flag[1] != 'l' && flag[1] != 's' && flag[1] != 'e'
-			&& flag[1] != 'a' && flag[1] != 'u')) {
-		printf("Invalid flag\n");
-		return 3;
-	}
 	
 	if (!validate_string_float(string_eps)) {
 		printf("Invalid float\n");
@@ -346,67 +272,24 @@ int main(int argc, char** argv) {
 	
 	eps = atof(string_eps);
 	
-	if (flag[1] == 'u') {
-		printf("e = %.10lf (limit)\n", calc_e_with_lim(eps));
-		printf("e = %.10lf (series)\n", calc_e_with_sum(eps));
-		printf("e = %.10lf (equation)\n\n", calc_e_with_equation(eps));
-		printf("pi = %.10lf (limit)\n", calc_pi_with_sum(eps));
-		printf("pi = %.10lf (series)\n", calc_pi_with_lim(eps));
-		printf("pi = %.10lf (equation)\n\n", calc_pi_with_equation(eps));
-		printf("ln2 = %.10lf (limit)\n", calc_ln2_with_lim(eps));
-		printf("ln2 = %.10lf (series)\n", calc_ln2_with_sum(eps));
-		printf("ln2 = %.10lf (equation)\n\n", calc_ln2_with_equation(eps));
-		printf("sqrt2 = %.10lf (limit)\n", calc_sqrt2_with_lim(eps));
-		printf("sqrt2 = %.10lf (series)\n", calc_sqrt2_with_prod(eps));
-		printf("sqrt2 = %.10lf (equation)\n\n", calc_sqrt2_with_equation(eps));
-		printf("gamma = %.10lf (limit)\n", calc_gamma_with_lim(eps));
-		printf("gamma = %.10lf (series)\n", calc_gamma_with_sum(eps));
-		printf("gamma = %.10lf (equation)\n", calc_gamma_with_equation(eps));
-		return 0;
+	if (eps <= 0) {
+		printf("Epsilon must be positive\n");
+		return 5;
 	}
 	
-	switch (const_id) {
-		case 1: {
-			
-			if (flag[1] == 'l' || flag[1] == 'a') printf("e = %.10lf (limit)\n", calc_e_with_lim(eps));
-			if (flag[1] == 's' || flag[1] == 'a') printf("e = %.10lf (series)\n", calc_e_with_sum(eps));
-			if (flag[1] == 'e' || flag[1] == 'a') printf("e = %.10lf (equation)\n", calc_e_with_equation(eps));
-			break;
-			
-		}
-		case 2: {
-			
-			if (flag[1] == 's' || flag[1] == 'a') printf("pi = %.10lf (limit)\n", calc_pi_with_sum(eps));
-			if (flag[1] == 'l' || flag[1] == 'a') printf("pi = %.10lf (series)\n", calc_pi_with_lim(eps));
-			if (flag[1] == 'e' || flag[1] == 'a') printf("pi = %.10lf (equation)\n", calc_pi_with_equation(eps));
-			break;
-			
-		}
-		case 3: {
-			
-			if (flag[1] == 'l' || flag[1] == 'a') printf("ln2 = %.10lf (limit)\n", calc_ln2_with_lim(eps));
-			if (flag[1] == 's' || flag[1] == 'a') printf("ln2 = %.10lf (series)\n", calc_ln2_with_sum(eps));
-			if (flag[1] == 'e' || flag[1] == 'a') printf("ln2 = %.10lf (equation)\n", calc_ln2_with_equation(eps));
-			break;
-			
-		}
-		case 4: {
-			
-			if (flag[1] == 'l' || flag[1] == 'a') printf("sqrt2 = %.10lf (limit)\n", calc_sqrt2_with_lim(eps));
-			if (flag[1] == 's' || flag[1] == 'a') printf("sqrt2 = %.10lf (series)\n", calc_sqrt2_with_prod(eps));
-			if (flag[1] == 'e' || flag[1] == 'a') printf("sqrt2 = %.10lf (equation)\n", calc_sqrt2_with_equation(eps));
-			break;
-			
-		}
-		case 5: {
-			
-			if (flag[1] == 'l' || flag[1] == 'a') printf("gamma = %.10lf (limit)\n", calc_gamma_with_lim(eps));
-			if (flag[1] == 's' || flag[1] == 'a') printf("gamma = %.10lf (series)\n", calc_gamma_with_sum(eps));
-			if (flag[1] == 'e' || flag[1] == 'a') printf("gamma = %.10lf (equation)\n", calc_gamma_with_equation(eps));
-			break;
-			
-		}
-		default:
-			break;
-	}
+	printf("e = %.10lf (limit)\n", calc_e_with_lim(eps));
+	printf("e = %.10lf (series)\n", calc_e_with_sum(eps));
+	printf("e = %.10lf (equation)\n\n", calc_e_with_equation(eps));
+	printf("pi = %.10lf (limit)\n", calc_pi_with_sum(eps));
+	printf("pi = %.10lf (series)\n", calc_pi_with_lim(eps));
+	printf("pi = %.10lf (equation)\n\n", calc_pi_with_equation(eps));
+	printf("ln2 = %.10lf (limit)\n", calc_ln2_with_lim(eps));
+	printf("ln2 = %.10lf (series)\n", calc_ln2_with_sum(eps));
+	printf("ln2 = %.10lf (equation)\n\n", calc_ln2_with_equation(eps));
+	printf("sqrt2 = %.10lf (limit)\n", calc_sqrt2_with_lim(eps));
+	printf("sqrt2 = %.10lf (series)\n", calc_sqrt2_with_prod(eps));
+	printf("sqrt2 = %.10lf (equation)\n\n", calc_sqrt2_with_equation(eps));
+	printf("gamma = %.10lf (limit)\n", calc_gamma_with_lim(eps));
+	printf("gamma = %.10lf (series)\n", calc_gamma_with_sum(eps));
+	printf("gamma = %.10lf (equation)\n", calc_gamma_with_equation(eps));
 }
