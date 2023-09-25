@@ -20,7 +20,7 @@ int validate_string_float(char* str_float) {
 int is_prime(long long integer) {
 	if (integer == 0 || integer == 1) return 0;
 	if (integer == 2) return 1;
-	if (integer % 2 == 0) return 0;
+	if (!(integer & 1)) return 0;
 	for (int i = 3; i*i <= integer; i += 2)
 		if (integer % i == 0) return 0;
 	return 1;
@@ -93,7 +93,7 @@ double calc_pi_with_sum(double eps) {
 		
 		++n;
 		next_elem = 4 / (2.0*n-1);
-		if(n % 2 == 0) next_elem *= -1;
+		if(!(n & 1)) next_elem *= -1;
 		
 	} while (fabsl(next_elem) >= eps);
 	return ans;
@@ -133,7 +133,7 @@ double calc_ln2_with_sum(double eps) {
 		
 		++n;
 		next_elem = 1.0 / n;
-		if(n % 2 == 0) next_elem *= -1;
+		if(!(n & 1)) next_elem *= -1;
 		
 	} while (fabsl(next_elem) >= eps);
 	return ans;
@@ -208,7 +208,7 @@ double calc_gamma_with_lim(double eps) {
 			logarithm += log(k);
 			
 			elem = comb * logarithm / k;
-			if(k % 2) elem *= -1;
+			if(k & 1) elem *= -1;
 			
 			cur += elem;
 		}
@@ -255,10 +255,14 @@ double calc_gamma_with_equation(double eps) {
 }
 
 int main(int argc, char** argv) {
-	if (argc != 2) {
-		printf("Invalid input\n");
+	if (argc == 1) {
 		printf("Usage: command_name <eps>\n");
 		printf("application computes such constants as e, pi, ln2, sqrt2, gamma using limit, series and equation with accuracy of <eps>\n");
+		return 0;
+	}
+	
+	if (argc != 2) {
+		printf("Invalid input\n");
 		return 1;
 	}
 	
@@ -274,7 +278,7 @@ int main(int argc, char** argv) {
 	
 	if (eps <= 0) {
 		printf("Epsilon must be positive\n");
-		return 5;
+		return 3;
 	}
 	
 	printf("e = %.10lf (limit)\n", calc_e_with_lim(eps));

@@ -41,7 +41,6 @@ int check_overflow(char* str_int) {
 
 void get_multiples(int integer, int* cnt, int** multiples) {
 	if (cnt == NULL || multiples == NULL) return;
-	if (*multiples != NULL) free(*multiples);
 	
 	integer = abs(integer);
 	*cnt = (integer != 0) ? (100 / integer) : 0;
@@ -62,7 +61,7 @@ typedef enum {
 prime_status_codes is_prime(long long integer) {
 	if (integer <= 1) return psc_none;
 	if (integer == 2) return psc_prime;
-	if (integer % 2 == 0) return psc_composite;
+	if (!(integer & 1)) return psc_composite;
 	for (int i = 3; i*i <= integer; i += 2)
 		if (integer % i == 0) return psc_composite;
 	return psc_prime;
@@ -121,7 +120,6 @@ int get_int_len(long long integer) {
 
 void separate_into_digits(int integer, int* cnt, int** digits) {
 	if (cnt == NULL || digits == NULL) return;
-	if (*digits != NULL) free(*digits);
 	
 	*cnt = get_int_len(integer);
 	
@@ -134,20 +132,25 @@ void separate_into_digits(int integer, int* cnt, int** digits) {
 }
 
 int main(int argc, char** argv) {
-	if (argc != 3) {
-		printf("Invalid input\n");
+	if (argc == 1) {
 		printf("Usage: command_name <flag> <32-bit integer>\n");
 		printf("flags:\n");
 		printf("-h  -  print natural numbers up to 100 that is multiples of <integer>\n");
-		printf("-p  -  checks if <integer> is a prime (<integer> must be natural)\n");
+		printf("-p  -  check if <integer> is a prime (<integer> must be natural)\n");
 		printf("-s  -  separate <integer> into digits\n");
 		printf(" by all natural numbers up to <integer> (<integer>\n");
 		printf("-e  -  print the exponential of natural numbers up to <integer>");
 		printf(" with base from 1 to 10 (<integer> must be not greater than 10)\n");
 		printf("-a  -  print the sum of all natural numbers up to <integer>\n");
 		printf("-f  -  print the factorial of <integer>\n");
+		return 0;
+	}
+	
+	if (argc != 3) {
+		printf("Invalid input\n");
 		return 1;
 	}
+	
 	char* flag = argv[1];
 	char* string_int = argv[2];
 	
@@ -199,20 +202,16 @@ int main(int argc, char** argv) {
 			// prime check
 			
 			switch (is_prime(integer)) {
-				case psc_prime: {
+				case psc_prime:
 					printf("%d is a prime\n", integer);
 					break;
-				}
-				case psc_composite: {
+				case psc_composite:
 					printf("%d is a composite\n", integer);
 					break;
-				}
-				case psc_none: {
+				case psc_none:
 					printf("%d is neither a prime nor composite\n", integer);
 					break;
-				}
 			}
-			
 			break;
 		}
 		case 's': {
@@ -255,20 +254,16 @@ int main(int argc, char** argv) {
 			unsigned long long result = 1ull;
 			
 			switch (sum_natural_numbers(integer, &result)) {
-				case nnsc_ok: {
+				case nnsc_ok:
 					printf("Sum of integers from 1 to %d is %llu\n", integer, result);
 					break;
-				}
-				case nnsc_overflow: {
+				case nnsc_overflow:
 					printf("Computing the sum of integers from 1 to %d caused overflow\n", integer);
 					break;
-				}
-				case nnsc_invalid_input: {
+				case nnsc_invalid_input:
 					printf("Sum of integers from 1 to %d cannot be computed\n", integer);
 					break;
-				}
 			}
-			
 			break;
 		}
 		case 'f': {
@@ -276,20 +271,16 @@ int main(int argc, char** argv) {
 			unsigned long long result = 1ull;
 			
 			switch (factorial(integer, &result)) {
-				case fsc_ok: {
+				case fsc_ok:
 					printf("The factorial of %d is %llu\n", integer, result);
 					break;
-				}
-				case fsc_overflow: {
+				case fsc_overflow:
 					printf("Computing the factorial of %d caused an overflow\n", integer);
 					break;
-				}
-				case fsc_invalid_input: {
+				case fsc_invalid_input:
 					printf("The factorial of %d cannot be computed\n", integer);
 					break;
-				}
 			}
-
 			break;
 		}
 		default:
