@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <limits.h>
 #include <math.h>
 
 int validate_string_integer(char* str_int) {
@@ -38,7 +39,7 @@ factorial_status_codes factorial(long long integer, unsigned long long* result) 
 	*result = 1ull;
 	
 	for (int i = 2; i <= integer; ++i) {
-		if (*result > ULONG_LONG_MAX / i)
+		if (*result > ULLONG_MAX / i)
 			return fsc_overflow;
 		
 		*result *= i;

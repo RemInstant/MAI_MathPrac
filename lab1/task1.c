@@ -79,7 +79,7 @@ factorial_status_codes factorial(long long integer, unsigned long long* result) 
 	*result = 1ull;
 	
 	for (int i = 2; i <= integer; ++i) {
-		if (*result > ULONG_LONG_MAX / i)
+		if (*result > ULLONG_MAX / i)
 			return fsc_overflow;
 		
 		*result *= i;
@@ -99,7 +99,7 @@ natural_number_status_codes sum_natural_numbers(int integer, unsigned long long*
 	
 	*result = integer+1;
 	
-	if (*result > ULONG_LONG_MAX / integer)
+	if (*result > ULLONG_MAX / integer)
 		return nnsc_overflow;
 	
 	*result *= integer;
