@@ -11,7 +11,7 @@ int validate_string_float(char* str_float) {
 			++dot_cnt;
 			continue;
 		}
-		if ('0' <= str_float[i] && str_float[i] <= '9') continue;
+		if (isdigit(str_float[i])) continue;
 		return 0;
 	}
 	return 1;

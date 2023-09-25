@@ -9,7 +9,7 @@ int min(int a, int b) {
 int validate_string_integer(char* str_int) {
 	for (int i = 0; str_int[i] != '\0'; ++i) {
 		if (i == 0 && str_int[i] == '-') continue;
-		if ('0' <= str_int[i] && str_int[i] <= '9') continue;
+		if (isdigit(str_int[i])) continue;
 		return 0;
 	}
 	return 1;
