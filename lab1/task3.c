@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
+#include <ctype.h>
 #include <math.h>
 
 int validate_string_integer(char* str_int) {
