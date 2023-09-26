@@ -238,6 +238,14 @@ int main(int argc, char** argv) {
 		case 'e': {
 			// power table
 			printf("Power table:\n");
+			
+			printf(" x ");
+			for(int pow = 2; pow <= min(10, integer); ++pow) {
+				for (int i = 2+get_int_len(pow); i <= pow; ++i) printf(" ");
+				printf("x^%d ", pow);
+			}
+			printf("\n");
+			
 			for (int base = 1; base <= 10; ++base) {
 				long long res = 1;
 				
