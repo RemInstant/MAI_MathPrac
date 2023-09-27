@@ -49,19 +49,35 @@ int main(int argc, char** argv) {
 		output_file_name = argv[3];
 	} else {
 		int len = strlen(input_file_name);
-		output_file_name = malloc(sizeof(char) * (len + 4));
+		output_file_name = (char*) malloc(sizeof(char) * (len + 4));
+		
+		if(output_file_name == NULL) {
+			printf("Memory lack error\n");
+			return 3;
+		}
+		
 		sprintf(output_file_name, "%s%s", "out_", input_file_name);
 	}
 	
-	FILE* input = fopen(input_file_name, "r");
-	FILE* output = fopen(output_file_name, "w");
+	FILE* input_file = fopen(input_file_name, "r");
+	FILE* output_file = fopen(output_file_name, "w");
+	
+	if(input_file == NULL) {
+		printf("Input file cannot be opened\n");
+		return 4;
+	}
+	
+	if(output_file == NULL) {
+		printf("Output file cannot be opened\n");
+		return 4;
+	}
 	
 	switch (main_flag) {
 		case 'd': {
 			char ch;
-			while ((ch = fgetc(input)) != EOF) {
+			while ((ch = fgetc(input_file)) != EOF) {
 				if (isdigit(ch)) continue;
-				fputc(ch, output);
+				fputc(ch, output_file);
 			}
 			break;
 		}
@@ -71,28 +87,28 @@ int main(int argc, char** argv) {
 			unsigned int counter = 0;
 			
 			while (1) {
-				ch = fgetc(input);
+				ch = fgetc(input_file);
 				
 				if (ch == '\n') {
-					fprintf(output, "%u\n", counter);
+					fprintf(output_file, "%u\n", counter);
 					counter = 0;
 					continue;
 				}
 				
 				if (ch == EOF) {
-					fprintf(output, "%u", counter);
+					fprintf(output_file, "%u", counter);
 					break;
 				}
 				
 				if (isalpha(ch)) {
 
 					if (counter > UINT_MAX - 1) {
-						fprintf(output, "overflow\n");
+						fprintf(output_file, "overflow\n");
 						counter = 0;
 						
 						while (ch != EOF && ch != '\n')
-							ch = fgetc(input);
-						ch = fgetc(input);
+							ch = fgetc(input_file);
+						ch = fgetc(input_file);
 						
 						continue;
 					}
@@ -108,28 +124,28 @@ int main(int argc, char** argv) {
 			unsigned int counter = 0;
 			
 			while (1) {
-				ch = fgetc(input);
+				ch = fgetc(input_file);
 				
 				if (ch == '\n') {
-					fprintf(output, "%u\n", counter);
+					fprintf(output_file, "%u\n", counter);
 					counter = 0;
 					continue;
 				}
 				
 				if (ch == EOF) {
-					fprintf(output, "%u", counter);
+					fprintf(output_file, "%u", counter);
 					break;
 				}
 				
 				if (isalpha(ch) || isdigit(ch) || ch == ' ') continue;
 					
 				if (counter > UINT_MAX - 1) {
-					fprintf(output, "overflow\n");
+					fprintf(output_file, "overflow\n");
 					counter = 0;
 					
 					while (ch != EOF && ch != '\n')
-						ch = fgetc(input);
-					ch = fgetc(input);
+						ch = fgetc(input_file);
+					ch = fgetc(input_file);
 					
 					continue;
 				}
@@ -141,20 +157,20 @@ int main(int argc, char** argv) {
 		
 		case 'a': {
 			char ch;
-			while ((ch = fgetc(input)) != EOF) {
+			while ((ch = fgetc(input_file)) != EOF) {
 				if (isdigit(ch)) {
-					fputc(ch, output);
+					fputc(ch, output_file);
 					continue;
 				}
 				printf("%X", ch);
-				fprintf(output, "%X", ch);
+				fprintf(output_file, "%X", ch);
 			}
 			break;
 		}
 	}
 	
-	fclose(input);
-	fclose(output);
+	fclose(input_file);
+	fclose(output_file);
 	
 	if(!output_flag) {
 		free(output_file_name);

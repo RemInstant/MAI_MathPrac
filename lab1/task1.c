@@ -45,9 +45,10 @@ void get_multiples(int integer, int* cnt, int** multiples) {
 	
 	integer = abs(integer);
 	*cnt = (integer != 0) ? (100 / integer) : 0;
-	*multiples = malloc(sizeof(int)*(*cnt));
+	*multiples = (int*) malloc(sizeof(int) * (*cnt));
 	
-	if (*cnt == 0) return;
+	if (*cnt == 0 || *multiples == NULL) return;
+	
 	for(int i = integer, j = 0; i <= 100; i += integer, ++j) {
 		(*multiples)[j] = i;
 	}
@@ -123,9 +124,10 @@ void separate_into_digits(int integer, int* cnt, int** digits) {
 	if (cnt == NULL || digits == NULL) return;
 	
 	*cnt = get_int_len(integer);
+	*digits = (int*) malloc(sizeof(int) * (*cnt));
 	
-	*digits = malloc(sizeof(int)*(*cnt));
-
+	if (*digits == NULL) return;
+	
 	for (int i = *cnt-1; i >= 0; --i) {
 		(*digits)[i] = integer % 10;
 		integer /= 10;

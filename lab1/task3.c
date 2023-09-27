@@ -68,10 +68,18 @@ void permutations(double eps, unsigned int cnt, double* numbers, unsigned long l
 		return;
 	}
 	
-	*res = malloc(sizeof(double*) * (*res_cnt));
+	*res = (double**) malloc(sizeof(double*) * (*res_cnt));
+	if (*res == NULL) return;
 	
 	for (int i = 0; i < *res_cnt; ++i) {
-		(*res)[i] = malloc(sizeof(double) * cnt);
+		(*res)[i] = (double*) malloc(sizeof(double) * cnt);
+		
+		if ((*res)[i] == NULL) {
+			for (int j = i-1; j >= 0; --j)
+				free((*res)[i]);
+			free(*res);
+			*res = NULL;
+		}
 	}
 	
 	for (int j = 0; j < cnt; ++j) {
@@ -130,7 +138,7 @@ void permutations(double eps, unsigned int cnt, double* numbers, unsigned long l
 	}
 	
 	*res_cnt = bound+1;
-	*res = realloc(*res, sizeof(double*) * (bound+1));
+	*res = (double**) realloc(*res, sizeof(double*) * (bound+1));
 }
 
 void solve_quadratic_equation(double eps, double a, double b, double c, int* cnt, double* x1, double* x2) {
@@ -231,7 +239,13 @@ int main(int argc, char** argv) {
 		case 'q': {
 			
 			double eps = atof(argv[2]);
-			double* eq_coefs = malloc(sizeof(double)*3);
+			double* eq_coefs = (double*) malloc(sizeof(double)*3);
+			
+			if(eq_coefs == NULL) {
+				printf("Memory lack error\n");
+				return 5;
+			}
+			
 			eq_coefs[0] = atof(argv[3]);
 			eq_coefs[1] = atof(argv[4]);
 			eq_coefs[2] = atof(argv[5]);
@@ -240,6 +254,11 @@ int main(int argc, char** argv) {
 			unsigned long long perm_cnt;
 			
 			permutations(eps, 3, eq_coefs, &perm_cnt, &eq_coefs_perm);
+			
+			if(eq_coefs_perm == NULL) {
+				printf("Memory lack error\n");
+				return 5;
+			}
 			
 			for (int i = 0; i < perm_cnt; ++i) {
 				int root_cnt;
@@ -281,7 +300,13 @@ int main(int argc, char** argv) {
 		case 't': {
 			
 			double eps = atof(argv[2]);
-			double* tr_sides = malloc(sizeof(double)*3);
+			double* tr_sides = (double*) malloc(sizeof(double)*3);
+			
+			if(tr_sides == NULL) {
+				printf("Memory lack error\n");
+				return 5;
+			}
+			
 			tr_sides[0] = atof(argv[3]);
 			tr_sides[1] = atof(argv[4]);
 			tr_sides[2] = atof(argv[5]);
@@ -290,6 +315,11 @@ int main(int argc, char** argv) {
 			unsigned long long perm_cnt;
 			
 			permutations(eps, 3, tr_sides, &perm_cnt, &tr_sides_perm);
+			
+			if(tr_sides_perm == NULL) {
+				printf("Memory lack error\n");
+				return 5;
+			}
 			
 			int tr_flag = 0;
 			
