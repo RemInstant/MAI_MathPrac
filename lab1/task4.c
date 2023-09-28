@@ -45,29 +45,37 @@ int main(int argc, char** argv) {
 	char* input_file_name = argv[2];
 	char* output_file_name;
 	
-	if(output_flag) {
+	if (output_flag) {
 		output_file_name = argv[3];
-	} else {
-		int len = strlen(input_file_name);
-		output_file_name = (char*) malloc(sizeof(char) * (len + 4));
 		
-		if(output_file_name == NULL) {
+	} else {	
+		int len = strlen(input_file_name);
+		int last_sep_pos = len-1; // last position of a separator, i.e. '/', '\'
+		
+		while (input_file_name[last_sep_pos] != '\\' && input_file_name[last_sep_pos] != '/') {
+			--last_sep_pos;
+		}
+		
+		output_file_name = (char*) malloc(sizeof(char) * (5 + (len - last_sep_pos - 1)));
+		
+		if (output_file_name == NULL) {
 			printf("Memory lack error\n");
 			return 3;
 		}
 		
-		sprintf(output_file_name, "%s%s", "out_", input_file_name);
+		sprintf(output_file_name, "%s%s", "out_", input_file_name + last_sep_pos + 1);
 	}
 	
 	FILE* input_file = fopen(input_file_name, "r");
-	FILE* output_file = fopen(output_file_name, "w");
 	
-	if(input_file == NULL) {
+	if (input_file == NULL) {
 		printf("Input file cannot be opened\n");
 		return 4;
 	}
 	
-	if(output_file == NULL) {
+	FILE* output_file = fopen(output_file_name, "w");
+	
+	if (output_file == NULL) {
 		printf("Output file cannot be opened\n");
 		return 4;
 	}
@@ -172,7 +180,7 @@ int main(int argc, char** argv) {
 	fclose(input_file);
 	fclose(output_file);
 	
-	if(!output_flag) {
+	if (!output_flag) {
 		free(output_file_name);
 	}
 }
