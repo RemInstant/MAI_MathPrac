@@ -3,153 +3,216 @@
 #include <limits.h>
 #include <ctype.h>
 
-int min(int a, int b) {
-	return a < b ? a : b;
-}
+typedef enum
+{
+	OK,
+	INVALID_INPUT,
+	OVERFLOW,
+	BAD_ALLOC
+} status_codes;
 
-int validate_string_integer(char* str_int) {
-	for (int i = 0; str_int[i] != '\0'; ++i) {
-		if (i == 0 && str_int[i] == '-') continue;
-		if (isdigit(str_int[i])) continue;
-		return 0;
-	}
-	return 1;
-}
+typedef enum
+{
+	PSC_PRIME,
+	PSC_COMPOSITE,
+	PSC_NONE
+} prime_status_codes;
 
-int check_overflow(char* str_int) {
+status_codes validate_string_integer(char* str_int)
+{
 	int integer = 0;
-	int negative = 0;
 	
-	for (int i = 0; str_int[i] != '\0'; ++i) {
-		if (i == 0 && str_int[i] == '-') {
-			negative = 1;
-			continue;
-		}	
-		if ('0' > str_int[i] || str_int[i] > '9')
-			return 0;
+	if (str_int[0] != '-')
+	{
+		for (int i = 0; str_int[i]; ++i)
+		{
+			if (!isdigit(str_int[i]))
+			{
+				return INVALID_INPUT;
+			}
 			
-		if ((!negative && integer > INT_MAX / 10) || (negative && integer < INT_MIN / 10)) 
-			return 1;
-		integer *= 10;
-		
-		int add = str_int[i] - '0';
-		if ((!negative && integer > INT_MAX - add) || (negative && integer < INT_MIN + add))
-			return 1;
-		integer += negative ? -add : add;
+			int add = str_int[i] - '0';
+			if (integer > (INT_MAX - add) / 10)
+			{
+				return OVERFLOW;
+			}
+			
+			integer = integer * 10 + add;
+		}
 	}
-	return 0;
+	else
+	{
+		for (int i = 1; str_int[i]; ++i)
+		{
+			if (!isdigit(str_int[i]))
+			{
+				return INVALID_INPUT;
+			}
+			
+			int subtr = str_int[i] - '0';
+			if (integer < (INT_MIN + subtr) / 10)
+			{
+				return OVERFLOW;
+			}
+			
+			integer = integer * 10 - subtr;
+		}
+	}
+	return OK;
 }
 
-void get_multiples(int integer, int* cnt, int** multiples) {
-	if (cnt == NULL || multiples == NULL) return;
+status_codes get_multiples(int integer, int* cnt, int** multiples)
+{
+	if (cnt == NULL || multiples == NULL)
+	{
+		return INVALID_INPUT;
+	}
 	
 	integer = abs(integer);
 	*cnt = (integer != 0) ? (100 / integer) : 0;
 	*multiples = (int*) malloc(sizeof(int) * (*cnt));
 	
-	if (*cnt == 0 || *multiples == NULL) return;
-	
-	for(int i = integer, j = 0; i <= 100; i += integer, ++j) {
-		(*multiples)[j] = i;
+	if (*multiples == NULL)
+	{
+		return BAD_ALLOC;
 	}
+	if (*cnt == 0)
+	{
+		return OK;
+	}
+	
+	for(int i = 0, val = integer; i < *cnt; ++i) 
+	{
+		(*multiples)[i] = val;
+		val += integer;
+	}
+	return OK;
 }
 
-typedef enum {
-	psc_prime,
-	psc_composite,
-	psc_none
-} prime_status_codes;
+prime_status_codes is_prime(long long integer)
+{
+	if (integer <= 1) 
+	{
+		return PSC_NONE;
+	}
+	if (integer == 2)
+	{
+		return PSC_PRIME;
+	}
+	if (!(integer & 1))
+	{
+		return PSC_COMPOSITE;
+	}
 
-prime_status_codes is_prime(long long integer) {
-	if (integer <= 1) return psc_none;
-	if (integer == 2) return psc_prime;
-	if (!(integer & 1)) return psc_composite;
 	for (int i = 3; i*i <= integer; i += 2)
-		if (integer % i == 0) return psc_composite;
-	return psc_prime;
+	{
+		if (integer % i == 0)
+		{
+			return PSC_COMPOSITE;
+		}
+	}
+	return PSC_PRIME;
 }
 
-typedef enum {
-	fsc_ok,
-	fsc_overflow,
-	fsc_invalid_input
-} factorial_status_codes;
-
-factorial_status_codes factorial(long long integer, unsigned long long* result) {
-	if(integer < 0) return fsc_invalid_input;
+status_codes factorial(long long integer, unsigned long long* result)
+{
+	if(integer < 0 || result == NULL)
+	{
+		return INVALID_INPUT;
+	}
 	
-	*result = 1ull;
-	
-	for (int i = 2; i <= integer; ++i) {
+	*result = 1;
+	for (int i = 2; i <= integer; ++i)
+	{
 		if (*result > ULLONG_MAX / i)
-			return fsc_overflow;
-		
+		{
+			return OVERFLOW;
+		}
 		*result *= i;
 	}
-	
-	return fsc_ok;
+	return OK;
 }
 
-typedef enum {
-	nnsc_ok,
-	nnsc_overflow,
-	nnsc_invalid_input
-} natural_number_status_codes;
+status_codes sum_natural_numbers(int integer, unsigned long long* result)
+{
+	if(integer < 1 || result == NULL)
+	{
+		return INVALID_INPUT;
+	}
+	
+	*result = integer + 1;
 
-natural_number_status_codes sum_natural_numbers(int integer, unsigned long long* result) {
-	if(integer < 0) return nnsc_invalid_input;
-	
-	*result = integer+1;
-	
-	if (*result > ULLONG_MAX / integer)
-		return nnsc_overflow;
+	if (*result > 2 * ULLONG_MAX / integer)
+	{
+		return OVERFLOW;
+	}
 	
 	*result *= integer;
 	*result /= 2;
 	
-	return nnsc_ok;
+	return OK;
 }
 
-int get_int_len(long long integer) {
-	if (integer == 0) return 1;
-	int len = 0;
-	while (integer > 0) {
+int get_int_len(long long integer)
+{
+	int len = (integer < 0) ? 1 : 0;
+	
+	do
+	{
 		integer /= 10;
 		++len;
-	}
+	} while (integer > 0);
+	
 	return len;
 }
 
-void separate_into_digits(int integer, int* cnt, int** digits) {
-	if (cnt == NULL || digits == NULL) return;
+status_codes separate_into_digits(int integer, int* cnt, int** digits)
+{
+	if (cnt == NULL || digits == NULL) 
+	{
+		return INVALID_INPUT;
+	}
 	
+	if (integer == INT_MIN)
+	{
+		return OVERFLOW;
+	}
+	
+	integer = abs(integer);
 	*cnt = get_int_len(integer);
 	*digits = (int*) malloc(sizeof(int) * (*cnt));
 	
-	if (*digits == NULL) return;
+	if (*digits == NULL)
+	{
+		return BAD_ALLOC;
+	}
 	
-	for (int i = *cnt-1; i >= 0; --i) {
+	for (int i = *cnt-1; i >= 0; --i)
+	{
 		(*digits)[i] = integer % 10;
 		integer /= 10;
 	}
+	return OK;
 }
 
-int main(int argc, char** argv) {
-	if (argc == 1) {
+int main(int argc, char** argv)
+{
+	if (argc == 1)
+	{
 		printf("Usage: command_name <flag> <32-bit integer>\n");
 		printf("flags:\n");
 		printf("-h  -  print natural numbers up to 100 that is multiples of <integer>\n");
-		printf("-p  -  check if <integer> is a prime (<integer> must be natural)\n");
+		printf("-p  -  check if <integer> is a prime\n");
 		printf("-s  -  separate <integer> into digits\n");
-		printf(" by all natural numbers up to <integer> (<integer>\n");
 		printf("-e  -  print the exponential of natural numbers up to <integer>");
-		printf(" with base from 1 to 10 (<integer> must be not greater than 10)\n");
+		printf(" with base from 1 to 10 (1 <= <integer> <= 10)\n");
 		printf("-a  -  print the sum of all natural numbers up to <integer>\n");
 		printf("-f  -  print the factorial of <integer>\n");
 		return 0;
 	}
 	
-	if (argc != 3) {
+	if (argc != 3)
+	{
 		printf("Invalid input\n");
 		return 1;
 	}
@@ -157,43 +220,59 @@ int main(int argc, char** argv) {
 	char* flag = argv[1];
 	char* string_int = argv[2];
 	
-	if (((flag[0] != '-') && (flag[0] != '/')) || flag[2] != '\0' 
+	if (((flag[0] != '-') && (flag[0] != '/')) || flag[2]
 			|| (flag[1] != 'h' && flag[1] != 'p' && flag[1] != 's'
-			&& flag[1] != 'e' && flag[1] != 'a' && flag[1] != 'f')) {
+			&& flag[1] != 'e' && flag[1] != 'a' && flag[1] != 'f'))
+	{
 		printf("Invalid flag\n");
 		return 2;
 	}
 	
-	if (!validate_string_integer(string_int)) {
-		printf("Invalid integer\n");
-		return 3;
-	}
-	
-	if (check_overflow(string_int)) {
-		printf("Entered integer caused an overflow\n");
-		return 4;
+	switch (validate_string_integer(string_int))
+	{
+		case OK:
+			break;
+		case INVALID_INPUT:
+			printf("Invalid integer\n");
+			return 3;
+		case OVERFLOW:
+			printf("Entered integer caused an overflow\n");
+			return 4;
+		default:
+			printf("Unexpected error occurred\n");
+			return 6;
 	}
 	
 	int integer = atoi(string_int);
 	
-	switch (flag[1]) {
-		case 'h': {
-			// multiples
+	switch (flag[1])
+	{
+		case 'h': // multiples
+		{
 			int cnt = 0;
 			int* multiples = NULL;
 			
-			get_multiples(integer, &cnt, &multiples);
-			
-			if (multiples == NULL) {
-				printf("Memory lack error\n");
-				return 5;
+			switch (get_multiples(integer, &cnt, &multiples))
+			{
+				case OK:
+					break;
+				case BAD_ALLOC:
+					printf("Memory lack error\n");
+					return 5;
+				default:
+					printf("Unexpected error occurred\n");
+					return 6;
 			}
 			
-			if (cnt == 0) {
+			if (cnt == 0)
+			{
 				printf("There are no natural numbers within 100 that are multiples of %d\n", integer);
-			} else {
+			}
+			else
+			{
 				printf("There are %d natural numbers within 100 that are multiples of %d:\n", cnt, integer);
-				for (int i = 0; i < cnt; ++i) {
+				for (int i = 0; i < cnt; ++i)
+				{
 					printf("%d ", multiples[i]);
 				}
 				printf("\n");
@@ -201,96 +280,126 @@ int main(int argc, char** argv) {
 			free(multiples);
 			break;
 		}
-		case 'p': {
-			// prime check
-			
-			switch (is_prime(integer)) {
-				case psc_prime:
+		case 'p': // prime check
+		{
+			switch (is_prime(integer))
+			{
+				case PSC_PRIME:
 					printf("%d is a prime\n", integer);
 					break;
-				case psc_composite:
+				case PSC_COMPOSITE:
 					printf("%d is a composite\n", integer);
 					break;
-				case psc_none:
+				case PSC_NONE:
 					printf("%d is neither a prime nor composite\n", integer);
 					break;
 			}
 			break;
 		}
-		case 's': {
-			// number separation
+		case 's': // number separation
+		{
 			int cnt = 0;
 			int* digits = NULL;
 			
-			separate_into_digits(integer, &cnt, &digits);
-			
-			if (digits == NULL) {
-				printf("Memory lack error\n");
-				return 5;
+			switch (separate_into_digits(integer, &cnt, &digits))
+			{
+				case OK:
+					break;
+				case OVERFLOW:
+					printf("Entered integer caused an overflow\n");
+					return 4;
+				case BAD_ALLOC:
+					printf("Memory lack error\n");
+					return 5;
+				default:
+					printf("Unexpected error occurred\n");
+					return 6;
 			}
 			
 			printf("See this cool digits of %d:\n", integer);
-			for (int i = 0; i < cnt; ++i) {
+			for (int i = 0; i < cnt; ++i)
+			{
 				printf("%d ", digits[i]);
 			}
 			printf("\n");
 			free(digits);
 			break;
 		}
-		case 'e': {
-			// power table
+		case 'e': // power table
+		{
+			if (integer < 1 || integer > 10)
+			{
+				printf("Invalid input\n");
+				return 1;
+			}
 			printf("Power table:\n");
-			
 			printf(" x ");
-			for(int pow = 2; pow <= min(10, integer); ++pow) {
-				for (int i = 2+get_int_len(pow); i <= pow; ++i) printf(" ");
+			for(int pow = 2; pow <= integer; ++pow)
+			{
+				for (int i = 2 + get_int_len(pow); i <= pow; ++i) 
+				{
+					printf(" ");
+				}
 				printf("x^%d ", pow);
 			}
 			printf("\n");
 			
-			for (int base = 1; base <= 10; ++base) {
+			for (int base = 1; base <= 10; ++base)
+			{
 				long long res = 1;
-				
-				for (int pow = 1; pow <= min(10, integer); ++pow) {
+
+				for (int pow = 1; pow <= integer; ++pow)
+				{
 					res *= base;
-					for (int i = get_int_len(res); i <= pow; ++i) printf(" ");
+					for (int i = get_int_len(res); i <= pow; ++i) 
+					{
+						printf(" ");
+					}
 					printf("%lld ", res);
 				}
 				printf("\n");
 			}
 			break;
 		}
-		case 'a': {
-			// natural numbers sum
+		case 'a': // natural numbers sum
+		{
 			unsigned long long result = 1ull;
 			
-			switch (sum_natural_numbers(integer, &result)) {
-				case nnsc_ok:
-					printf("Sum of integers from 1 to %d is %llu\n", integer, result);
+			switch (sum_natural_numbers(integer, &result))
+			{
+				case OK:
+					printf("The sum of natural numbers from 1 to %d is %llu\n", integer, result);
 					break;
-				case nnsc_overflow:
-					printf("Computing the sum of integers from 1 to %d caused overflow\n", integer);
+				case INVALID_INPUT:
+					printf("The sum cannot be computed: %d is not a natural number\n", integer);
 					break;
-				case nnsc_invalid_input:
-					printf("Sum of integers from 1 to %d cannot be computed\n", integer);
+				case OVERFLOW:
+					printf("Computing the sum of natural numbers from 1 to %d caused overflow\n", integer);
 					break;
+				default:
+					printf("Unexpected error occurred\n");
+					return 6;
 			}
 			break;
 		}
-		case 'f': {
-			// factorial
+		case 'f': // factorial
+		{
 			unsigned long long result = 1ull;
 			
-			switch (factorial(integer, &result)) {
-				case fsc_ok:
+			switch (factorial(integer, &result))
+			{
+				case OK:
 					printf("The factorial of %d is %llu\n", integer, result);
 					break;
-				case fsc_overflow:
-					printf("Computing the factorial of %d caused an overflow\n", integer);
-					break;
-				case fsc_invalid_input:
+				case INVALID_INPUT:
 					printf("The factorial of %d cannot be computed\n", integer);
 					break;
+				case OVERFLOW:
+					printf("Computing the factorial of %d caused an overflow\n", integer);
+					break;
+				default:
+					printf("Unexpected error occurred\n");
+					return 6;
 			}
 			break;
 		}
