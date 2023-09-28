@@ -20,7 +20,7 @@ int validate_string_float(char* str_float) {
 
 int sum_a(double eps, double x, double* ans) {
 	// this series converges for any x
-	if(ans == NULL) return 0;
+	if (ans == NULL) return 0;
 	int n = 0;
 	double sum = 0, elem = 1;
 	
@@ -38,7 +38,7 @@ int sum_a(double eps, double x, double* ans) {
 
 int sum_b(double eps, double x, double* ans) {
 	// this series converges for any x
-	if(ans == NULL) return 0;
+	if (ans == NULL) return 0;
 	int n = 0;
 	double sum = 0, elem = 1;
 	
@@ -56,7 +56,7 @@ int sum_b(double eps, double x, double* ans) {
 
 int sum_c(double eps, double x, double* ans) {
 	// this series converges for |x| < 1
-	if(fabs(x) >= 1 || ans == NULL) return 0;
+	if (fabs(x) >= 1 || ans == NULL) return 0;
 	int n = 0;
 	double sum = 0, elem = 1;
 	
@@ -74,7 +74,7 @@ int sum_c(double eps, double x, double* ans) {
 
 int sum_d(double eps, double x, double* ans) {
 	// this series converges for |x| < 1
-	if(fabs(x) >= 1 || ans == NULL) return 0;
+	if (fabs(x) >= 1 || ans == NULL) return 0;
 	int n = 1;
 	double sum = 0, elem = -x*x / 2;
 	
@@ -122,22 +122,22 @@ int main(int argc, char** argv) {
 	
 	double ans;
 	
-	if(sum_a(eps, x, &ans))
+	if (sum_a(eps, x, &ans))
 		printf("The sum of the series a is %.15lf\n", ans);
 	else
 		printf("The series a disconverges\n");
 	
-	if(sum_b(eps, x, &ans))
+	if (sum_b(eps, x, &ans))
 		printf("The sum of the series b is %.15lf\n", ans);
 	else
 		printf("The series b disconverges\n");
 	
-	if(sum_c(eps, x, &ans))
+	if (sum_c(eps, x, &ans))
 		printf("The sum of the series c is %.15lf\n", ans);
 	else
 		printf("The series c disconverges\n");
 	
-	if(sum_d(eps, x, &ans))
+	if (sum_d(eps, x, &ans))
 		printf("The sum of the series d is %.15lf\n", ans);
 	else
 		printf("The series d disconverges\n");
