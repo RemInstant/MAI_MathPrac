@@ -123,22 +123,22 @@ int main(int argc, char** argv) {
 	double ans;
 	
 	if(sum_a(eps, x, &ans))
-		printf("The sum of the series a is %lf\n", ans);
+		printf("The sum of the series a is %.15lf\n", ans);
 	else
 		printf("The series a disconverges\n");
 	
 	if(sum_b(eps, x, &ans))
-		printf("The sum of the series b is %lf\n", ans);
+		printf("The sum of the series b is %.15lf\n", ans);
 	else
 		printf("The series b disconverges\n");
 	
 	if(sum_c(eps, x, &ans))
-		printf("The sum of the series c is %lf\n", ans);
+		printf("The sum of the series c is %.15lf\n", ans);
 	else
 		printf("The series c disconverges\n");
 	
 	if(sum_d(eps, x, &ans))
-		printf("The sum of the series d is %lf\n", ans);
+		printf("The sum of the series d is %.15lf\n", ans);
 	else
 		printf("The series d disconverges\n");
 }

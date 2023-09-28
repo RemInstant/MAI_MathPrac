@@ -148,7 +148,12 @@ void solve_quadratic_equation(double eps, double a, double b, double c, int* cnt
 	
 	if (fabs(a) < eps) {
 		if (fabs(b) < eps) {
-			*cnt = 0;
+			if (fabs(c) < eps) {
+				*cnt = 1;
+				*x1 = INFINITY;
+			} else {
+				*cnt = 0;
+			}
 		} else {
 			*cnt = 1;
 			*x1 = -c/b;
@@ -206,7 +211,7 @@ int main(int argc, char** argv) {
 				}
 			}
 			
-			if (atof(argv[3]) <= 0) {
+			if (atof(argv[2]) <= 0) {
 				printf("Epsilon must be positive\n");
 				return 4;
 			}
