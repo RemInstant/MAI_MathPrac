@@ -69,7 +69,7 @@ series_status_codes sum_a(double eps, double x, double* ans)
 	return SSC_CONVERGENCE;
 }
 
-int sum_b(double eps, double x, double* ans)
+series_status_codes sum_b(double eps, double x, double* ans)
 {
 	// this series converges for any x
 	if (ans == NULL)
@@ -93,7 +93,7 @@ int sum_b(double eps, double x, double* ans)
 	return SSC_CONVERGENCE;
 }
 
-int sum_c(double eps, double x, double* ans)
+series_status_codes sum_c(double eps, double x, double* ans)
 {
 	// this series converges for |x| < 1
 	if (ans == NULL)
@@ -122,7 +122,7 @@ int sum_c(double eps, double x, double* ans)
 	return SSC_CONVERGENCE;
 }
 
-int sum_d(double eps, double x, double* ans)
+series_status_codes sum_d(double eps, double x, double* ans)
 {
 	// this series converges for |x| < 1
 	if (ans == NULL)
@@ -188,7 +188,10 @@ int main(int argc, char** argv)
 	
 	double ans;
 	
+	sum_a(eps, x, &ans);
 	printf("The sum of the series a is %.15lf\n", ans);
+	
+	sum_b(eps, x, &ans);
 	printf("The sum of the series b is %.15lf\n", ans);
 	
 	if (sum_c(eps, x, &ans) == SSC_CONVERGENCE)
