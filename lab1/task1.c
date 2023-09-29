@@ -81,7 +81,7 @@ status_codes get_multiples(int integer, int* cnt, int** multiples)
 		return OK;
 	}
 	
-	for(int i = 0, val = integer; i < *cnt; ++i) 
+	for (int i = 0, val = integer; i < *cnt; ++i) 
 	{
 		(*multiples)[i] = val;
 		val += integer;
@@ -116,7 +116,7 @@ prime_status_codes is_prime(long long integer)
 
 status_codes factorial(long long integer, unsigned long long* result)
 {
-	if(integer < 0 || result == NULL)
+	if (integer < 0 || result == NULL)
 	{
 		return INVALID_INPUT;
 	}
@@ -135,7 +135,7 @@ status_codes factorial(long long integer, unsigned long long* result)
 
 status_codes sum_natural_numbers(int integer, unsigned long long* result)
 {
-	if(integer < 1 || result == NULL)
+	if (integer < 1 || result == NULL)
 	{
 		return INVALID_INPUT;
 	}
@@ -334,7 +334,7 @@ int main(int argc, char** argv)
 			}
 			printf("Power table:\n");
 			printf(" x ");
-			for(int pow = 2; pow <= integer; ++pow)
+			for (int pow = 2; pow <= integer; ++pow)
 			{
 				for (int i = 2 + get_int_len(pow); i <= pow; ++i) 
 				{

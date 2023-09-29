@@ -83,7 +83,7 @@ double calc_e_with_lim(double eps)
 		++n;
 		prev = cur;
 		cur = 1.0;
-		for(int i = 0; i < n; ++i)
+		for (int i = 0; i < n; ++i)
 		{
 			cur *= 1 + 1.0/n;
 		}
@@ -151,7 +151,7 @@ double calc_pi_with_sum(double eps)
 		
 		++n;
 		next_elem = 4 / (2.0*n-1);
-		if(!(n & 1)) 
+		if (!(n & 1)) 
 		{
 			next_elem *= -1;
 		}
@@ -199,7 +199,7 @@ double calc_ln2_with_sum(double eps)
 		
 		++n;
 		next_elem = 1.0 / n;
-		if(!(n & 1)) 
+		if (!(n & 1)) 
 		{
 			next_elem *= -1;
 		}
@@ -280,13 +280,13 @@ double calc_gamma_with_lim(double eps)
 		double comb = m;
 		double logarithm = 0;
 		
-		for(int k = 2; k <= m; ++k)
+		for (int k = 2; k <= m; ++k)
 		{
 			comb *= (m-k+1.0) / k;
 			logarithm += log(k);
 			
 			elem = comb * logarithm / k;
-			if(k & 1) 
+			if (k & 1) 
 			{
 				elem *= -1;
 			}
@@ -329,7 +329,7 @@ double calc_gamma_with_equation(double eps)
 		++t;
 		prev = cur;	
 		
-		if(is_prime(t) == PSC_PRIME) prod *= (t-1.0)/t;
+		if (is_prime(t) == PSC_PRIME) prod *= (t-1.0)/t;
 		
 		cur = -log(prod * log(t));
 

@@ -265,11 +265,18 @@ int main(int argc, char** argv)
 	if ((input_file = fopen(input_file_name, "r")) == NULL)
 	{
 		printf("Input file cannot be opened\n");
-		return 4;
 	}
-	if ((output_file = fopen(output_file_name, "w")) == NULL)
+	else if ((output_file = fopen(output_file_name, "w")) == NULL)
 	{
 		printf("Output file cannot be opened\n");
+	}
+	
+	if (input_file == NULL || output_file == NULL)
+	{
+		if (output_flag)
+		{
+			free(output_file_name);
+		}
 		return 4;
 	}
 	
@@ -292,7 +299,7 @@ int main(int argc, char** argv)
 	fclose(input_file);
 	fclose(output_file);
 	
-	if (output_file_name != NULL)
+	if (output_flag)
 	{
 		free(output_file_name);
 	}
