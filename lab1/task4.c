@@ -268,6 +268,7 @@ int main(int argc, char** argv)
 	}
 	else if ((output_file = fopen(output_file_name, "w")) == NULL)
 	{
+		fclose(input_file);
 		printf("Output file cannot be opened\n");
 	}
 	
