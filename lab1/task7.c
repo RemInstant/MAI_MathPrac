@@ -127,7 +127,6 @@ int main(int argc, char** argv)
 {
 	if (argc == 1)
 	{
-		// TODO
 		printf("Usage: command_name <flag>\n");
 		printf("flags:\n");
 		printf("-r <file1> <file2> <output file>  -  Write words in turns from files 1 and 2 into the output file.\n");
@@ -155,31 +154,27 @@ int main(int argc, char** argv)
 	FILE* input_file2 = NULL;
 	FILE* output_file = NULL;
 	
-	switch (flag[1]) {
+	switch (flag[1])
+	{
 		case 'r':
 		{
-			if(argc != 5) {
+			if (argc != 5)
+			{
 				printf("Invalid input\n");
 				return 1;
 			}
-			
-			input_file1 = fopen(argv[2], "r");
-			if (input_file1 == NULL)
+			if ((input_file1 = fopen(argv[2], "r")) == NULL)
 			{
 				printf("Cannot open the file1");
 				return 3;
 			}
-			
-			input_file2 = fopen(argv[3], "r");
-			if(input_file2 == NULL)
+			if ((input_file2 = fopen(argv[3], "r")) == NULL)
 			{
 				fclose(input_file1);
 				printf("Cannot open the file2");
 				return 3;
 			}
-			
-			output_file = fopen(argv[4], "w");
-			if(output_file == NULL)
+			if ((output_file = fopen(argv[4], "w")) == NULL)
 			{
 				fclose(input_file1);
 				fclose(input_file2);
@@ -190,20 +185,17 @@ int main(int argc, char** argv)
 		}
 		case 'a':
 		{
-			if(argc != 4) {
+			if (argc != 4)
+			{
 				printf("Invalid input\n");
 				return 1;
 			}
-			
-			input_file1 = fopen(argv[2], "r");
-			if (input_file1 == NULL)
+			if ((input_file1 = fopen(argv[2], "r")) == NULL)
 			{
 				printf("Cannot open the file1");
 				return 3;
 			}
-			
-			output_file = fopen(argv[3], "w");
-			if(output_file == NULL)
+			if ((output_file = fopen(argv[3], "w")) == NULL)
 			{
 				fclose(input_file1);
 				printf("Cannot open the output file");
@@ -213,7 +205,8 @@ int main(int argc, char** argv)
 		}
 	}
 
-	switch (flag[1]) {
+	switch (flag[1])
+	{
 		case 'r':
 			do_r(input_file1, input_file2, output_file);
 			break;
@@ -222,7 +215,8 @@ int main(int argc, char** argv)
 			break;
 	}
 	
-	switch (flag[1]) {
+	switch (flag[1])
+	{
 		case 'r':
 			fclose(input_file1);
 			fclose(input_file2);
