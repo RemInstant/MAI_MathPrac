@@ -42,6 +42,10 @@ status_codes validate_string_integer(char* str_int)
 	}
 	else
 	{
+		if (!isdigit(str_int[1]))
+		{
+			return INVALID_INPUT;
+		}
 		for (int i = 1; str_int[i]; ++i)
 		{
 			if (!isdigit(str_int[i]))

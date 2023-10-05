@@ -209,20 +209,12 @@ int main(int argc, char** argv)
 	{
 		case 'r':
 			do_r(input_file1, input_file2, output_file);
-			break;
-		case 'a':
-			do_a(input_file1, output_file);
-			break;
-	}
-	
-	switch (flag[1])
-	{
-		case 'r':
 			fclose(input_file1);
 			fclose(input_file2);
 			fclose(output_file);
 			break;
 		case 'a':
+			do_a(input_file1, output_file);
 			fclose(input_file1);
 			fclose(output_file);
 			break;
