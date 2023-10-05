@@ -4,10 +4,10 @@
 #include <string.h>
 #include <time.h>
 
-#define B_ELEM_MIN -10 	// -1000
-#define B_ELEM_MAX 10 	//  1000
-#define B_COUNT_MIN 10 	//  10
-#define B_COUNT_MAX 15 	//  1000
+#define B_ELEM_MIN -1000
+#define B_ELEM_MAX 1000
+#define B_COUNT_MIN 10
+#define B_COUNT_MAX 1000
 
 typedef enum
 {
@@ -197,19 +197,16 @@ int main(int argc, char** argv)
 {
 	if (argc == 1)
 	{
-		// TODO
-		printf("Usage: command_name <input file> <output file\n");
-		printf("(Files containing only digits and letters can be processed)\n");
-		printf("For each number of input file program figures out the minimum base (X) of numeral system");
-		printf(" this number can be represented in.\n");
-		printf("Then, the number is converted from this numeral system into decimal one\n");
-		printf("Output format:\n");
-		printf("<base-X number> <X> <base-10 number>\n");
+		printf("Usage: command_name <flag>\n");
+		printf("flags:\n");
+		printf("-a <N> <a> <b>  -  Create an array of size N and fill it with pseudorandom numbers in the range [a; b].\n");
+		printf("                   Then find last occurrences of minumum and maximum of this array and swap them.\n");
+		printf("-b              -  Create arrays A and B of pseudorandom size in the range [10; 10000]\n");
+		printf("                   and fill them with pseudorandom numbers in the range [-1000; 1000].\n");
+		printf("                   Then create array C whose i-th element equals i-th element of array A added\n");
+		printf("                   element of array B nearest to i-th element of array A.\n");
 		return 0;
 	}
-	
-	// -a <size> <a> <b>
-	// -b
 	
 	char* flag = argv[1];
 	

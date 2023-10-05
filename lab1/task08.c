@@ -140,7 +140,7 @@ int main(int argc, char** argv)
 {
 	if (argc == 1)
 	{
-		printf("Usage: command_name <input file> <output file\n");
+		printf("Usage: command_name <input file> <output file>\n");
 		printf("(Files containing only digits and letters can be processed)\n");
 		printf("For each number of input file program figures out the minimum base (X) of numeral system");
 		printf(" this number can be represented in.\n");
