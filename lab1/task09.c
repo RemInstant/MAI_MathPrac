@@ -1,13 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <limits.h>
 #include <ctype.h>
 #include <string.h>
 #include <time.h>
 
+#define A_SIZE 10
 #define B_ELEM_MIN -1000
 #define B_ELEM_MAX 1000
-#define B_COUNT_MIN 10
-#define B_COUNT_MAX 1000
+#define B_SIZE_MIN 10
+#define B_SIZE_MAX 1000
 
 typedef enum
 {
@@ -41,7 +43,7 @@ status_codes validate_string_integer(char* str_int)
 	}
 	else
 	{
-		if (!isdigit(str_int[1]))
+		if (str_int[1] == '\0')
 		{
 			return INVALID_INPUT;
 		}
@@ -155,6 +157,19 @@ int lower_bound(int* arr, int begin, int end, int x)
 	return r;
 }
 
+void print_int_arr(int* arr, int size)
+{
+	if (arr == NULL)
+	{
+		return;
+	}
+	for (int i = 0; i < size; ++i)
+	{
+		printf("%d ", arr[i]);
+	}
+	printf("\n");
+}
+
 void do_a(int* arr, int size)
 {
 	int mx_pos = 0, mn_pos = 0;
@@ -176,20 +191,26 @@ void do_a(int* arr, int size)
 
 void do_b(int* arr_a, int size_a, int* arr_b, int size_b, int* arr_c)
 {
-	quicksort(arr_b, 0, size_b-1);
+	int arr_b_copy[B_ELEM_MAX];
+	for (int i = 0; i < size_b; ++i)
+	{
+		arr_b_copy[i] = arr_b[i];
+	}
+	quicksort(arr_b_copy, 0, size_b-1);
+	
 	for (int i = 0; i < size_a; ++i)
 	{
-		int pos = lower_bound(arr_b, 0, size_b-1, arr_a[i]);
+		int pos = lower_bound(arr_b_copy, 0, size_b-1, arr_a[i]);
 		
 		if (pos == size_b)
 		{
 			--pos;
 		}
-		else if (pos > 0 && (arr_a[i] - arr_b[pos - 1]) < (arr_b[pos] - arr_a[i]))
+		else if (pos > 0 && (arr_a[i] - arr_b_copy[pos - 1]) < (arr_b_copy[pos] - arr_a[i]))
 		{
 			--pos;
 		}
-		arr_c[i] = arr_a[i] + arr_b[pos];
+		arr_c[i] = arr_a[i] + arr_b_copy[pos];
 	}
 }
 
@@ -199,12 +220,12 @@ int main(int argc, char** argv)
 	{
 		printf("Usage: command_name <flag>\n");
 		printf("flags:\n");
-		printf("-a <N> <a> <b>  -  Create an array of size N and fill it with pseudorandom numbers in the range [a; b].\n");
-		printf("                   Then find last occurrences of minumum and maximum of this array and swap them.\n");
-		printf("-b              -  Create arrays A and B of pseudorandom size in the range [10; 10000]\n");
-		printf("                   and fill them with pseudorandom numbers in the range [-1000; 1000].\n");
-		printf("                   Then create array C whose i-th element equals i-th element of array A added\n");
-		printf("                   element of array B nearest to i-th element of array A.\n");
+		printf("-a <a> <b>  -  Create an array of size 10 and fill it with pseudorandom numbers in the range [a; b].\n");
+		printf("               Then find last occurrences of minumum and maximum of this array and swap them.\n");
+		printf("-b          -  Create arrays A and B of pseudorandom size in the range [10; 10000]\n");
+		printf("               and fill them with pseudorandom numbers in the range [-1000; 1000].\n");
+		printf("               Then create array C whose i-th element equals i-th element of array A added\n");
+		printf("               element of array B nearest to i-th element of array A.\n");
 		return 0;
 	}
 	
@@ -221,14 +242,12 @@ int main(int argc, char** argv)
 	{
 		case 'a':
 		{
-			if (argc != 5)
+			if (argc != 4)
 			{
 				printf("Invalid input\n");
 				return 1;
 			}
-			if(validate_string_integer(argv[2]) != OK
-					|| validate_string_integer(argv[3]) != OK
-					|| validate_string_integer(argv[4]) != OK)
+			if (validate_string_integer(argv[2]) != OK || validate_string_integer(argv[3]) != OK)
 			{
 				printf("Invalid integer\n");
 				return 2;
@@ -251,61 +270,30 @@ int main(int argc, char** argv)
 	{
 		case 'a':
 		{
-			int size = atoi(argv[2]);
-			int mn_border = atoi(argv[3]);
-			int mx_border = atoi(argv[4]);
+			int mn_border = atoi(argv[2]);
+			int mx_border = atoi(argv[3]);
 			
-			int* arr = (int*) malloc(sizeof(int) * size);
-			if (arr == NULL)
-			{
-				printf("Memory lack error\n");
-				return 3;
-			}
-			
-			fill_rand(arr, size, mn_border, mx_border);
+			int arr[A_SIZE];
+			fill_rand(arr, A_SIZE, mn_border, mx_border);
 			
 			printf("Generated array:\n");
-			for (int i = 0; i < size; ++i)
-			{
-				printf("%d ", arr[i]);
-			}
-			printf("\n\n");
-			
-			do_a(arr, size);
-			
+			print_int_arr(arr, A_SIZE);
+			do_a(arr, A_SIZE);
 			printf("Processed array:\n");
-			for (int i = 0; i < size; ++i)
-			{
-				printf("%d ", arr[i]);
-			}
-			printf("\n");
-			
-			free(arr);
+			print_int_arr(arr, A_SIZE);
 			break;
 		}
 		case 'b':
 		{
-			int size_a = rand_range(B_COUNT_MIN, B_COUNT_MAX);
-			int size_b = rand_range(B_COUNT_MIN, B_COUNT_MAX);
+			int size_a = rand_range(B_SIZE_MIN, B_SIZE_MAX);
+			int size_b = rand_range(B_SIZE_MIN, B_SIZE_MAX);
 			
-			int* arr_a = (int*) malloc(sizeof(int) * size_a);
-			int* arr_b = (int*) malloc(sizeof(int) * size_b);
+			int arr_a[B_SIZE_MAX];
+			int arr_b[B_SIZE_MAX];
 			int* arr_c = (int*) malloc(sizeof(int) * size_a);
 			
-			if(arr_a == NULL || arr_b == NULL || arr_c == NULL)
+			if (arr_c == NULL)
 			{
-				if (arr_a != NULL)
-				{
-					free(arr_a);
-				}
-				if (arr_b != NULL)
-				{
-					free(arr_b);
-				}
-				if (arr_c != NULL)
-				{
-					free(arr_c);
-				}
 				printf("Memory lack error\n");
 				return 3;
 			}
@@ -314,28 +302,15 @@ int main(int argc, char** argv)
 			fill_rand(arr_b, size_b, B_ELEM_MIN, B_ELEM_MAX);
 			
 			printf("Array A:\n");
-			for (int i = 0; i < size_a; ++i)
-			{
-				printf("%d ", arr_a[i]);
-			}
-			printf("\nArray B:\n");
-			for (int i = 0; i < size_b; ++i)
-			{
-				printf("%d ", arr_b[i]);
-			}
-			printf("\n");
+			print_int_arr(arr_a, size_a);
+			printf("Array B:\n");
+			print_int_arr(arr_b, size_b);
 			
 			do_b(arr_a, size_a, arr_b, size_b, arr_c);
 			
 			printf("Array C:\n");
-			for (int i = 0; i < size_a; ++i)
-			{
-				printf("%d ", arr_c[i]);
-			}
-			printf("\n");
+			print_int_arr(arr_c, size_a);
 			
-			free(arr_a);
-			free(arr_b);
 			free(arr_c);
 			break;
 		}

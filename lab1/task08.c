@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <limits.h>
 #include <ctype.h>
 #include <string.h>
 
@@ -18,11 +19,11 @@ int is_separator(char ch)
 
 int char_to_int(char ch)
 {
-	if(isdigit(ch))
+	if (isdigit(ch))
 	{
 		return ch - '0';
 	}
-	if(isalpha(ch))
+	if (isalpha(ch))
 	{
 		return ch - 'A' + 10;
 	}
@@ -32,15 +33,31 @@ int char_to_int(char ch)
 status_codes to_decimal(char* number_str, int base, long long* res)
 {
 	*res = 0;
-	for (int i = 0; number_str[i]; ++i)
+	if (number_str[0] != '-')
 	{
-		int add = char_to_int(number_str[i]);
-		if (*res > (LLONG_MAX - add) / base)
+		for (int i = 0; number_str[i]; ++i)
 		{
-			return OVERFLOW;
+			int add = char_to_int(number_str[i]);
+			if (*res > (LLONG_MAX - add) / base)
+			{
+				return OVERFLOW;
+			}
+			*res *= base;
+			*res += add;
 		}
-		*res *= base;
-		*res += add;
+	}
+	else
+	{
+		for (int i = 1; number_str[i]; ++i)
+		{
+			int subtr = char_to_int(number_str[i]);
+			if (*res < (LLONG_MIN + subtr) / base)
+			{
+				return OVERFLOW;
+			}
+			*res *= base;
+			*res -= subtr;
+		}
 	}
 	return OK;
 }
@@ -78,7 +95,12 @@ status_codes parse_numbers(FILE* input, FILE* output)
 				number_str = temp_str;
 			}
 			
-			if (!isdigit(ch) && !isalpha(ch))
+			if (ch == '-' && iter > 0)
+			{
+				return INVALID_INPUT;
+			}
+			
+			if (!isdigit(ch) && !isalpha(ch) && ch != '-')
 			{
 				free(number_str);
 				return INVALID_INPUT;
@@ -98,6 +120,11 @@ status_codes parse_numbers(FILE* input, FILE* output)
 				++iter;
 			}
 			ch = getc(input);
+		}
+		
+		if (number_str[0] == '-' && !number_str[1])
+		{
+			return INVALID_INPUT;
 		}
 		
 		if (iter == 0)
@@ -150,7 +177,8 @@ int main(int argc, char** argv)
 		return 0;
 	}
 	
-	if(argc != 3) {
+	if (argc != 3)
+	{
 		printf("Invalid input\n");
 		return 1;
 	}
