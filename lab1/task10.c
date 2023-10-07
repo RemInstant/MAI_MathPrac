@@ -183,17 +183,11 @@ status_codes to_decimal(char* number_str, int base, long long* res)
 	return OK;
 }
 
-status_codes to_base_n(long long integer, int base, char** res)
+status_codes to_base_n(long long integer, int base, char res[])
 {
 	if (res == NULL)
 	{
 		return INVALID_INPUT;
-	}
-	
-	*res = (char*) malloc(sizeof(char) * 66);
-	if (res == NULL)
-	{
-		return BAD_ALLOC;
 	}
 	
 	int iter = 0;
@@ -201,7 +195,7 @@ status_codes to_base_n(long long integer, int base, char** res)
 	
 	if (integer < 0)
 	{
-		(*res)[iter++] = '-';
+		res[iter++] = '-';
 		while (divider <= LLONG_MAX / base && -divider * base > integer)
 		{
 			divider *= base;
@@ -217,10 +211,10 @@ status_codes to_base_n(long long integer, int base, char** res)
 	
 	while (divider > 0)
 	{
-		(*res)[iter++] = int_to_char(abs(integer / divider % base););
+		res[iter++] = int_to_char(abs(integer / divider % base));
 		divider /= base;
 	}
-	(*res)[iter] = '\0';
+	res[iter] = '\0';
 	
 	return OK;
 }
@@ -291,6 +285,11 @@ status_codes handle_input(int base, char** str_res, long long* int_res)
 		}
 	}
 	
+	if (str != max_str)
+	{
+		free(str);
+	}
+	
 	*str_res = max_str;
 	*int_res = max_integer;
 	return OK;
@@ -302,7 +301,8 @@ int main(int argc, char** argv)
 	{
 		printf("Usage: command_name <base>\n");
 		printf("Program takes as input numbers of defined numeral system (2 <= base <= 36),\n");
-		printf("find maximum absolute value among them and print it in bases 9, 18, 27, 26\n");
+		printf("find maximum absolute value among them and print it in bases 9, 18, 27, 36.\n");
+		printf("(Enter \"stop\" to end input phase)\n");
 		return 0;
 	}
 	
@@ -353,38 +353,15 @@ int main(int argc, char** argv)
 		return 0;
 	}
 	
-	char* str_int9 = NULL;
-	char* str_int18 = NULL;
-	char* str_int27 = NULL;
-	char* str_int36 = NULL;
+	char str_int9[66];
+	char str_int18[66];
+	char str_int27[66];
+	char str_int36[66];
 	
-	to_base_n(max_integer, 9, &str_int9);
-	to_base_n(max_integer, 18, &str_int18);
-	to_base_n(max_integer, 27, &str_int27);
-	to_base_n(max_integer, 36, &str_int36);
-	
-	if (str_int9 == NULL || str_int18 == NULL || str_int27 == NULL || str_int36 == NULL)
-	{
-		if (str_int9 != NULL)
-		{
-			free(str_int9);
-		}
-		if (str_int18 != NULL)
-		{
-			free(str_int9);
-		}
-		if (str_int27 != NULL)
-		{
-			free(str_int9);
-		}
-		if (str_int36 != NULL)
-		{
-			free(str_int9);
-		}
-		free(max_str);
-		printf("Memory lack error\n");
-		return 3;
-	}
+	to_base_n(max_integer, 9, str_int9);
+	to_base_n(max_integer, 18, str_int18);
+	to_base_n(max_integer, 27, str_int27);
+	to_base_n(max_integer, 36, str_int36);
 	
 	printf("Maximum absolute value (base-%d): %s\n", base, max_str);
 	printf("in base-9: %s\n", str_int9);
