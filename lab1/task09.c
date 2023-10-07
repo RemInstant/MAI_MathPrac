@@ -189,9 +189,14 @@ void do_a(int* arr, int size)
 	arr[mn_pos] = temp;
 }
 
-void do_b(int* arr_a, int size_a, int* arr_b, int size_b, int* arr_c)
+status_codes do_b(int* arr_a, int size_a, int* arr_b, int size_b, int* arr_c)
 {
-	int arr_b_copy[B_ELEM_MAX];
+	int* arr_b_copy = (int*) malloc(sizeof(int) * size_b);
+	if (arr_b_copy == NULL)
+	{
+		return BAD_ALLOC;
+	}
+	
 	for (int i = 0; i < size_b; ++i)
 	{
 		arr_b_copy[i] = arr_b[i];
@@ -212,6 +217,8 @@ void do_b(int* arr_a, int size_a, int* arr_b, int size_b, int* arr_c)
 		}
 		arr_c[i] = arr_a[i] + arr_b_copy[pos];
 	}
+	free(arr_b_copy);
+	return OK;
 }
 
 int main(int argc, char** argv)
@@ -288,12 +295,24 @@ int main(int argc, char** argv)
 			int size_a = rand_range(B_SIZE_MIN, B_SIZE_MAX);
 			int size_b = rand_range(B_SIZE_MIN, B_SIZE_MAX);
 			
-			int arr_a[B_SIZE_MAX];
-			int arr_b[B_SIZE_MAX];
+			int* arr_a = (int*) malloc(sizeof(int) * size_a);
+			int* arr_b = (int*) malloc(sizeof(int) * size_b);
 			int* arr_c = (int*) malloc(sizeof(int) * size_a);
 			
-			if (arr_c == NULL)
+			if(arr_a == NULL || arr_b == NULL || arr_c == NULL)
 			{
+				if (arr_a != NULL)
+				{
+					free(arr_a);
+				}
+				if (arr_b != NULL)
+				{
+					free(arr_b);
+				}
+				if (arr_c != NULL)
+				{
+					free(arr_c);
+				}
 				printf("Memory lack error\n");
 				return 3;
 			}
@@ -306,11 +325,20 @@ int main(int argc, char** argv)
 			printf("Array B:\n");
 			print_int_arr(arr_b, size_b);
 			
-			do_b(arr_a, size_a, arr_b, size_b, arr_c);
+			if (do_b(arr_a, size_a, arr_b, size_b, arr_c) != OK)
+			{
+				printf("Memory lack error\n");
+				free(arr_a);
+				free(arr_b);
+				free(arr_c);
+				return 3;	
+			}
 			
 			printf("Array C:\n");
 			print_int_arr(arr_c, size_a);
 			
+			free(arr_a);
+			free(arr_b);
 			free(arr_c);
 			break;
 		}
