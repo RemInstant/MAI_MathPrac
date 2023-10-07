@@ -211,7 +211,7 @@ status_codes to_base_n(long long integer, int base, char res[])
 	
 	while (divider > 0)
 	{
-		res[iter++] = int_to_char(abs(integer / divider % base));
+		res[iter++] = int_to_char(llabs(integer / divider % base));
 		divider /= base;
 	}
 	res[iter] = '\0';
@@ -261,7 +261,7 @@ status_codes handle_input(int base, char** str_res, long long* int_res)
 			}
 			else
 			{
-				if (abs(integer) > abs(max_integer))
+				if (llabs(integer) > llabs(max_integer))
 				{
 					free(max_str);
 					max_str = str;
