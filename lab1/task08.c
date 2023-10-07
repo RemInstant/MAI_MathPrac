@@ -62,6 +62,42 @@ status_codes to_decimal(char* number_str, int base, long long* res)
 	return OK;
 }
 
+void remove_leading_zero(char* str)
+{
+	if (str == NULL)
+	{
+		return;
+	}
+	
+	int pos = 0, is_zero = 1;
+	for (int i = 0; str[i] && is_zero; ++i)
+	{
+		if (str[i] != '0' && str[i] != '-')
+		{
+			is_zero = 0;
+		}
+		pos = i;
+	}
+	
+	if (is_zero)
+	{
+		str[0] = '0';
+		str[1] = '\0';
+		return;
+	}
+	
+	int shift = str[0] == '-' ? 1 : 0;
+	if (pos <= shift)
+	{
+		return;
+	}
+	for (int i = 0; str[i+pos]; ++i)
+	{
+		str[i + shift] = str[i+pos];
+		str[i + shift + 1] = '\0';
+	}
+}
+
 status_codes parse_numbers(FILE* input, FILE* output)
 {
 	char ch = ' ';
@@ -97,6 +133,7 @@ status_codes parse_numbers(FILE* input, FILE* output)
 			
 			if (ch == '-' && iter > 0)
 			{
+				free(number_str);
 				return INVALID_INPUT;
 			}
 			
@@ -114,11 +151,8 @@ status_codes parse_numbers(FILE* input, FILE* output)
 			{
 				max_ch = ch;
 			}
-			if (size != 2 || ch != '0')
-			{
-				number_str[iter] = ch;
-				++iter;
-			}
+			
+			number_str[iter++] = ch;
 			ch = getc(input);
 		}
 		
@@ -127,12 +161,8 @@ status_codes parse_numbers(FILE* input, FILE* output)
 			return INVALID_INPUT;
 		}
 		
-		if (iter == 0)
-		{
-			number_str[0] = '0';
-			++iter;
-		}
 		number_str[iter] = '\0';
+		remove_leading_zero(number_str);
 		
 		int base = char_to_int(max_ch) + 1;
 		if (base < 2)

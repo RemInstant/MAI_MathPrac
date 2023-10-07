@@ -80,11 +80,7 @@ status_codes read_word(char** word, int* size)
 			*word = temp_word;
 		}
 		
-		if (*size != 2 || ch != '0')
-		{
-			(*word)[iter] = ch;
-			++iter;
-		}
+		(*word)[iter++] = ch;
 		
 		scanf("%c", &ch);
 	}
@@ -92,6 +88,42 @@ status_codes read_word(char** word, int* size)
 	(*word)[iter] = '\0';
 	
 	return OK;
+}
+
+void remove_leading_zero(char* str)
+{
+	if (str == NULL)
+	{
+		return;
+	}
+	
+	int pos = 0, is_zero = 1;
+	for (int i = 0; str[i] && is_zero; ++i)
+	{
+		if (str[i] != '0' && str[i] != '-')
+		{
+			is_zero = 0;
+		}
+		pos = i;
+	}
+	
+	if (is_zero)
+	{
+		str[0] = '0';
+		str[1] = '\0';
+		return;
+	}
+	
+	int shift = str[0] == '-' ? 1 : 0;
+	if (pos <= shift)
+	{
+		return;
+	}
+	for (int i = 0; str[i+pos]; ++i)
+	{
+		str[i + shift] = str[i+pos];
+		str[i + shift + 1] = '\0';
+	}
 }
 
 status_codes validate_based_str_integer(char* str_int, int base)
@@ -243,6 +275,8 @@ status_codes handle_input(int base, char** str_res, long long* int_res)
 				return validate_code;
 			}
 			
+			remove_leading_zero(str);
+			
 			status_codes dec_code = to_decimal(str, base, &integer);
 			if (dec_code != OK)
 			{
@@ -284,12 +318,8 @@ status_codes handle_input(int base, char** str_res, long long* int_res)
 			return read_code;
 		}
 	}
-	
-	if (str != max_str)
-	{
-		free(str);
-	}
-	
+
+	free(str);
 	*str_res = max_str;
 	*int_res = max_integer;
 	return OK;
