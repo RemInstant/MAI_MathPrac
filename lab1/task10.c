@@ -134,7 +134,7 @@ status_codes validate_based_str_integer(char* str_int, int base)
 	{
 		for (int i = 0; str_int[i]; ++i)
 		{
-			if (!isdigit(str_int[i]) && !isalpha(str_int[i]))
+			if ((!isdigit(str_int[i]) && !isalpha(str_int[i])) || islower(str_int[i]))
 			{
 				return INVALID_INPUT;
 			}
@@ -161,7 +161,7 @@ status_codes validate_based_str_integer(char* str_int, int base)
 		}
 		for (int i = 1; str_int[i]; ++i)
 		{
-			if (!isdigit(str_int[i]) && !isalpha(str_int[i]))
+			if ((!isdigit(str_int[i]) && !isalpha(str_int[i])) || islower(str_int[i]))
 			{
 				return INVALID_INPUT;
 			}

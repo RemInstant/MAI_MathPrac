@@ -69,7 +69,8 @@ void remove_leading_zero(char* str)
 		return;
 	}
 	
-	int pos = 0, is_zero = 1;
+	int pos = 0;	// position of first non-zero digit
+	int is_zero = 1;
 	for (int i = 0; str[i] && is_zero; ++i)
 	{
 		if (str[i] != '0' && str[i] != '-')
