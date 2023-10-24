@@ -22,7 +22,7 @@ typedef enum
 
 void print_error(status_codes code)
 {
-	switch(code)
+	switch (code)
 	{
 		case OK:
 			return;
