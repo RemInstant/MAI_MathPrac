@@ -65,7 +65,7 @@ double func3(double x)
 	return pow(9, tan(x)) - pow(12, tan(x)) + 3;
 }
 
-double sign(double x)
+int sign(double x)
 {
 	return x == 0 ? 0 : (x > 0 ? 1 : -1);
 }
