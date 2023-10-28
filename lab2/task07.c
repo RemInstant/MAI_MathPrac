@@ -109,7 +109,7 @@ status_codes solve_eq_dichotomy(double left, double right, double eps, double (*
 	} while(fabs(val) >= eps);
 	
 	*ans = mid;
-	return OVERFLOW;
+	return OK;
 }
 
 int main(int argc, char** argv)
@@ -123,7 +123,7 @@ int main(int argc, char** argv)
 	solve_eq_dichotomy(1, 5555, 1e-3, func1, &res);
 	printf("[1; 5555], eps = 1e-3 -> %.10lf\n", res);
 	
-	printf("\nEquation: exp(x) - x = 0\n");
+	printf("\nEquation: exp(x) + x = 0\n");
 	solve_eq_dichotomy(-1, 1, 1e-2, func2, &res);
 	printf("[-1; 1], eps = 1e-2 -> %.10lf\n", res);
 	solve_eq_dichotomy(-10, 10, 1e-12, func2, &res);
