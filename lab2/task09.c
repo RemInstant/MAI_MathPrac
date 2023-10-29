@@ -169,6 +169,10 @@ status_codes poly_check_finite_repr(int base, int** have_finite_repr, ull cnt, .
 	va_start(arg, cnt);
 	
 	*have_finite_repr = (int*) malloc(sizeof(int) * cnt);
+	if(*have_finite_repr == NULL)
+	{
+		return BAD_ALLOC;
+	}
 	
 	for (ull i = 0; i < cnt; ++i)
 	{
@@ -207,4 +211,5 @@ int main(int argc, char** argv)
 			printf("fraction N%d hasn't a finite representation in base %d\n", i+1, base);
 		}
 	}
+	free(have_finite_repr);
 }

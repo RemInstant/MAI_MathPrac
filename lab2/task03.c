@@ -58,7 +58,7 @@ typedef struct
 
 status_codes handle_file(char* path, char* pattern, ull* occ_cnt, occurrence** occ)
 {
-	if (path == NULL || pattern == NULL || occ == NULL)
+	if (path == NULL || pattern == NULL || occ_cnt == NULL || occ == NULL)
 	{
 		return NULL_POINTER_ERROR;
 	}
@@ -79,6 +79,11 @@ status_codes handle_file(char* path, char* pattern, ull* occ_cnt, occurrence** o
 	}
 	
 	ull buf_size = strlen(pattern);
+	if (buf_size == 0)
+	{
+		return INVALID_INPUT;
+	}
+	
 	char* buf = (char*) malloc(sizeof(char) * (buf_size + 1));
 	if (buf == NULL)
 	{
@@ -112,7 +117,7 @@ status_codes handle_file(char* path, char* pattern, ull* occ_cnt, occurrence** o
 			if (*occ_cnt == occ_size)
 			{
 				occ_size *= 2;
-				occurrence* tmp = (occurrence*) realloc(*occ, sizeof(occurrence)* occ_size);
+				occurrence* tmp = (occurrence*) realloc(*occ, sizeof(occurrence) * occ_size);
 				if (tmp == NULL)
 				{
 					fclose(input);

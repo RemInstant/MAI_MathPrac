@@ -168,6 +168,10 @@ status_codes poly_sum(int base, char** res, ull cnt, ...)
 	va_start(arg, cnt);
 	
 	*res = (char*) malloc(sizeof(char) * 2);
+	if(*res == NULL)
+	{
+		return BAD_ALLOC;
+	}
 	sprintf(*res, "0");
 	
 	for (ull i = 0; i < cnt; ++i)
@@ -191,8 +195,11 @@ int main(int argc, char** argv)
 	char* res = NULL;
 	poly_sum(10, &res, 4, "111222", "11333", "1444", "1");
 	printf("%s\n", res);
+	free(res);
 	poly_sum(16, &res, 3, "10A", "553", "462");
 	printf("%s\n", res);
+	free(res);
 	poly_sum(2, &res, 3, "101", "111", "10000");
 	printf("%s\n", res);
+	free(res);
 }
