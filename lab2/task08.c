@@ -122,13 +122,13 @@ status_codes long_sum(int base, char* left, char* right, char** res)
 		return OVERFLOW;
 	}
 	
-	ull res_len = left_len + 1;
-	*res = (char*) malloc(sizeof(char) * (res_len+1));
+	ull res_len = left_len;
+	*res = (char*) malloc(sizeof(char) * (res_len + 2));
 	if (*res == NULL)
 	{
 		return BAD_ALLOC;
 	}
-	(*res)[res_len - 1] = '\0';
+	(*res)[res_len] = '\0';
 	
 	int carry_digit = 0;
 	for (ull i = left_len - 1; i >= left_len - right_len && i != ULLONG_MAX; --i)
@@ -148,11 +148,42 @@ status_codes long_sum(int base, char* left, char* right, char** res)
 	}
 	if (carry_digit != 0)
 	{
+		++res_len;
 		for (ull i = res_len; i > 0; --i)
 		{
 			(*res)[i] = (*res)[i-1];
 		}
 		(*res)[0] = itoc(carry_digit);
+	}
+	
+	ull zero_cnt = 0;
+	while ((*res)[zero_cnt] == '0')
+	{
+		++zero_cnt;
+	}
+	if (zero_cnt != 0)
+	{	
+		if (zero_cnt == res_len)
+		{
+			(*res)[0] = '0';
+			(*res)[1] = '\0';
+			res_len = 2;
+		}
+		else
+		{
+			for (int i = zero_cnt; (*res)[i]; ++i)
+			{
+				(*res)[i - zero_cnt] = (*res)[i];
+			}
+			(*res)[res_len - zero_cnt] = '\0';
+		}
+		char* tmp = (char*) realloc(*res, res_len + 1);
+		if (tmp == NULL)
+		{
+			free(*res);
+			return BAD_ALLOC;
+		}
+		*res = tmp;
 	}
 	return OK;
 }
@@ -193,7 +224,10 @@ status_codes poly_sum(int base, char** res, ull cnt, ...)
 int main(int argc, char** argv)
 {
 	char* res = NULL;
-	poly_sum(10, &res, 4, "111222", "11333", "1444", "1");
+	poly_sum(16, &res, 2, "FF", "1");
+	printf("%s\n", res);
+	free(res);
+	poly_sum(10, &res, 4, "0000111222", "11333", "1444", "00001");
 	printf("%s\n", res);
 	free(res);
 	poly_sum(16, &res, 3, "10A", "553", "462");
