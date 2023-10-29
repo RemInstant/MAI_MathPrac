@@ -291,6 +291,7 @@ status_codes random_cat(ull cnt, char** strings, unsigned seed, char** res)
 			(*res)[k] = shuffled_strings[i][j];
 		}
 	}
+	free(shuffled_strings);
 	(*res)[res_len] = '\0';
 	return OK;
 }
