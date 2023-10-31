@@ -56,9 +56,11 @@ void print_error(status_codes code)
 
 typedef enum
 {
+	// BASE
 	NONE,
 	CHAR,
 	STRING,
+	SET,
 	INT,
 	I_INT,
 	UINT,
@@ -66,7 +68,12 @@ typedef enum
 	HEX_UINT,
 	CHAR_N,
 	FLOAT,
-	PTR
+	PTR,
+	// SPECIFIC
+	ROMAN,
+	ZECKENDORF,
+	BASED_INT_L,
+	BASED_INT_U
 } specifiers;
 
 specifiers get_base_spec_enum(char ch)
@@ -77,6 +84,8 @@ specifiers get_base_spec_enum(char ch)
 			return CHAR;
 		case 's':
 			return STRING;
+		case '[':
+			return SET;
 		case 'd':
 			return INT;
 		case 'i':
@@ -134,9 +143,9 @@ int is_digit_b(char ch, int base)
 
 int is_base_specifier(char ch)
 {
-	char specs[16] = { 'c', 's', 'd', 'i', 'u', 'o', 'x', 'X', 'n', 'e', 'E', 'f', 'F', 'g', 'G', 'p' };
+	char specs[17] = { 'c', 's', '[', 'd', 'i', 'u', 'o', 'x', 'X', 'n', 'e', 'E', 'f', 'F', 'g', 'G', 'p' };
 	
-	for (int i = 0; i < 16; ++i)
+	for (int i = 0; i < 17; ++i)
 	{
 		if (ch == specs[i])
 		{
@@ -156,24 +165,52 @@ int is_spec_combination_valid(char* len_mod, specifiers spec)
 	{
 		case CHAR:
 		case STRING:
-			return !len_mod[0] || !strcmp(len_mod, "l");
+		case SET:
+			return !len_mod[0];
 		case INT:
 		case I_INT:
 		case UINT:
 		case OCT_UINT:
 		case HEX_UINT:
 		case CHAR_N:
-			return !!strcmp(len_mod, "L");
+			return 1;
 		case FLOAT:
-			return !len_mod[0] || !strcmp(len_mod, "l") || !strcmp(len_mod, "L");
+			return !len_mod[0] || !strcmp(len_mod, "l");
 		case PTR:
+			return !len_mod[0];
+		case ROMAN:
+		case ZECKENDORF:
+		case BASED_INT_L:
+		case BASED_INT_U:
 			return !len_mod[0];
 		default:
 			return 0;
 	}
 }
 
-status_codes sreadll(const char* src_ptr, int base, ll field_width, ll* res, const char** res_ptr)
+typedef enum
+{
+	ANY,
+	LOWER,
+	UPPER
+} letter_cases;
+
+int check_letter_case(char ch, letter_cases l_case)
+{
+	switch (l_case)
+	{
+		case ANY:
+			return 1;
+		case LOWER:
+			return islower(ch);
+		case UPPER:
+			return isupper(ch);
+		default:
+			return 0;
+	}
+}
+
+status_codes sread_ll(const char* src_ptr, int base, ll field_width, letter_cases l_case, ll* res, const char** res_ptr)
 {
 	if (src_ptr == NULL || res == NULL || res_ptr == NULL)
 	{
@@ -207,7 +244,8 @@ status_codes sreadll(const char* src_ptr, int base, ll field_width, ll* res, con
 	}
 	base = base == 0 ? auto_base : base;
 	
-	while (is_digit_b(*src_ptr, base) && (field_width == -1 || (src_ptr - start_ptr) < field_width))
+	while (is_digit_b(*src_ptr, base) && (isdigit(*src_ptr) || check_letter_case(*src_ptr, l_case))
+			&& (field_width == -1 || (src_ptr - start_ptr) < field_width))
 	{
 		num *= base;
 		num += ctoi(*src_ptr);
@@ -228,7 +266,7 @@ status_codes sreadll(const char* src_ptr, int base, ll field_width, ll* res, con
 	return OK;
 }
 
-status_codes sreadllf(const char* src_ptr, ll field_width, long double* res, const char** res_ptr)
+status_codes sread_lf(const char* src_ptr, ll field_width, double* res, const char** res_ptr)
 {
 	if (src_ptr == NULL || res == NULL || res_ptr == NULL)
 	{
@@ -236,7 +274,7 @@ status_codes sreadllf(const char* src_ptr, ll field_width, long double* res, con
 	}
 	const char* start_ptr = src_ptr;
 	int neg_flag = 0;
-	long double num = 0;
+	double num = 0;
 	int error_flag = 1;
 	if (*src_ptr == '-')
 	{
@@ -254,8 +292,8 @@ status_codes sreadllf(const char* src_ptr, ll field_width, long double* res, con
 	if (*src_ptr == '.')
 	{
 		++src_ptr;
-		long double numer = 0;
-		long double denom = 1;
+		double numer = 0;
+		double denom = 1;
 		while (isdigit(*src_ptr) && (field_width == -1 || (src_ptr - start_ptr) < field_width))
 		{
 			numer *= 10;
@@ -271,7 +309,7 @@ status_codes sreadllf(const char* src_ptr, ll field_width, long double* res, con
 		++src_ptr;
 		ll power = 0;
 		ll new_width = field_width == -1 ? -1 : field_width - (src_ptr - start_ptr);
-		if (sreadll(src_ptr, 10, new_width, &power, &src_ptr) == INVALID_INPUT)
+		if (sread_ll(src_ptr, 10, new_width, ANY, &power, &src_ptr) == INVALID_INPUT)
 		{
 			*res_ptr = src_ptr;
 			return INVALID_INPUT;
@@ -320,7 +358,7 @@ int rotoi(char ch)
 	}
 }
 
-status_codes sreadro(const char* src_ptr, ll field_width, int* res, const char** res_ptr)
+status_codes sread_ro(const char* src_ptr, ll field_width, int* res, const char** res_ptr)
 {
 	if (src_ptr == NULL || res == NULL || res_ptr == NULL)
 	{
@@ -328,58 +366,71 @@ status_codes sreadro(const char* src_ptr, ll field_width, int* res, const char**
 	}
 	const char* start_ptr = src_ptr;
 	ll num = 0;
-	int error_flag = 1;
-	int run_flag = 1;
-	
 	char prev = ' ';
-	char row_cnt = 1;
-	int decr = 0;
 	
-	while (run_flag && is_digit_ro(*src_ptr) && (field_width == -1 || (src_ptr - start_ptr) < field_width))
+	if(is_digit_ro(*src_ptr))
 	{
-		row_cnt = (*src_ptr == prev) ? (row_cnt + 1) : 1;
-		
-		if (row_cnt > 3)
-		{
-			run_flag = 0;
-		}
-		
-		if (prev != ' ')
-		{
-			if (rotoi(prev) < rotoi(*src_ptr))
-			{
-				if (decr || row_cnt > 1)
-				{
-					run_flag = 0;
-				}
-				else
-				{
-					decr = rotoi(prev);
-				}
-			}
-			else
-			{
-				if (decr && (rotoi(prev) == 2 * rotoi(*src_ptr)))
-				{
-					run_flag = 0;
-				}
-				else
-				{
-					num += rotoi(prev) - decr;
-					decr = 0;
-				}
-			}
-		}
-		
 		prev = *src_ptr;
-		if (run_flag)
-		{
-			++src_ptr;
-			error_flag = 0;
-		}
+		++src_ptr;
 	}
-	num += rotoi(prev) - decr;
+	else
+	{
+		return INVALID_INPUT;
+	}
 	
+	while(is_digit_ro(*src_ptr) && (field_width == -1 || (src_ptr - start_ptr) < field_width))
+	{
+		if (rotoi(prev) < rotoi(*src_ptr))
+		{
+			num -= rotoi(prev);
+		}
+		else
+		{
+			num += rotoi(prev);
+		}
+		prev = *src_ptr;
+		++src_ptr;
+	}
+	num += rotoi(prev);
+	
+	*res = num;
+	*res_ptr = src_ptr;
+	return OK;
+}
+
+status_codes sread_zr(const char* src_ptr, ll field_width, unsigned int* res, const char** res_ptr)
+{
+	if (src_ptr == NULL || res == NULL || res_ptr == NULL)
+	{
+		return NULL_POINTER_ERROR;
+	}
+	const char* start_ptr = src_ptr;
+	ll prev_fib = 1;
+	ll cur_fib = 1;
+	ll num = 0;
+	int prev_coef = 0;
+	int coef = 0;
+	int error_flag = 1;
+	
+	while (isdigit(*src_ptr) && (coef = ctoi(*src_ptr)) < 2
+			&& (field_width == -1 || (src_ptr - start_ptr) < field_width))
+	{
+		if (coef == 1)
+		{
+			if (prev_coef == 1)
+			{
+				*res = num;
+				*res_ptr = src_ptr;
+				return OK;
+			}
+			num += cur_fib;
+		}
+		cur_fib += prev_fib;
+		prev_fib = cur_fib - prev_fib;
+		prev_coef = coef;
+		error_flag = 0;
+		++src_ptr;
+	}
 	if (error_flag)
 	{
 		*res_ptr = src_ptr;
@@ -418,316 +469,472 @@ int oversscanf(const char* src, const char* format, ...)
 			++frm_ptr;
 			++src_ptr;
 		}
-		// HANDLE CONVERSION SPECIFICATION
 		else
 		{
-			// PART 1: GET AND VALIDATE CONV SPEC
-			int suppress = 0;
-			ll field_width = -1;
-			char* length_modifier = (char*) calloc(3, sizeof(char));
-			specifiers spec = NONE;
-			
 			++frm_ptr;
-			// HANDLE ASSIGNMENT-SUPPRESSING CHARACTER
-			if (*frm_ptr == '*')
+			if (*frm_ptr == '%')
 			{
-				suppress = 1;
-				++frm_ptr;
-			}
-			// HANDLE MAXIMUM FIELD WIDTH
-			if (isdigit(*frm_ptr))
-			{
-				field_width = 0;
-				while (isdigit(*frm_ptr))
+				if (*frm_ptr != *src_ptr)
 				{
-					field_width *= 10;
-					field_width += *frm_ptr - '0';
+					return read_cnt;
+				}
+				++frm_ptr;
+				++src_ptr;
+			}
+			// HANDLE CONVERSION SPECIFICATION
+			else
+			{
+				// PART 1: GET AND VALIDATE CONV SPEC
+				int suppress = 0;
+				ll field_width = -1;
+				char* length_modifier = (char*) calloc(3, sizeof(char));
+				specifiers spec = NONE;
+				
+				int set_inv = 0;
+				char set_elems[CHAR_MAX];
+				for (int i = 0; i < CHAR_MAX; ++i)
+				{
+					set_elems[i] = 0;
+				}
+				
+				// HANDLE ASSIGNMENT-SUPPRESSING CHARACTER
+				if (*frm_ptr == '*')
+				{
+					suppress = 1;
 					++frm_ptr;
 				}
-			}
-			// HANDLE LENGTH MODIFIER
-			if (*frm_ptr == 'h' || *frm_ptr == 'l')
-			{
-				length_modifier[0] = *frm_ptr;
-				++frm_ptr;
-			}
-			if (length_modifier[0] == *frm_ptr && (*frm_ptr == 'h' || *frm_ptr == 'l'))
-			{
-				length_modifier[1] = *frm_ptr;
-				++frm_ptr;
-			}
-			// HANDLE CONVERSION FORMAT SPECIFIER
-			if (is_base_specifier(*frm_ptr))
-			{
-				spec = get_base_spec_enum(*frm_ptr);
-				++frm_ptr;
-			}
-			// HANDLE EXTRA CONVERSION FORMAT SPECIFIER
-			if (0)
-			{
-				// TODO
-			}
-			
-			if (spec == NONE || !is_spec_combination_valid(length_modifier, spec) || field_width == 0)
-			{
-				free(length_modifier);
-				va_end(arg);
-				return read_cnt;
-			}
-			
-			// PART 2: WRITE DATA
-			void* write_ptr = NULL;
-			if (!suppress)
-			{
-				write_ptr = va_arg(arg, void*);
-				if (write_ptr == NULL)
+				// HANDLE MAXIMUM FIELD WIDTH
+				if (isdigit(*frm_ptr))
+				{
+					field_width = 0;
+					while (isdigit(*frm_ptr))
+					{
+						field_width *= 10;
+						field_width += *frm_ptr - '0';
+						++frm_ptr;
+					}
+				}
+				// HANDLE LENGTH MODIFIER
+				if (*frm_ptr == 'h' || *frm_ptr == 'l')
+				{
+					length_modifier[0] = *frm_ptr;
+					++frm_ptr;
+				}
+				if (length_modifier[0] == *frm_ptr && (*frm_ptr == 'h' || *frm_ptr == 'l'))
+				{
+					length_modifier[1] = *frm_ptr;
+					++frm_ptr;
+				}
+				// HANDLE CONVERSION FORMAT SPECIFIER
+				if (is_base_specifier(*frm_ptr))
+				{
+					spec = get_base_spec_enum(*frm_ptr);
+					++frm_ptr;
+				}
+				// HANDLE EXTRA CONVERSION FORMAT SPECIFIER
+				else if(*frm_ptr == 'R' || *frm_ptr == 'Z' || *frm_ptr == 'C')
+				{
+					char ch = *frm_ptr;
+					++frm_ptr;
+					if (ch == 'R' && *frm_ptr == 'o')
+					{
+						spec = ROMAN;
+						++frm_ptr;
+					}
+					else if (ch == 'Z' && *frm_ptr == 'r')
+					{
+						spec = ZECKENDORF;
+						++frm_ptr;
+					}
+					else if (ch == 'C' && (*frm_ptr == 'v' || *frm_ptr == 'V'))
+					{
+						spec = *frm_ptr == 'v' ? BASED_INT_L : BASED_INT_U;
+						++frm_ptr;
+					}
+				}
+				
+				if (spec == SET)
+				{
+					int set_settings = 1;
+					int prev_char = ' ';
+					int interval_flag = 0;
+					if (*frm_ptr == '^')
+					{
+						set_inv = 1;
+						++frm_ptr;
+					}
+					while (set_settings || *frm_ptr != ']')
+					{
+						if (*frm_ptr == '\0')
+						{
+							free(length_modifier);
+							va_end(arg);
+							return read_cnt;
+						}
+						else if (set_settings && *frm_ptr == '-')
+						{
+							set_elems[(int) *frm_ptr] = 1;
+						}
+						else if (set_settings && *frm_ptr == ']')
+						{
+							set_elems[(int) *frm_ptr] = 1;
+						}
+						else if (*frm_ptr == '-')
+						{
+							interval_flag = 1;
+						}
+						else
+						{
+							if (interval_flag)
+							{
+								while(prev_char != *frm_ptr)
+								{
+									set_elems[(int) prev_char] = 1;
+									++prev_char;
+								}
+							}
+							set_elems[(int) *frm_ptr] = 1;
+							set_settings = 0;
+						}
+						prev_char = *frm_ptr == '-' ? prev_char : *frm_ptr;
+						++frm_ptr;
+					}
+					++frm_ptr;
+				}
+				
+				if (spec == NONE || !is_spec_combination_valid(length_modifier, spec) || field_width == 0)
 				{
 					free(length_modifier);
 					va_end(arg);
 					return read_cnt;
 				}
-			}
-			int error_flag = 0;
-			while (spec != CHAR && spec != CHAR_N && is_separator(*src_ptr))
-			{
-				++src_ptr;
-			}
-			switch(spec)
-			{
-				case CHAR:
+				
+				// PART 2: WRITE DATA
+				void* write_ptr = NULL;
+				if (!suppress)
 				{
-					if (!suppress)
+					write_ptr = va_arg(arg, void*);
+					if (write_ptr == NULL)
 					{
-						char* ch_ptr = (char*) write_ptr;
-						*ch_ptr = *src_ptr;
+						free(length_modifier);
+						va_end(arg);
+						return read_cnt;
 					}
-					++src_ptr;
-					break;
 				}
-				case STRING:
+				int error_flag = 0;
+				while (spec != CHAR && spec != CHAR_N && spec != SET && is_separator(*src_ptr))
 				{
-					char* str_ptr = suppress ? NULL : (char*) write_ptr;
-					ull i = 0;
-					error_flag = 1;
-					while (*src_ptr && !is_separator(*src_ptr) && (field_width == -1 || i < field_width))
+					++src_ptr;
+				}
+				switch(spec)
+				{
+					case CHAR:
 					{
 						if (!suppress)
 						{
-							str_ptr[i] = *src_ptr;
+							char* ch_ptr = (char*) write_ptr;
+							*ch_ptr = *src_ptr;
 						}
-						error_flag = 0;
 						++src_ptr;
-						++i;
+						break;
 					}
-					if (!suppress)
+					case STRING:
 					{
-						str_ptr[i] = '\0';
-					}
-					break;
-				}
-				case INT:
-				{
-					int base = 0;
-					ll num = 0;
-					if (sreadll(src_ptr, base, field_width, &num, &src_ptr) == INVALID_INPUT)
-					{
+						char* str_ptr = (char*) write_ptr;
+						ull i = 0;
 						error_flag = 1;
+						while (*src_ptr && !is_separator(*src_ptr) && (field_width == -1 || i < field_width))
+						{
+							if (!suppress)
+							{
+								str_ptr[i] = *src_ptr;
+							}
+							error_flag = 0;
+							++src_ptr;
+							++i;
+						}
+						if (!suppress)
+						{
+							str_ptr[i] = '\0';
+						}
+						break;
 					}
-					if (!suppress)
+					case SET:
 					{
-						if (!strcmp(length_modifier, "hh"))
-						{
-							char* ch_ptr = (char*) write_ptr;
-							*ch_ptr = UCHAR_MAX & num;
-						}
-						else if (!strcmp(length_modifier, "h"))
-						{
-							short* sh_ptr = (short*) write_ptr;
-							*sh_ptr = USHRT_MAX & num;
-						}
-						else if (!strcmp(length_modifier, ""))
-						{
-							int* int_ptr = (int*) write_ptr;
-							*int_ptr = UINT_MAX & num;
-						}
-						else if (!strcmp(length_modifier, "l"))
-						{
-							long* l_ptr = (long*) write_ptr;
-							*l_ptr = ULONG_MAX & num;
-						}
-						else if (!strcmp(length_modifier, "ll"))
-						{
-							long long* ll_ptr = (long long*) write_ptr;
-							*ll_ptr = ULLONG_MAX & num;
-						}
-					}
-					break;
-				}
-				case I_INT:
-				{
-					int base = 0;
-					ll num = 0;
-					if (sreadll(src_ptr, base, field_width, &num, &src_ptr) == INVALID_INPUT)
-					{
+						char* str_ptr = (char*) write_ptr;
+						ull i = 0;
 						error_flag = 1;
+						while ((set_elems[(int) *src_ptr] ^ set_inv) && (field_width == -1 || i < field_width))
+						{
+							if (!suppress)
+							{
+								str_ptr[i] = *src_ptr;
+							}
+							error_flag = 0;
+							++src_ptr;
+							++i;
+						}
+						if (!suppress)
+						{
+							str_ptr[i] = '\0';
+						}
+						break;
 					}
-					if (!suppress)
+					case INT:
 					{
-						if (!strcmp(length_modifier, "hh"))
+						int base = 0;
+						ll num = 0;
+						if (sread_ll(src_ptr, base, field_width, ANY, &num, &src_ptr) == INVALID_INPUT)
 						{
-							char* ch_ptr = (char*) write_ptr;
-							*ch_ptr = UCHAR_MAX & num;
+							error_flag = 1;
 						}
-						else if (!strcmp(length_modifier, "h"))
+						if (!suppress)
 						{
-							short* sh_ptr = (short*) write_ptr;
-							*sh_ptr = USHRT_MAX & num;
+							if (!strcmp(length_modifier, "hh"))
+							{
+								char* ch_ptr = (char*) write_ptr;
+								*ch_ptr = UCHAR_MAX & num;
+							}
+							else if (!strcmp(length_modifier, "h"))
+							{
+								short* sh_ptr = (short*) write_ptr;
+								*sh_ptr = USHRT_MAX & num;
+							}
+							else if (!strcmp(length_modifier, ""))
+							{
+								int* int_ptr = (int*) write_ptr;
+								*int_ptr = UINT_MAX & num;
+							}
+							else if (!strcmp(length_modifier, "l"))
+							{
+								long* l_ptr = (long*) write_ptr;
+								*l_ptr = ULONG_MAX & num;
+							}
+							else if (!strcmp(length_modifier, "ll"))
+							{
+								long long* ll_ptr = (long long*) write_ptr;
+								*ll_ptr = ULLONG_MAX & num;
+							}
 						}
-						else if (!strcmp(length_modifier, ""))
-						{
-							int* int_ptr = (int*) write_ptr;
-							*int_ptr = UINT_MAX & num;
-						}
-						else if (!strcmp(length_modifier, "l"))
-						{
-							long* l_ptr = (long*) write_ptr;
-							*l_ptr = ULONG_MAX & num;
-						}
-						else if (!strcmp(length_modifier, "ll"))
-						{
-							long long* ll_ptr = (long long*) write_ptr;
-							*ll_ptr = ULLONG_MAX & num;
-						}
+						break;
 					}
-					break;
-				}
-				case UINT:
-				case OCT_UINT:
-				case HEX_UINT:
-				{
-					int base = spec == UINT ? 10 : (spec == OCT_UINT ? 8 : 16);
-					ll num = 0;
-					if (sreadll(src_ptr, base, field_width, &num, &src_ptr) == INVALID_INPUT)
+					case I_INT:
 					{
+						int base = 0;
+						ll num = 0;
+						if (sread_ll(src_ptr, base, field_width, ANY, &num, &src_ptr) == INVALID_INPUT)
+						{
+							error_flag = 1;
+						}
+						if (!suppress)
+						{
+							if (!strcmp(length_modifier, "hh"))
+							{
+								char* ch_ptr = (char*) write_ptr;
+								*ch_ptr = UCHAR_MAX & num;
+							}
+							else if (!strcmp(length_modifier, "h"))
+							{
+								short* sh_ptr = (short*) write_ptr;
+								*sh_ptr = USHRT_MAX & num;
+							}
+							else if (!strcmp(length_modifier, ""))
+							{
+								int* int_ptr = (int*) write_ptr;
+								*int_ptr = UINT_MAX & num;
+							}
+							else if (!strcmp(length_modifier, "l"))
+							{
+								long* l_ptr = (long*) write_ptr;
+								*l_ptr = ULONG_MAX & num;
+							}
+							else if (!strcmp(length_modifier, "ll"))
+							{
+								long long* ll_ptr = (long long*) write_ptr;
+								*ll_ptr = ULLONG_MAX & num;
+							}
+						}
+						break;
+					}
+					case UINT:
+					case OCT_UINT:
+					case HEX_UINT:
+					{
+						int base = spec == UINT ? 10 : (spec == OCT_UINT ? 8 : 16);
+						ll num = 0;
+						if (sread_ll(src_ptr, base, field_width, ANY, &num, &src_ptr) == INVALID_INPUT)
+						{
+							error_flag = 1;
+						}
+						if (!suppress)
+						{
+							if (!strcmp(length_modifier, "hh"))
+							{
+								unsigned char* ch_ptr = (unsigned char*) write_ptr;
+								*ch_ptr = UCHAR_MAX & num;
+							}
+							else if (!strcmp(length_modifier, "h"))
+							{
+								unsigned short* sh_ptr = (unsigned short*) write_ptr;
+								*sh_ptr = USHRT_MAX & num;
+							}
+							else if (!strcmp(length_modifier, ""))
+							{
+								unsigned int* int_ptr = (unsigned int*) write_ptr;
+								*int_ptr = UINT_MAX & num;
+							}
+							else if (!strcmp(length_modifier, "l"))
+							{
+								unsigned long* l_ptr = (unsigned long*) write_ptr;
+								*l_ptr = ULONG_MAX & num;
+							}
+							else if (!strcmp(length_modifier, "ll"))
+							{
+								unsigned long long* ll_ptr = (unsigned long long*) write_ptr;
+								*ll_ptr = ULLONG_MAX & num;
+							}
+						}
+						break;
+					}
+					case CHAR_N:
+					{
+						if (!suppress)
+						{
+							if (!strcmp(length_modifier, "hh"))
+							{
+								unsigned char* ch_ptr = (unsigned char*) write_ptr;
+								*ch_ptr = UCHAR_MAX & (src_ptr - src);
+							}
+							else if (!strcmp(length_modifier, "h"))
+							{
+								unsigned short* sh_ptr = (unsigned short*) write_ptr;
+								*sh_ptr = USHRT_MAX & (src_ptr - src);
+							}
+							else if (!strcmp(length_modifier, ""))
+							{
+								unsigned int* int_ptr = (unsigned int*) write_ptr;
+								*int_ptr = UINT_MAX & (src_ptr - src);
+							}
+							else if (!strcmp(length_modifier, "l"))
+							{
+								unsigned long* l_ptr = (unsigned long*) write_ptr;
+								*l_ptr = ULONG_MAX & (src_ptr - src);
+							}
+							else if (!strcmp(length_modifier, "ll"))
+							{
+								unsigned long long* ll_ptr = (unsigned long long*) write_ptr;
+								*ll_ptr = ULLONG_MAX & (src_ptr - src);
+							}
+						}
+						break;
+					}
+					case FLOAT:
+					{
+						double num = 0;
+						if (sread_lf(src_ptr, field_width, &num, &src_ptr) == INVALID_INPUT)
+						{
+							error_flag = 1;
+						}
+						if (!suppress)
+						{
+							if (!strcmp(length_modifier, ""))
+							{
+								float* f_ptr = (float*) write_ptr;
+								*f_ptr = (float) num;
+							}
+							else if (!strcmp(length_modifier, "l"))
+							{
+								double* lf_ptr = (double*) write_ptr;
+								*lf_ptr = (double) num;
+							}
+						}
+						break;
+					}
+					case PTR:
+					{
+						int base = 16;
+						ll num = 0;
+						if (sread_ll(src_ptr, base, field_width, ANY, &num, &src_ptr) == INVALID_INPUT)
+						{
+							error_flag = 1;
+						}
+						if (!suppress)
+						{
+							void** void_ptr = (void**) write_ptr;
+							*void_ptr = (void*) num;
+						}
+						break;
+					}
+					case ROMAN:
+					{
+						int num = 0;
+						if (sread_ro(src_ptr, field_width, &num, &src_ptr) == INVALID_INPUT)
+						{
+							error_flag = 1;
+						}
+						if (!suppress)
+						{
+							int* void_ptr = (int*) write_ptr;
+							*void_ptr = num;
+						}
+						break;
+					}
+					case ZECKENDORF:
+					{
+						unsigned int num = 0;
+						if (sread_zr(src_ptr, field_width, &num, &src_ptr) == INVALID_INPUT)
+						{
+							error_flag = 1;
+						}
+						if (!suppress)
+						{
+							unsigned int* void_ptr = (unsigned int*) write_ptr;
+							*void_ptr = num;
+						}
+						break;
+					}
+					case BASED_INT_L:
+					case BASED_INT_U:
+					{
+						int base = 10;
+						if (!suppress)
+						{
+							base = va_arg(arg, int);
+						}
+						if (base < 2 || base > 36)
+						{
+							base = 10;
+						}
+						
+						letter_cases l_case = spec == BASED_INT_L ? LOWER : UPPER;
+						
+						ll num = 0;
+						if (sread_ll(src_ptr, base, field_width, l_case, &num, &src_ptr) == INVALID_INPUT)
+						{
+							error_flag = 1;
+						}
+						if (!suppress)
+						{
+							int* void_ptr = (int*) write_ptr;
+							*void_ptr = num;
+						}
+						break;
+					}
+					default:
 						error_flag = 1;
-					}
-					if (!suppress)
-					{
-						if (!strcmp(length_modifier, "hh"))
-						{
-							unsigned char* ch_ptr = (unsigned char*) write_ptr;
-							*ch_ptr = UCHAR_MAX & num;
-						}
-						else if (!strcmp(length_modifier, "h"))
-						{
-							unsigned short* sh_ptr = (unsigned short*) write_ptr;
-							*sh_ptr = USHRT_MAX & num;
-						}
-						else if (!strcmp(length_modifier, ""))
-						{
-							unsigned int* int_ptr = (unsigned int*) write_ptr;
-							*int_ptr = UINT_MAX & num;
-						}
-						else if (!strcmp(length_modifier, "l"))
-						{
-							unsigned long* l_ptr = (unsigned long*) write_ptr;
-							*l_ptr = ULONG_MAX & num;
-						}
-						else if (!strcmp(length_modifier, "ll"))
-						{
-							unsigned long long* ll_ptr = (unsigned long long*) write_ptr;
-							*ll_ptr = ULLONG_MAX & num;
-						}
-					}
-					break;
+						break;
 				}
-				case CHAR_N:
+				
+				free(length_modifier);
+				if (error_flag)
 				{
-					if (!suppress)
-					{
-						if (!strcmp(length_modifier, "hh"))
-						{
-							unsigned char* ch_ptr = (unsigned char*) write_ptr;
-							*ch_ptr = UCHAR_MAX & (src_ptr - src);
-						}
-						else if (!strcmp(length_modifier, "h"))
-						{
-							unsigned short* sh_ptr = (unsigned short*) write_ptr;
-							*sh_ptr = USHRT_MAX & (src_ptr - src);
-						}
-						else if (!strcmp(length_modifier, ""))
-						{
-							unsigned int* int_ptr = (unsigned int*) write_ptr;
-							*int_ptr = UINT_MAX & (src_ptr - src);
-						}
-						else if (!strcmp(length_modifier, "l"))
-						{
-							unsigned long* l_ptr = (unsigned long*) write_ptr;
-							*l_ptr = ULONG_MAX & (src_ptr - src);
-						}
-						else if (!strcmp(length_modifier, "ll"))
-						{
-							unsigned long long* ll_ptr = (unsigned long long*) write_ptr;
-							*ll_ptr = ULLONG_MAX & (src_ptr - src);
-						}
-					}
-					break;
+					va_end(arg);
+					return read_cnt;
 				}
-				case FLOAT:
+				if (!suppress && spec != CHAR_N)
 				{
-					long double num = 0;
-					if (sreadllf(src_ptr, field_width, &num, &src_ptr) == INVALID_INPUT)
-					{
-						error_flag = 1;
-					}
-					if (!suppress)
-					{
-						if (!strcmp(length_modifier, ""))
-						{
-							float* f_ptr = (float*) write_ptr;
-							*f_ptr = (float) num;
-						}
-						else if (!strcmp(length_modifier, "l"))
-						{
-							double* lf_ptr = (double*) write_ptr;
-							*lf_ptr = (double) num;
-						}
-						else if (!strcmp(length_modifier, "L"))
-						{
-							long double* llf_ptr = (long double*) write_ptr;
-							*llf_ptr = (long double) num;
-						}
-					}
-					break;
+					++read_cnt;
 				}
-				case PTR:
-				{
-					int base = 16;
-					ll num = 0;
-					if (sreadll(src_ptr, base, field_width, &num, &src_ptr) == INVALID_INPUT)
-					{
-						error_flag = 1;
-					}
-					if (!suppress)
-					{
-						void** void_ptr = (void**) write_ptr;
-						*void_ptr = (void*) num;
-					}
-					break;
-				}
-				default:
-					error_flag = 1;
-					break;
-			}
-			
-			free(length_modifier);
-			if (error_flag)
-			{
-				return read_cnt;
-			}
-			if (!suppress && spec != CHAR_N)
-			{
-				++read_cnt;
 			}
 		}
 	}
@@ -738,6 +945,7 @@ int oversscanf(const char* src, const char* format, ...)
 
 int main(int argc, char** argv)
 {
+	// BASE SPECIFIERS
 	char ch;
 	char str[100] = "NO DATA", str2[100] = "NO DATA";
 	int d, octd, hexd;
@@ -758,20 +966,39 @@ int main(int argc, char** argv)
 	cnt = oversscanf("1234567", "%3s%2d%s", str, &d, str2);
 	printf("4: cnt=%d\n%s %d %s\n", cnt, str, d, str2);
 	
-	cnt = oversscanf("abc", "%s%s", str, str2);
+	cnt = oversscanf("ababcrsq2k3s", "%[a-d]%5[^a-d]", str, str2);
 	printf("5: cnt=%d\n%s %s\n", cnt, str, str2);
 	
+	cnt = oversscanf("abc", "%s%s", str, str2);
+	printf("6: cnt=%d\n%s %s\n", cnt, str, str2);
+	
 	cnt = oversscanf("abc", "%lls", str);
-	printf("6: cnt=%d\n%s\n", cnt, str);
+	printf("7: cnt=%d\n%s\n", cnt, str);
 	
 	double a = 0, b = 0, c = 0;
 	float fa = 0;
 	cnt = oversscanf(".123 5.5 1.2e3", "%lf %lf %lf", &a, &b, &c);
-	printf("7: cnt=%d\n%lf %lf %lf\n", cnt, a, b, c);
+	printf("8: cnt=%d\n%lf %lf %lf\n", cnt, a, b, c);
 	cnt = oversscanf("1e45 1e45 1e45", "%f %lf %Lf", &fa, &a);
 	printf("cnt=%d\n%lf %lf\n", cnt, fa, a);
 	
+	cnt = oversscanf("1%2README", "1%%2%s", str);
+	printf("9: cnt=%d\n%s\n", cnt, str);
 	
-	cnt = oversscanf("skip read 123", "%*s %s %d", str, &d);
-	printf("111 cnt=%d\n%s %d\n", cnt, str, d);
+	// SPECIFIC SPECIFIERS
+	int ro1, ro2;
+	cnt = oversscanf("  XIV MMDCCCXLV ", "%2Ro%*Ro%Ro", &ro1, &ro2);
+	printf("10: cnt=%d\n%d %d\n", cnt, ro1, ro2);
+	
+	unsigned int zr1, zr2;
+	cnt = oversscanf("  101011   1000000000000011 ", "%Zr%5Zr", &zr1, &zr2);
+	printf("11: cnt=%d\n%d %d\n", cnt, zr1, zr2);
+	
+	int cvl1, cvl2;
+	cnt = oversscanf("  -222   a1AAA ", "%Cv%Cv", &cvl1, 3, &cvl2, 16);
+	printf("12: cnt=%d\n%d %d\n", cnt, cvl1, cvl2);
+	
+	int cvu1, cvu2;
+	cnt = oversscanf("  333   -A1aaa ", "%CV%CV", &cvu1, 4, &cvu2, 32);
+	printf("13: cnt=%d\n%d %d\n", cnt, cvu1, cvu2);
 }
