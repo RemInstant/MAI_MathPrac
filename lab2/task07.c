@@ -72,9 +72,17 @@ int sign(double x)
 
 status_codes solve_eq_dichotomy(double left, double right, double eps, double (*func)(double), double* ans)
 {
+	if (func == NULL || ans == NULL)
+	{
+		return NULL_POINTER_ERROR;
+	}
+	if (eps <= 0)
+	{
+		return INVALID_INPUT;
+	}
+	
 	int right_sign = sign(func(right));
 	int left_sign = sign(func(left));
-	
 	if (fabs(left_sign) < eps)
 	{
 		*ans = left;
@@ -98,7 +106,7 @@ status_codes solve_eq_dichotomy(double left, double right, double eps, double (*
 		mid = (left + right) / 2;
 		val = func(mid);
 		
-		if ((val > 0) ^ increasing)
+		if ((val > eps) ^ increasing)
 		{
 			left = mid;
 		}
