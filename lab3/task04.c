@@ -15,10 +15,12 @@ typedef enum
 	INVALID_INPUT,
 	INVALID_FLAG,
 	INVALID_NUMBER,
+	UNAVAILABLE_ID,
 	FILE_OPENING_ERROR,
 	FILE_CONTENT_ERROR,
 	OVERFLOW,
-	BAD_ALLOC
+	BAD_ALLOC,
+	BAD_SEARCH
 } status_codes;
 
 void print_error(status_codes code)
@@ -36,6 +38,9 @@ void print_error(status_codes code)
 		case INVALID_NUMBER:
 			printf("Invalid number\n");
 			return;
+		case UNAVAILABLE_ID:
+			printf("Unavailable data access\n");
+			return;
 		case FILE_OPENING_ERROR:
 			printf("File cannot be opened\n");
 			return;
@@ -47,6 +52,9 @@ void print_error(status_codes code)
 			return;
 		case BAD_ALLOC:
 			printf("Memory lack error occurred\n");
+			return;
+		case BAD_SEARCH:
+			printf("No required data were found\n");
 			return;
 		default:
 			printf("Unexpected error occurred\n");
@@ -383,6 +391,16 @@ status_codes read_string_line(String* str_line)
 	return OK;
 }
 
+status_codes get_cur_long_time(String* str_time)
+{
+	char tmp[20];
+	time_t cur_time = time(NULL);
+	struct tm *cur_tm = localtime(&cur_time);
+	sprintf(tmp, "%02d:%02d:%04d %02d:%02d:%02d", cur_tm->tm_mday, cur_tm->tm_mon + 1,
+			cur_tm->tm_year + 1900, cur_tm->tm_hour, cur_tm->tm_min, cur_tm->tm_sec);
+	return construct_string(str_time, tmp);
+}
+
 // PART 2
 
 typedef struct
@@ -617,12 +635,7 @@ status_codes read_mail(Mail* mail)
 	}
 	if (!err_code)
 	{
-		char creation_time[20];
-		time_t cur_time = time(NULL);
-		struct tm *cur_tm = localtime(&cur_time);
-		sprintf(creation_time, "%02d:%02d:%04d %02d:%02d:%02d", cur_tm->tm_mday, cur_tm->tm_mon + 1,
-				cur_tm->tm_year + 1900, cur_tm->tm_hour, cur_tm->tm_min, cur_tm->tm_sec);
-		err_code = construct_string(&(mail->creation_time), creation_time);
+		err_code = get_cur_long_time(&(mail->creation_time));
 	}
 	if (!err_code)
 	{
@@ -668,15 +681,50 @@ void print_mail(const Mail mail)
 	printf("Delivered: %s\n", status);
 }
 
+int compare_str_long_time(const String l, const String r)
+{
+	// validate with return 0
+	// dd:MM:yyyy hh:mm:ss
+	for (ull i = 6; i < 10; ++i)
+	{
+		if (l.data[i] != r.data[i])
+		{
+			return l.data[i] < r.data[i] ? -1 : 1;
+		}
+	}
+	for (ull i = 3; i < 5; ++i)
+	{
+		if (l.data[i] != r.data[i])
+		{
+			return l.data[i] < r.data[i] ? -1 : 1;
+		}
+	}
+	for (ull i = 0; i < 2; ++i)
+	{
+		if (l.data[i] != r.data[i])
+		{
+			return l.data[i] < r.data[i] ? -1 : 1;
+		}
+	}
+	return strcmp(l.data, r.data);
+}
+
+int mail_time_comp(const void* l, const void* r)
+{
+	Mail* mail_l = (Mail*) l;
+	Mail* mail_r = (Mail*) r;
+	return compare_str_long_time(mail_l->creation_time, mail_r->creation_time);
+}
+
 int mail_id_comp(const void* l, const void* r)
 {
-	Mail mail_l = *((Mail*) l);
-	Mail mail_r = *((Mail*) r);
-	if (!equal_string(mail_l.receiver_addr.receiver_id, mail_r.receiver_addr.receiver_id))
+	Mail* mail_l = (Mail*) l;
+	Mail* mail_r = (Mail*) r;
+	if (!equal_string(mail_l->receiver_addr.receiver_id, mail_r->receiver_addr.receiver_id))
 	{
-		return compare_string(mail_l.receiver_addr.receiver_id, mail_r.receiver_addr.receiver_id);
+		return compare_string(mail_l->receiver_addr.receiver_id, mail_r->receiver_addr.receiver_id);
 	}
-	return compare_string(mail_l.mail_id, mail_r.mail_id);
+	return compare_string(mail_l->mail_id, mail_r->mail_id);
 }
 
 status_codes construct_post(Post* post, const Address addr)
@@ -713,6 +761,11 @@ status_codes destruct_post(Post* post)
 
 void print_post_mail(const Post post)
 {
+	if (post.mail_cnt == 0)
+	{
+		printf("There is no mail\n");
+		return;
+	}
 	printf("| ReceiverID |     MailID     | wght | address |  time of creation   |  time of delivery   | Delivered |\n");
 	for (ull i = 0; i < post.mail_cnt; ++i)
 	{
@@ -743,7 +796,7 @@ status_codes search_mail(const Post post, const String mailID, ull* ind)
 		}
 	}
 	*ind = -1;
-	return OK;
+	return BAD_SEARCH;
 }
 
 status_codes insert_mail(Post* post, const Mail mail)
@@ -751,6 +804,11 @@ status_codes insert_mail(Post* post, const Mail mail)
 	if (post == NULL)
 	{
 		return INVALID_INPUT;
+	}
+	ull ind;
+	if (search_mail(*post, mail.mail_id, &ind) == OK)
+	{
+		return UNAVAILABLE_ID;
 	}
 	if (post->mail_cnt == post->mail_size)
 	{
@@ -779,10 +837,6 @@ status_codes extract_mail(Post* post, const String mailID)
 	{
 		return code;
 	}
-	if (ind == -1)
-	{
-		return OK;
-	}
 	destruct_mail(&(post->mail_arr[ind]));
 	for (ull i = ind + 1; i < post->mail_cnt; ++i)
 	{
@@ -792,15 +846,66 @@ status_codes extract_mail(Post* post, const String mailID)
 	return OK;
 }
 
+void print_delivered_post_mail(const Post post)
+{
+	int flag = 1;
+	for (ull i = 0; i < post.mail_cnt; ++i)
+	{
+		Mail* m = &(post.mail_arr[i]);
+		if (m->is_delivered)
+		{
+			if (flag)
+			{
+				printf("| ReceiverID |     MailID     | wght | address |  time of creation   |  time of delivery   |\n");
+				flag = 0;
+			}
+			printf("| %10s | %s | % 3.1lf | no addr | %s | %s |\n",
+				m->receiver_addr.receiver_id.data, m->mail_id.data, m->weight, m->creation_time.data, m->delivery_time.data);
+		}
+	}
+	if (flag)
+	{
+		printf("There is no delivered mail\n");
+	}
+}
+
+status_codes print_expired_post_mail(const Post post)
+{
+	String cur_time;
+	status_codes code = get_cur_long_time(&cur_time);
+	if (code)
+	{
+		return code;
+	}
+	int flag = 1;
+	for (ull i = 0; i < post.mail_cnt; ++i)
+	{
+		Mail* m = &(post.mail_arr[i]);
+		if (!m->is_delivered && compare_str_long_time(m->delivery_time, cur_time) < 0)
+		{
+			if (flag)
+			{
+				printf("| ReceiverID |     MailID     | wght | address |  time of creation   |  time of delivery   |\n");
+				flag = 0;
+			}
+			printf("| %10s | %s | % 3.1lf | no addr | %s | %s |\n",
+				m->receiver_addr.receiver_id.data, m->mail_id.data, m->weight, m->creation_time.data, m->delivery_time.data);
+		}
+	}
+	if (flag)
+	{
+		printf("There is no expired mail\n");
+	}
+}
+
 // TODO
 // read_line -> read_string_line
-// Время создания посылки??
 // Интерактивный диалог (ого):
-// 1. Добавление посылки (by mail_id) + сортировка после каждого добавления.......
-// 2. Удаление посылки
-// 3. Поиск посылки (by mail_id)
-// 4. Поиск всех УЖЕ доставленных посылок (от старых к новым)
-// 5. Поиск всех посылок, срок доставки которых истёк??? (от старых к новым)
+// 1. + Добавление посылки (by mail_id) + сортировка после каждого добавления.......
+// 2. + Удаление посылки (by mail_id)
+// 3. + Поиск посылки (by mail_id)
+// 4. ? Поиск всех УЖЕ доставленных посылок (от старых к новым)
+// 5. ? Поиск всех посылок, срок доставки которых истёк??? (от старых к новым)
 
 int main(int argc, char** argv)
 {
@@ -838,21 +943,26 @@ int main(int argc, char** argv)
 	Post post;
 	construct_post(&post, office_addr);
 	
-	String cmd_exit, cmd_insert, cmd_extract, cmd_print, cmd_search;
+	String cmd_exit, cmd_add, cmd_remove, cmd_print, cmd_search, cmd_deliver, cmd_print_delivered, cmd_print_expired;
 	construct_string(&cmd_exit, "exit");
-	construct_string(&cmd_insert, "insert");
-	construct_string(&cmd_extract, "extract");
+	construct_string(&cmd_add, "add");
+	construct_string(&cmd_remove, "remove");
 	construct_string(&cmd_print, "print");
 	construct_string(&cmd_search, "search");
+	construct_string(&cmd_deliver, "deliver");
+	construct_string(&cmd_print_delivered, "delivered");
+	construct_string(&cmd_print_expired, "expired");
+	printf("cmds: exit add remove print search deliver delivered expired\n");
 	
 	status_codes err_code = OK;
 	int run_flag = 1;
 	while (run_flag && !err_code)
 	{
-		printf("cmds:\n");
+		printf("cmd: ");
 		// WRITE CMD
 		String cmd;
 		err_code = read_string_line(&cmd);	
+		printf("\n");
 		// EXECUTE CMD
 		if (!err_code)
 		{
@@ -860,41 +970,59 @@ int main(int argc, char** argv)
 			// --- COMMAND EXIT ---
 			if (equal_string(cmd, cmd_exit))
 			{
-				printf("1\n");
+				printf("hrrr mi mi mi hrrrr mi mi mi\n");
 				run_flag = 0;
 			}
-			// --- COMMAND INSERT MAIL ---
-			else if (equal_string(cmd, cmd_insert))
+			// --- COMMAND ADD MAIL ---
+			else if (equal_string(cmd, cmd_add))
 			{
-				printf("2\n");
+				printf("Enter mail data\n");
 				Mail mail;
 				cmd_code = read_mail(&mail);
 				if (!cmd_code)
 				{
 					cmd_code = insert_mail(&post, mail);
 				}
+				if (cmd_code == UNAVAILABLE_ID)
+				{
+					printf("Mail with this ID already exists\n");
+					destruct_mail(&mail);
+					cmd_code = OK;
+				}
+				else if (!cmd_code)
+				{
+					printf("Mail was added\n");
+				}
 			}
-			// --- COMMAND EXTRACT MAIL ---
-			else if (equal_string(cmd, cmd_extract))
+			// --- COMMAND REMOVE MAIL ---
+			else if (equal_string(cmd, cmd_remove))
 			{
-				printf("3\n");
+				printf("Enter mail ID: ");
 				String mailID;
 				cmd_code = read_string_line(&mailID);
 				if (!cmd_code)
 				{
 					cmd_code = extract_mail(&post, mailID);
 				}
+				if (cmd_code == BAD_SEARCH)
+				{
+					printf("This mail does not exist\n");
+					cmd_code = OK;
+				}
+				else if (!cmd_code)
+				{
+					printf("Mail was removed\n");
+				}
 			}
 			// --- COMMAND PRINT ALL MAIL (DELETE ME) ---
 			else if (equal_string(cmd, cmd_print))
 			{
-				printf("4\n");
 				print_post_mail(post);
 			}
 			// --- COMMAND SEARCH MAIL ---
 			else if (equal_string(cmd, cmd_search))
 			{
-				printf("5\n");
+				printf("Enter mail ID: ");
 				String mailID;
 				ull ind;
 				cmd_code = read_string_line(&mailID);
@@ -902,31 +1030,62 @@ int main(int argc, char** argv)
 				{
 					cmd_code = search_mail(post, mailID, &ind);
 				}
+				if (cmd_code == BAD_SEARCH)
+				{
+					printf("This mail does not exist\n");
+					cmd_code = OK;
+				}
+				else if (!cmd_code)
+				{
+					print_mail(post.mail_arr[ind]);
+				}
+			}
+			// --- COMMAND DELIVER MAIL ---
+			else if (equal_string(cmd, cmd_deliver))
+			{
+				printf("Enter mail ID: ");
+				String mailID;
+				ull ind;
+				cmd_code = read_string_line(&mailID);
 				if (!cmd_code)
 				{
-					if (ind == -1)
-					{
-						printf("This mail does not exist\n");
-					}
-					else
-					{
-						print_mail(post.mail_arr[ind]);
-					}
+					cmd_code = search_mail(post, mailID, &ind);
 				}
+				if (cmd_code == BAD_SEARCH)
+				{
+					printf("This mail does not exist\n");
+					cmd_code = OK;
+				}
+				else if (!cmd_code)
+				{
+					post.mail_arr[ind].is_delivered = 1;
+					printf("Status of mail was updated\n");
+				}
+			}
+			// --- COMMAND PRINT DELIVERED MAIL ---
+			else if (equal_string(cmd, cmd_print_delivered))
+			{
+				print_delivered_post_mail(post);
+			}
+			// --- COMMAND PRINT EXPIRED MAIL (DELETE ME) ---
+			else if (equal_string(cmd, cmd_print))
+			{
+				err_code = print_expired_post_mail(post);
 			}
 			
 			if (cmd_code)
 			{
 				print_error(cmd_code);
 			}
+			printf("\n");
 		}
 	}
 	
-	destruct_string(&cmd_insert);
-	destruct_string(&cmd_insert);
-	destruct_string(&cmd_insert);
-	destruct_string(&cmd_insert);
-	destruct_string(&cmd_insert);
+	destruct_string(&cmd_exit);
+	destruct_string(&cmd_add);
+	destruct_string(&cmd_remove);
+	destruct_string(&cmd_print);
+	destruct_string(&cmd_search);
 	
 	destruct_post(&post);
 }
