@@ -846,8 +846,9 @@ status_codes extract_mail(Post* post, const String mailID)
 	return OK;
 }
 
-void print_delivered_post_mail(const Post post)
+void print_delivered_post_mail(Post post)
 {
+	qsort(post.mail_arr, post.mail_cnt, sizeof(Mail), mail_time_comp);
 	int flag = 1;
 	for (ull i = 0; i < post.mail_cnt; ++i)
 	{
@@ -867,9 +868,10 @@ void print_delivered_post_mail(const Post post)
 	{
 		printf("There is no delivered mail\n");
 	}
+	qsort(post.mail_arr, post.mail_cnt, sizeof(Mail), mail_id_comp);
 }
 
-status_codes print_expired_post_mail(const Post post)
+status_codes print_expired_post_mail(Post post)
 {
 	String cur_time;
 	status_codes code = get_cur_long_time(&cur_time);
@@ -877,6 +879,7 @@ status_codes print_expired_post_mail(const Post post)
 	{
 		return code;
 	}
+	qsort(post.mail_arr, post.mail_cnt, sizeof(Mail), mail_time_comp);
 	int flag = 1;
 	for (ull i = 0; i < post.mail_cnt; ++i)
 	{
@@ -896,6 +899,8 @@ status_codes print_expired_post_mail(const Post post)
 	{
 		printf("There is no expired mail\n");
 	}
+	qsort(post.mail_arr, post.mail_cnt, sizeof(Mail), mail_id_comp);
+	return OK;
 }
 
 // TODO
