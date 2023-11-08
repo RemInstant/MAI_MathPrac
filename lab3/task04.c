@@ -62,50 +62,22 @@ void print_error(status_codes code)
 	}
 }
 
-int is_separator(char ch)
+// PART 1
+typedef struct
 {
-	return ch == ' ' || ch == '\t' || ch == '\n';
-}
+	char* data;
+	int len;
+} String;
 
-int is_leap_year(int year)
-{
-	return year % 400 == 0 && year % 100 != 0 && year % 4 == 0;
-}
+status_codes construct_string(String* str, const char* other);
+status_codes destruct_string(String* str);
+int compare_string(const String left, const String right);
+int equal_string(const String left, const String right);
+status_codes copy_string(String* dest, const String src);
+status_codes construct_copy_string(String* dest, const String src);
+status_codes concat_string(String* dest, const String src);
 
-status_codes read_line(char** line)
-{
-	if (line == NULL)
-	{
-		return INVALID_INPUT;
-	}
-	ull iter = 0;
-	ull size = 2;
-	*line = (char*) malloc(sizeof(char) * size);
-	if (*line == NULL)
-	{
-		return BAD_ALLOC;
-	}
-	char ch = getchar();
-	while (ch != '\n')
-	{
-		if (iter > size - 2)
-		{
-			size *= 2;
-			char* temp_line = realloc(*line, size);
-			if (temp_line == NULL)
-			{
-				free(*line);
-				return BAD_ALLOC;
-			}
-			*line = temp_line;
-		}
-		(*line)[iter++] = ch;
-		ch = getchar();
-	}
-	(*line)[iter] = '\0';
-	return OK;
-}
-
+// STRINGS EXTRA FUNCTIONS
 typedef enum
 {
 	NON_VOID_STRING,
@@ -116,136 +88,242 @@ typedef enum
 	LONG_TIME_STRING
 } validation_type;
 
-status_codes validate_string(const char* str, validation_type type, ll char_n)
-{
-	if (str == NULL)
-	{
-		return INVALID_INPUT;
-	}
-	if (char_n != -1 && strlen(str) != char_n)
-	{
-		return INVALID_INPUT;
-	}
-	switch (type)
-	{
-		case NON_VOID_STRING:
-		{
-			return str[0] ? OK : INVALID_INPUT;
-		}
-		case DIGIT_STRING:
-		{
-			for (ull i = 0; str[i]; ++i)
-			{
-				if (!isdigit(str[i]))
-				{
-					return INVALID_INPUT;
-				}
-			}
-			return OK;
-		}
-		case UNSIGNED_STRING:
-		{
-			errno = 0;
-			char* ptr;
-			strtoull(str, &ptr, 10);
-			if (errno == ERANGE)
-			{
-				return OVERFLOW;
-			}
-			if (*ptr != '\0')
-			{
-				return INVALID_INPUT;
-			}
-			return OK;
-		}
-		case INTEGER_STRING:
-		{
-			errno = 0;
-			char* ptr;
-			strtoll(str, &ptr, 10);
-			if (errno == ERANGE)
-			{
-				return OVERFLOW;
-			}
-			if (*ptr != '\0')
-			{
-				return INVALID_INPUT;
-			}
-			return OK;
-		}
-		case FLOAT_STRING:
-		{
-			errno = 0;
-			char* ptr;
-			strtod(str, &ptr);
-			if (errno == ERANGE)
-			{
-				return OVERFLOW;
-			}
-			if (*ptr != '\0')
-			{
-				return INVALID_INPUT;
-			}
-			return OK;
-		}
-		case LONG_TIME_STRING:
-		{
-			if (strlen(str) != 19)
-			{
-				return INVALID_INPUT;
-			}
-			for (ull i = 0; str[i]; ++i)
-			{
-				if (!isdigit(str[i]) && i != 2 && i != 5 && i != 10 && i != 13 && i != 16)
-				{
-					return INVALID_INPUT;
-				}
-			}
-			if (str[2] != ':' || str[5] != ':' || str[10] != ' ' || str[13] != ':' || str[16] != ':')
-			{
-				return INVALID_INPUT;
-			}
-			
-			char str_day[20], str_month[20], str_year[20], str_hour[20];
-			strcpy(str_day, str);
-			strcpy(str_month, str + 3);
-			strcpy(str_year, str + 6);
-			strcpy(str_hour, str + 11);
-			str_day[2] = str_month[2] = str_year[4] = str_hour[2] = '\0';
-			
-			int day = atoi(str_day);
-			int month = atoi(str_month);
-			int year = atoi(str_year);
-			int hour = atoi(str_hour);
-			
-			char month_content[12] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
-			char leap_month_content[12] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
-			
-			if (year <= 1970 || year > 3000 || month > 11 || hour > 23 || str[14] > '5' || str[17] > '5')
-			{
-				return INVALID_INPUT;
-			}
-			if (is_leap_year(year) && day > leap_month_content[month])
-			{
-				return INVALID_INPUT;
-			}
-			if (!is_leap_year(year) && day > month_content[month])
-			{
-				return INVALID_INPUT;
-			}
-			return OK;
-		}
-	}
-	return OK;
-}
+status_codes read_string_line(String* str_line);
+status_codes get_cur_long_time(String* str_time);
+status_codes validate_string(String string, validation_type type, ll char_n);
 
-// PART 1
+
+// PART II (POST OFFICE)
+typedef struct
+{
+	String city;
+	String street;
+	ull house_number;
+	String building;
+	ull apartment_number;
+	String receiver_id;
+} Address;
+
+status_codes destruct_address(Address* addr);
+status_codes read_address(Address* addr);
 
 typedef struct
 {
-	char* data;
-	int len;
-} String;
+	Address receiver_addr;
+	double weight;
+	String mail_id;
+	String creation_time;
+	String delivery_time;
+	int is_delivered;
+} Mail;
+
+status_codes destruct_mail(Mail* mail);
+status_codes read_mail(Mail* mail);
+void print_mail(const Mail mail);
+
+typedef struct
+{
+	Address office_addr;
+	ull mail_size;
+	ull mail_cnt;
+	Mail* mail_arr;
+} Post;
+
+status_codes construct_post(Post* post, const Address addr);
+status_codes destruct_post(Post* post);
+status_codes search_mail(const Post post, const String mailID, ull* ind);
+status_codes insert_mail(Post* post, const Mail mail);
+status_codes extract_mail(Post* post, const String mailID);
+void print_post_mail(const Post post);
+void print_delivered_post_mail(Post post);
+void print_expired_post_mail(Post post);
+
+int main(int argc, char** argv)
+{
+	// STRINGS TEST
+	if (0)
+	{
+		String str1, str2, str3;
+		construct_string(&str1, "aboba");
+		construct_string(&str2, "ab");
+		construct_copy_string(&str3, str2);
+		copy_string(&str2, str1);
+		
+		printf("%d %s\n", str1.len, str1.data);
+		printf("%d %s\n", str2.len, str2.data);
+		printf("%d %s\n", str3.len, str3.data);
+		printf("%d\n", equal_string(str1, str2));
+		printf("%d\n", compare_string(str3, str1));
+		
+		concat_string(&str3, str2);
+		printf("%d %s\n", str3.len, str3.data);
+		
+		destruct_string(&str1);
+		destruct_string(&str2);
+		destruct_string(&str3);
+		return 0;
+	}
+	
+	String null_str;
+	construct_string(&null_str, NULL);
+	
+	Address office_addr = { .city = null_str, .street = null_str, .house_number = 0, .building = null_str,
+							.apartment_number = 0, .receiver_id = null_str };
+	
+	Post post;
+	construct_post(&post, office_addr);
+	
+	String cmd_exit, cmd_add, cmd_remove, cmd_search, cmd_deliver, cmd_print, cmd_print_delivered, cmd_print_expired;
+	construct_string(&cmd_exit, "exit");
+	construct_string(&cmd_add, "add");
+	construct_string(&cmd_remove, "remove");
+	construct_string(&cmd_search, "search");
+	construct_string(&cmd_deliver, "deliver");
+	construct_string(&cmd_print, "print");
+	construct_string(&cmd_print_delivered, "delivered");
+	construct_string(&cmd_print_expired, "expired");
+	printf("cmds: exit add remove print search deliver delivered expired\n");
+	
+	status_codes err_code = OK;
+	int run_flag = 1;
+	while (run_flag && !err_code)
+	{
+		printf("cmd: ");
+		// WRITE CMD
+		String cmd;
+		err_code = read_string_line(&cmd);	
+		printf("\n");
+		// EXECUTE CMD
+		if (!err_code)
+		{
+			status_codes cmd_code = OK;
+			// --- COMMAND EXIT ---
+			if (equal_string(cmd, cmd_exit))
+			{
+				printf("hrrr mi mi mi hrrrr mi mi mi\n");
+				run_flag = 0;
+			}
+			// --- COMMAND ADD MAIL ---
+			else if (equal_string(cmd, cmd_add))
+			{
+				printf("Entering mail data\n");
+				Mail mail;
+				cmd_code = read_mail(&mail);
+				if (!cmd_code)
+				{
+					cmd_code = insert_mail(&post, mail);
+				}
+				if (cmd_code == UNAVAILABLE_ID)
+				{
+					printf("Mail with this ID already exists\n");
+					destruct_mail(&mail);
+					cmd_code = OK;
+				}
+				else if (!cmd_code)
+				{
+					printf("Mail was added\n");
+				}
+			}
+			// --- COMMAND REMOVE MAIL ---
+			else if (equal_string(cmd, cmd_remove))
+			{
+				printf("Enter mail ID: ");
+				String mailID;
+				cmd_code = read_string_line(&mailID);
+				if (!cmd_code)
+				{
+					cmd_code = extract_mail(&post, mailID);
+				}
+				if (cmd_code == BAD_SEARCH)
+				{
+					printf("This mail does not exist\n");
+					cmd_code = OK;
+				}
+				else if (!cmd_code)
+				{
+					printf("Mail was removed\n");
+				}
+			}
+			// --- COMMAND SEARCH MAIL ---
+			else if (equal_string(cmd, cmd_search))
+			{
+				printf("Enter mail ID: ");
+				String mailID;
+				ull ind;
+				cmd_code = read_string_line(&mailID);
+				if (!cmd_code)
+				{
+					cmd_code = search_mail(post, mailID, &ind);
+				}
+				if (cmd_code == BAD_SEARCH)
+				{
+					printf("This mail does not exist\n");
+					cmd_code = OK;
+				}
+				else if (!cmd_code)
+				{
+					print_mail(post.mail_arr[ind]);
+				}
+			}
+			// --- COMMAND DELIVER MAIL ---
+			else if (equal_string(cmd, cmd_deliver))
+			{
+				printf("Enter mail ID: ");
+				String mailID;
+				ull ind;
+				cmd_code = read_string_line(&mailID);
+				if (!cmd_code)
+				{
+					cmd_code = search_mail(post, mailID, &ind);
+				}
+				if (cmd_code == BAD_SEARCH)
+				{
+					printf("This mail does not exist\n");
+					cmd_code = OK;
+				}
+				else if (!cmd_code)
+				{
+					post.mail_arr[ind].is_delivered = 1;
+					printf("Status of mail was updated\n");
+				}
+			}
+			// --- COMMAND PRINT ALL MAIL ---
+			else if (equal_string(cmd, cmd_print))
+			{
+				print_post_mail(post);
+			}
+			// --- COMMAND PRINT DELIVERED MAIL ---
+			else if (equal_string(cmd, cmd_print_delivered))
+			{
+				print_delivered_post_mail(post);
+			}
+			// --- COMMAND PRINT EXPIRED MAIL ---
+			else if (equal_string(cmd, cmd_print_expired))
+			{
+				print_expired_post_mail(post);
+			}
+			// --- INVALID COMMAND ---
+			else
+			{
+				printf("Invalid command\n");
+			}
+			
+			if (cmd_code)
+			{
+				print_error(cmd_code);
+			}
+			printf("\n");
+		}
+	}
+	destruct_string(&cmd_exit);
+	destruct_string(&cmd_add);
+	destruct_string(&cmd_remove);
+	destruct_string(&cmd_print);
+	destruct_string(&cmd_search);
+	destruct_post(&post);
+}
+
+// PART I (STRINGS) IMPLEMENTATION
 
 status_codes construct_string(String* str, const char* other)
 {
@@ -319,26 +397,19 @@ status_codes copy_string(String* dest, const String src)
 	return OK;
 }
 
-// OR CONSTRUCT COPY????
-status_codes dyn_copy_string(String** dest, const String src)
+status_codes construct_copy_string(String* dest, const String src)
 {
 	if (dest == NULL)
 	{
 		return INVALID_INPUT;
 	}
-	*dest = (String*) malloc(sizeof(String));
-	if (*dest == NULL)
+	dest->len = src.len;
+	dest->data = (char*) malloc(sizeof(char) * (src.len + 1));
+	if (dest->data == NULL)
 	{
 		return BAD_ALLOC;
 	}
-	(*dest)->len = src.len;
-	(*dest)->data = (char*) malloc(sizeof(char) * (src.len + 1));
-	if ((*dest)->data == NULL)
-	{
-		free(*dest);
-		return BAD_ALLOC;
-	}
-	strcpy((*dest)->data, src.data);
+	strcpy(dest->data, src.data);
 	return OK;
 }
 
@@ -353,6 +424,13 @@ status_codes concat_string(String* dest, const String src)
 	dest->data = tmp;
 	strcat(dest->data, src.data);
 	return OK;
+}
+
+// STRINGS EXTRA FUNCTIONS IMPLEMENTATION
+
+int is_leap_year(int year)
+{
+	return year % 400 == 0 && year % 100 != 0 && year % 4 == 0;
 }
 
 status_codes read_string_line(String* str_line)
@@ -401,35 +479,130 @@ status_codes get_cur_long_time(String* str_time)
 	return construct_string(str_time, tmp);
 }
 
-// PART 2
-
-typedef struct
+status_codes validate_string(String string, validation_type type, ll char_n)
 {
-	String city;
-	String street;
-	ull house_number;
-	String building;
-	ull apartment_number;
-	String receiver_id;
-} Address;
+	char* str = string.data;
+	if (str == NULL)
+	{
+		return INVALID_INPUT;
+	}
+	if (char_n != -1 && string.len != char_n)
+	{
+		return INVALID_INPUT;
+	}
+	switch (type)
+	{
+		case NON_VOID_STRING:
+		{
+			return str[0] ? OK : INVALID_INPUT;
+		}
+		case DIGIT_STRING:
+		{
+			for (ull i = 0; str[i]; ++i)
+			{
+				if (!isdigit(str[i]))
+				{
+					return INVALID_INPUT;
+				}
+			}
+			return OK;
+		}
+		case UNSIGNED_STRING:
+		{
+			errno = 0;
+			char* ptr;
+			strtoull(str, &ptr, 10);
+			if (errno == ERANGE)
+			{
+				return OVERFLOW;
+			}
+			if (*ptr != '\0')
+			{
+				return INVALID_INPUT;
+			}
+			return OK;
+		}
+		case INTEGER_STRING:
+		{
+			errno = 0;
+			char* ptr;
+			strtoll(str, &ptr, 10);
+			if (errno == ERANGE)
+			{
+				return OVERFLOW;
+			}
+			if (*ptr != '\0')
+			{
+				return INVALID_INPUT;
+			}
+			return OK;
+		}
+		case FLOAT_STRING:
+		{
+			errno = 0;
+			char* ptr;
+			strtod(str, &ptr);
+			if (errno == ERANGE)
+			{
+				return OVERFLOW;
+			}
+			if (*ptr != '\0')
+			{
+				return INVALID_INPUT;
+			}
+			return OK;
+		}
+		case LONG_TIME_STRING:
+		{
+			if (string.len != 19)
+			{
+				return INVALID_INPUT;
+			}
+			for (ull i = 0; str[i]; ++i)
+			{
+				if (!isdigit(str[i]) && i != 2 && i != 5 && i != 10 && i != 13 && i != 16)
+				{
+					return INVALID_INPUT;
+				}
+			}
+			if (str[2] != ':' || str[5] != ':' || str[10] != ' ' || str[13] != ':' || str[16] != ':')
+			{
+				return INVALID_INPUT;
+			}
+			
+			char str_day[20], str_month[20], str_year[20], str_hour[20];
+			strcpy(str_day, str);
+			strcpy(str_month, str + 3);
+			strcpy(str_year, str + 6);
+			strcpy(str_hour, str + 11);
+			str_day[2] = str_month[2] = str_year[4] = str_hour[2] = '\0';
+			
+			int day = atoi(str_day);
+			int month = atoi(str_month);
+			int year = atoi(str_year);
+			int hour = atoi(str_hour);
+			
+			char month_content[12] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+			if (is_leap_year(year))
+			{
+				month_content[1] = 29;
+			}
+			
+			if (year <= 1970 || year > 3000 || month > 11 || hour > 23 || str[14] > '5' || str[17] > '5')
+			{
+				return INVALID_INPUT;
+			}
+			if (day > month_content[month])
+			{
+				return INVALID_INPUT;
+			}
+			return OK;
+		}
+	}
+	return OK;
+}
 
-typedef struct
-{
-	Address receiver_addr;
-	double weight;
-	String mail_id;
-	String creation_time;
-	String delivery_time;
-	int is_delivered;
-} Mail;
-
-typedef struct
-{
-	Address office_addr;
-	ull mail_size;
-	ull mail_cnt;
-	Mail* mail_arr;
-} Post;
+// PART II (POST OFFICE) IMPLEMENTATION
 
 status_codes destruct_address(Address* addr)
 {
@@ -452,109 +625,82 @@ status_codes read_address(Address* addr)
 	{
 		return INVALID_INPUT;
 	}
-	
 	status_codes err_code = OK;
-	char* city = NULL;
-	char* street = NULL;
-	char* house_n_str = NULL;
-	char* building = NULL;
-	char* apartment_n_str = NULL;
-	char* receiver_id = NULL;
+	String house_n_str, apartment_n_str;
+	construct_string(&house_n_str, NULL);
+	construct_string(&apartment_n_str, NULL);
 	construct_string(&(addr->city), NULL);
 	construct_string(&(addr->street), NULL);
 	construct_string(&(addr->building), NULL);
 	construct_string(&(addr->receiver_id), NULL);
-	
-	// READ CHAR*
+	// READ STRINGS
 	if (!err_code)
 	{
 		printf("Enter the city: ");
-		err_code = read_line(&city);
+		err_code = read_string_line(&(addr->city));
 	}
 	if (!err_code)
 	{
-		err_code = validate_string(city, NON_VOID_STRING, -1);
+		err_code = validate_string(addr->city, NON_VOID_STRING, -1);
 	}
 	if (!err_code)
 	{
 		printf("Enter the street: ");
-		err_code = read_line(&street);
+		err_code = read_string_line(&(addr->street));
 	}
 	if (!err_code)
 	{
-		err_code = validate_string(street, NON_VOID_STRING, -1);
+		err_code = validate_string(addr->street, NON_VOID_STRING, -1);
 	}
 	if (!err_code)
 	{
 		printf("Enter the number of the house: ");
-		err_code = read_line(&house_n_str);
+		err_code = read_string_line(&house_n_str);
 	}
 	if (!err_code)
 	{
 		err_code = validate_string(house_n_str, UNSIGNED_STRING, -1);
 	}
-	if (!err_code && atoi(house_n_str) == 0)
+	if (!err_code && atoi(house_n_str.data) == 0)
 	{
 		err_code = INVALID_INPUT;
 	}
 	if (!err_code)
 	{
 		printf("Enter the building: ");
-		err_code = read_line(&building);
+		err_code = read_string_line(&(addr->building));
 	}
 	if (!err_code)
 	{
 		printf("Enter the number of the apartment: ");
-		err_code = read_line(&apartment_n_str);
+		err_code = read_string_line(&apartment_n_str);
 	}
 	if (!err_code)
 	{
 		err_code = validate_string(apartment_n_str, UNSIGNED_STRING, -1);
 	}
-	if (!err_code && atoi(apartment_n_str) == 0)
+	if (!err_code && atoi(apartment_n_str.data) == 0)
 	{
 		err_code = INVALID_INPUT;
 	}
 	if (!err_code)
 	{
 		printf("Enter receiver ID: ");
-		err_code = read_line(&receiver_id);
+		err_code = read_string_line(&(addr->receiver_id));
 	}
 	if (!err_code)
 	{
-		err_code = validate_string(receiver_id, DIGIT_STRING, 6);
-	}
-	// CONSTRUCT STRINGS
-	if (!err_code)
-	{
-		err_code = construct_string(&(addr->city), city);
-	}
-	if (!err_code)
-	{
-		err_code = construct_string(&(addr->street), street);
-	}
-	if (!err_code)
-	{
-		err_code = construct_string(&(addr->building), building);
-	}
-	if (!err_code)
-	{
-		err_code = construct_string(&(addr->receiver_id), receiver_id);
+		err_code = validate_string(addr->receiver_id, DIGIT_STRING, 6);
 	}
 	// SET NUMBERS OF ADDRESS
 	if (!err_code)
 	{
-		addr->house_number = atoi(house_n_str);
-		addr->apartment_number = atoi(apartment_n_str);
+		addr->house_number = atoi(house_n_str.data);
+		addr->apartment_number = atoi(apartment_n_str.data);
 	}
 	
-	free(city);
-	free(street);
-	free(house_n_str);
-	free(building);
-	free(apartment_n_str);
-	free(receiver_id);
-	
+	destruct_string(&house_n_str);
+	destruct_string(&apartment_n_str);
 	if (err_code)
 	{
 		destruct_address(addr);
@@ -584,11 +730,9 @@ status_codes read_mail(Mail* mail)
 	{
 		return INVALID_INPUT;
 	}
-	
 	status_codes err_code = OK;
-	char* weight_str = NULL;
-	char* mail_id = NULL;
-	char* delivery_time = NULL;
+	String weight_str;
+	construct_string(&weight_str, NULL);
 	construct_string(&(mail->mail_id), NULL);
 	construct_string(&(mail->creation_time), NULL);
 	construct_string(&(mail->delivery_time), NULL);
@@ -596,62 +740,51 @@ status_codes read_mail(Mail* mail)
 	// READ ADDRESS
 	err_code = read_address(&(mail->receiver_addr));
 	
-	// READ CHAR*
+	// READ STRINGS
 	if (!err_code)
 	{
 		printf("Enter the package weight: ");
-		err_code = read_line(&weight_str);
+		err_code = read_string_line(&weight_str);
 	}
 	if (!err_code)
 	{
 		err_code = validate_string(weight_str, FLOAT_STRING, -1);
 	}
-	if (!err_code && atof(weight_str) < 0)
+	if (!err_code && atof(weight_str.data) < 0)
 	{
 		err_code = INVALID_INPUT;
 	}
 	if (!err_code)
 	{
 		printf("Enter the mail ID: ");
-		err_code = read_line(&mail_id);
+		err_code = read_string_line(&(mail->mail_id));
 	}
 	if (!err_code)
 	{
-		err_code = validate_string(mail_id, DIGIT_STRING, 14);
+		err_code = validate_string(mail->mail_id, DIGIT_STRING, 14);
 	}
 	if (!err_code)
 	{
 		printf("Enter the time of delivery (dd:MM:yyyy hh:mm:ss): ");
-		err_code = read_line(&delivery_time);
+		err_code = read_string_line(&(mail->delivery_time));
 	}
 	if (!err_code)
 	{
-		err_code = validate_string(delivery_time, LONG_TIME_STRING, -1);
+		err_code = validate_string(mail->delivery_time, LONG_TIME_STRING, -1);
 	}
-	// CONSTRUCT STRINGS
-	if (!err_code)
-	{
-		err_code = construct_string(&(mail->mail_id), mail_id);
-	}
+	// SET CREATION TIME
 	if (!err_code)
 	{
 		err_code = get_cur_long_time(&(mail->creation_time));
 	}
-	if (!err_code)
-	{
-		err_code = construct_string(&(mail->delivery_time), delivery_time);
-	}
 	// SET WEIGHT ANS STATUS
 	if (!err_code)
 	{
-		mail->weight = atof(weight_str);
+		mail->weight = atof(weight_str.data);
 		mail->is_delivered = 0;
 	}
 	
-	free(weight_str);
-	free(mail_id);
-	free(delivery_time);
-	
+	destruct_string(&weight_str);
 	if (err_code)
 	{
 		destruct_mail(mail);
@@ -660,53 +793,77 @@ status_codes read_mail(Mail* mail)
 	return OK;
 }
 
-void print_mail(const Mail mail)
+status_codes string_to_time(const String string, time_t* t)
 {
-	const Address* ad = &(mail.receiver_addr);
-	char* status = mail.is_delivered ? "Yes" : "No";
-	printf("Receiver's ID: %s\n", ad->receiver_id.data);
-	if (mail.receiver_addr.building.data[0] == '\0')
+	char* str = string.data;
+	if (string.len != 19)
 	{
-		printf("Receiver's address: %s, %s St, %llu %llu\n",
-				ad->city.data, ad->street.data, ad->house_number, ad->apartment_number);
+		return -1;
 	}
-	else
+	for (ull i = 0; str[i]; ++i)
 	{
-		printf("Receiver's address: %s, %s St, %llu-%s %llu\n",
-				ad->city.data, ad->street.data, ad->house_number, ad->building.data, ad->apartment_number);
+		if (!isdigit(str[i]) && i != 2 && i != 5 && i != 10 && i != 13 && i != 16)
+		{
+			return INVALID_INPUT;
+		}
 	}
-	printf("Weight: %.3lf\n", mail.weight);
-	printf("Time of creationg: %s\n", mail.creation_time.data);
-	printf("Time of delivery: %s\n", mail.delivery_time.data);
-	printf("Delivered: %s\n", status);
+	if (str[2] != ':' || str[5] != ':' || str[10] != ' ' || str[13] != ':' || str[16] != ':')
+	{
+		return INVALID_INPUT;
+	}
+	
+	char str_day[20], str_month[20], str_year[20], str_hour[20], str_min[20], str_sec[20];
+	strcpy(str_day, str);
+	strcpy(str_month, str + 3);
+	strcpy(str_year, str + 6);
+	strcpy(str_hour, str + 11);
+	strcpy(str_min, str + 14);
+	strcpy(str_sec, str + 17);
+	str_day[2] = str_month[2] = str_year[4] = str_hour[2] = str_min[2] = str_sec[2] = '\0';
+	
+	int day = atoi(str_day);
+	int month = atoi(str_month);
+	int year = atoi(str_year);
+	int hour = atoi(str_hour);
+	int min = atoi(str_min);
+	int sec = atoi(str_sec);
+	
+	char month_content[12] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+	if (is_leap_year(year))
+	{
+		month_content[1] = 29;
+	}
+	
+	if (year <= 1970 || year > 3000 || month > 11 || hour > 23 || min > 59 || sec > 59)
+	{
+		return INVALID_INPUT;
+	}
+	if (day > month_content[month])
+	{
+		return INVALID_INPUT;
+	}
+	
+	struct tm some_tm;
+	some_tm.tm_sec = sec;
+	some_tm.tm_min = min;
+	some_tm.tm_hour = hour;
+	some_tm.tm_isdst = -1; 
+	some_tm.tm_mday = day;
+	some_tm.tm_mon = month - 1;
+	some_tm.tm_year = year - 1900;
+	*t = mktime(&some_tm);
+	return OK;
 }
 
 int compare_str_long_time(const String l, const String r)
 {
-	// validate with return 0
-	// dd:MM:yyyy hh:mm:ss
-	for (ull i = 6; i < 10; ++i)
+	time_t time_l, time_r;
+	if (string_to_time(l, &time_l) != OK || string_to_time(r, &time_r) != OK)
 	{
-		if (l.data[i] != r.data[i])
-		{
-			return l.data[i] < r.data[i] ? -1 : 1;
-		}
+		// From a function's point of view everything that is not valid is equal
+		return 0;
 	}
-	for (ull i = 3; i < 5; ++i)
-	{
-		if (l.data[i] != r.data[i])
-		{
-			return l.data[i] < r.data[i] ? -1 : 1;
-		}
-	}
-	for (ull i = 0; i < 2; ++i)
-	{
-		if (l.data[i] != r.data[i])
-		{
-			return l.data[i] < r.data[i] ? -1 : 1;
-		}
-	}
-	return strcmp(l.data, r.data);
+	return time_l == time_r ? 0 : (time_l < time_r ? -1 : 1);
 }
 
 int mail_time_comp(const void* l, const void* r)
@@ -766,13 +923,13 @@ void print_post_mail(const Post post)
 		printf("There is no mail\n");
 		return;
 	}
-	printf("| ReceiverID |     MailID     | wght | address |  time of creation   |  time of delivery   | Delivered |\n");
+	printf("| ReceiverID |     MailID     | wght |  time of creation   |  time of delivery   | Delivered |\n");
 	for (ull i = 0; i < post.mail_cnt; ++i)
 	{
-		Mail* m = &(post.mail_arr[i]);
-		char* status = m->is_delivered ? "Yes" : "No";
-		printf("| %10s | %s | % 3.1lf | no addr | %s | %s | %9s |\n",
-				m->receiver_addr.receiver_id.data, m->mail_id.data, m->weight, m->creation_time.data, m->delivery_time.data, status);
+		Mail* m = &(post.mail_arr[i]);	
+		printf("| %10s | %s | % 3.1lf | %s | %s | %9s |\n",
+				m->receiver_addr.receiver_id.data, m->mail_id.data, m->weight, m->creation_time.data, m->delivery_time.data,
+				m->is_delivered ? "Yes" : "No");
 	}
 }
 
@@ -782,7 +939,7 @@ status_codes search_mail(const Post post, const String mailID, ull* ind)
 	{
 		return INVALID_INPUT;
 	}
-	if (validate_string(mailID.data, DIGIT_STRING, 14))
+	if (validate_string(mailID, DIGIT_STRING, 14))
 	{
 		return INVALID_INPUT;
 	}
@@ -846,6 +1003,27 @@ status_codes extract_mail(Post* post, const String mailID)
 	return OK;
 }
 
+void print_mail(const Mail mail)
+{
+	const Address* ad = &(mail.receiver_addr);
+	printf("Receiver's ID: %s\n", ad->receiver_id.data);
+	if (mail.receiver_addr.building.data[0] == '\0')
+	{
+		printf("Receiver's address: %s, %s St, %llu %llu\n",
+				ad->city.data, ad->street.data, ad->house_number, ad->apartment_number);
+	}
+	else
+	{
+		printf("Receiver's address: %s, %s St, %llu-%s %llu\n",
+				ad->city.data, ad->street.data, ad->house_number, ad->building.data, ad->apartment_number);
+	}
+	printf("Weight: %.3lf\n", mail.weight);
+	printf("Time of creationg: %s\n", mail.creation_time.data);
+	printf("Time of delivery: %s\n", mail.delivery_time.data);
+	printf("Delivered: %s\n", mail.is_delivered ? "Yes" : "No");
+
+}
+
 void print_delivered_post_mail(Post post)
 {
 	qsort(post.mail_arr, post.mail_cnt, sizeof(Mail), mail_time_comp);
@@ -871,27 +1049,24 @@ void print_delivered_post_mail(Post post)
 	qsort(post.mail_arr, post.mail_cnt, sizeof(Mail), mail_id_comp);
 }
 
-status_codes print_expired_post_mail(Post post)
+void print_expired_post_mail(Post post)
 {
-	String cur_time;
-	status_codes code = get_cur_long_time(&cur_time);
-	if (code)
-	{
-		return code;
-	}
 	qsort(post.mail_arr, post.mail_cnt, sizeof(Mail), mail_time_comp);
+	time_t cur_time = time(NULL);
+	time_t deliv_time = 0;
 	int flag = 1;
 	for (ull i = 0; i < post.mail_cnt; ++i)
 	{
 		Mail* m = &(post.mail_arr[i]);
-		if (!m->is_delivered && compare_str_long_time(m->delivery_time, cur_time) < 0)
+		string_to_time(m->delivery_time, &deliv_time);
+		if (!m->is_delivered && deliv_time < cur_time)
 		{
 			if (flag)
 			{
-				printf("| ReceiverID |     MailID     | wght | address |  time of creation   |  time of delivery   |\n");
+				printf("| ReceiverID |     MailID     | wght |  time of creation   |  time of delivery   |\n");
 				flag = 0;
 			}
-			printf("| %10s | %s | % 3.1lf | no addr | %s | %s |\n",
+			printf("| %10s | %s | % 3.1lf | %s | %s |\n",
 				m->receiver_addr.receiver_id.data, m->mail_id.data, m->weight, m->creation_time.data, m->delivery_time.data);
 		}
 	}
@@ -900,197 +1075,4 @@ status_codes print_expired_post_mail(Post post)
 		printf("There is no expired mail\n");
 	}
 	qsort(post.mail_arr, post.mail_cnt, sizeof(Mail), mail_id_comp);
-	return OK;
-}
-
-// TODO
-// read_line -> read_string_line
-// Интерактивный диалог (ого):
-// 1. + Добавление посылки (by mail_id) + сортировка после каждого добавления.......
-// 2. + Удаление посылки (by mail_id)
-// 3. + Поиск посылки (by mail_id)
-// 4. ? Поиск всех УЖЕ доставленных посылок (от старых к новым)
-// 5. ? Поиск всех посылок, срок доставки которых истёк??? (от старых к новым)
-
-int main(int argc, char** argv)
-{
-	// STRINGS TEST
-	if (0)
-	{
-		String str1, str2;
-		String* str3;
-		construct_string(&str1, "aboba");
-		construct_string(&str2, "ab");
-		dyn_copy_string(&str3, str2);
-		copy_string(&str2, str1);
-		
-		printf("%d %s\n", str1.len, str1.data);
-		printf("%d %s\n", str2.len, str2.data);
-		printf("%d %s\n", str3->len, str3->data);
-		printf("%d\n", equal_string(str1, str2));
-		printf("%d\n", compare_string(*str3, str1));
-		
-		concat_string(str3, str2);
-		printf("%d %s\n", str3->len, str3->data);
-		
-		destruct_string(&str1);
-		destruct_string(&str2);
-		destruct_string(str3);
-		return 0;
-	}
-	
-	String null_str;
-	construct_string(&null_str, NULL);
-	
-	Address office_addr = { .city = null_str, .street = null_str, .house_number = 0, .building = null_str,
-							.apartment_number = 0, .receiver_id = null_str };
-	
-	Post post;
-	construct_post(&post, office_addr);
-	
-	String cmd_exit, cmd_add, cmd_remove, cmd_print, cmd_search, cmd_deliver, cmd_print_delivered, cmd_print_expired;
-	construct_string(&cmd_exit, "exit");
-	construct_string(&cmd_add, "add");
-	construct_string(&cmd_remove, "remove");
-	construct_string(&cmd_print, "print");
-	construct_string(&cmd_search, "search");
-	construct_string(&cmd_deliver, "deliver");
-	construct_string(&cmd_print_delivered, "delivered");
-	construct_string(&cmd_print_expired, "expired");
-	printf("cmds: exit add remove print search deliver delivered expired\n");
-	
-	status_codes err_code = OK;
-	int run_flag = 1;
-	while (run_flag && !err_code)
-	{
-		printf("cmd: ");
-		// WRITE CMD
-		String cmd;
-		err_code = read_string_line(&cmd);	
-		printf("\n");
-		// EXECUTE CMD
-		if (!err_code)
-		{
-			status_codes cmd_code = OK;
-			// --- COMMAND EXIT ---
-			if (equal_string(cmd, cmd_exit))
-			{
-				printf("hrrr mi mi mi hrrrr mi mi mi\n");
-				run_flag = 0;
-			}
-			// --- COMMAND ADD MAIL ---
-			else if (equal_string(cmd, cmd_add))
-			{
-				printf("Enter mail data\n");
-				Mail mail;
-				cmd_code = read_mail(&mail);
-				if (!cmd_code)
-				{
-					cmd_code = insert_mail(&post, mail);
-				}
-				if (cmd_code == UNAVAILABLE_ID)
-				{
-					printf("Mail with this ID already exists\n");
-					destruct_mail(&mail);
-					cmd_code = OK;
-				}
-				else if (!cmd_code)
-				{
-					printf("Mail was added\n");
-				}
-			}
-			// --- COMMAND REMOVE MAIL ---
-			else if (equal_string(cmd, cmd_remove))
-			{
-				printf("Enter mail ID: ");
-				String mailID;
-				cmd_code = read_string_line(&mailID);
-				if (!cmd_code)
-				{
-					cmd_code = extract_mail(&post, mailID);
-				}
-				if (cmd_code == BAD_SEARCH)
-				{
-					printf("This mail does not exist\n");
-					cmd_code = OK;
-				}
-				else if (!cmd_code)
-				{
-					printf("Mail was removed\n");
-				}
-			}
-			// --- COMMAND PRINT ALL MAIL (DELETE ME) ---
-			else if (equal_string(cmd, cmd_print))
-			{
-				print_post_mail(post);
-			}
-			// --- COMMAND SEARCH MAIL ---
-			else if (equal_string(cmd, cmd_search))
-			{
-				printf("Enter mail ID: ");
-				String mailID;
-				ull ind;
-				cmd_code = read_string_line(&mailID);
-				if (!cmd_code)
-				{
-					cmd_code = search_mail(post, mailID, &ind);
-				}
-				if (cmd_code == BAD_SEARCH)
-				{
-					printf("This mail does not exist\n");
-					cmd_code = OK;
-				}
-				else if (!cmd_code)
-				{
-					print_mail(post.mail_arr[ind]);
-				}
-			}
-			// --- COMMAND DELIVER MAIL ---
-			else if (equal_string(cmd, cmd_deliver))
-			{
-				printf("Enter mail ID: ");
-				String mailID;
-				ull ind;
-				cmd_code = read_string_line(&mailID);
-				if (!cmd_code)
-				{
-					cmd_code = search_mail(post, mailID, &ind);
-				}
-				if (cmd_code == BAD_SEARCH)
-				{
-					printf("This mail does not exist\n");
-					cmd_code = OK;
-				}
-				else if (!cmd_code)
-				{
-					post.mail_arr[ind].is_delivered = 1;
-					printf("Status of mail was updated\n");
-				}
-			}
-			// --- COMMAND PRINT DELIVERED MAIL ---
-			else if (equal_string(cmd, cmd_print_delivered))
-			{
-				print_delivered_post_mail(post);
-			}
-			// --- COMMAND PRINT EXPIRED MAIL (DELETE ME) ---
-			else if (equal_string(cmd, cmd_print))
-			{
-				err_code = print_expired_post_mail(post);
-			}
-			
-			if (cmd_code)
-			{
-				print_error(cmd_code);
-			}
-			printf("\n");
-		}
-	}
-	
-	destruct_string(&cmd_exit);
-	destruct_string(&cmd_add);
-	destruct_string(&cmd_remove);
-	destruct_string(&cmd_print);
-	destruct_string(&cmd_search);
-	
-	destruct_post(&post);
 }
