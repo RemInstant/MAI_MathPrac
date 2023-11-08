@@ -164,35 +164,77 @@ int main(int argc, char** argv)
 		return 0;
 	}
 	
-	String null_str;
-	construct_string(&null_str, NULL);
-	
-	Address office_addr = { .city = null_str, .street = null_str, .house_number = 0, .building = null_str,
-							.apartment_number = 0, .receiver_id = null_str };
-	
-	Post post;
-	construct_post(&post, office_addr);
-	
-	String cmd_exit, cmd_add, cmd_remove, cmd_search, cmd_deliver, cmd_print, cmd_print_delivered, cmd_print_expired;
-	construct_string(&cmd_exit, "exit");
-	construct_string(&cmd_add, "add");
-	construct_string(&cmd_remove, "remove");
-	construct_string(&cmd_search, "search");
-	construct_string(&cmd_deliver, "deliver");
-	construct_string(&cmd_print, "print");
-	construct_string(&cmd_print_delivered, "delivered");
-	construct_string(&cmd_print_expired, "expired");
-	printf("cmds: exit add remove print search deliver delivered expired\n");
-	
 	status_codes err_code = OK;
+	Address post_addr;
+	Post post;
+	String cmd_exit, cmd_add, cmd_remove, cmd_search, cmd_deliver, cmd_print, cmd_print_delivered, cmd_print_expired;
+	construct_string(&cmd_exit, NULL);
+	construct_string(&cmd_add, NULL);
+	construct_string(&cmd_remove, NULL);
+	construct_string(&cmd_search, NULL);
+	construct_string(&cmd_deliver, NULL);
+	construct_string(&cmd_print, NULL);
+	construct_string(&cmd_print_delivered, NULL);
+	construct_string(&cmd_print_expired, NULL);
+	
+	err_code = read_address(&post_addr);
+	if (err_code)
+	{
+		printf("CRITICAL ERROR:\n");
+		print_error(err_code);
+		return err_code;
+	}
+	printf("\n");
+	
+	err_code = construct_post(&post, post_addr);
+	
+	// FILL COMMAND STRINGS
+	if (!err_code)
+	{
+		err_code = construct_string(&cmd_exit, "exit");
+	}
+	if (!err_code)
+	{
+		construct_string(&cmd_add, "add");
+	}
+	if (!err_code)
+	{
+		construct_string(&cmd_remove, "remove");
+	}
+	if (!err_code)
+	{
+		construct_string(&cmd_search, "search");
+	}
+	if (!err_code)
+	{
+		err_code = construct_string(&cmd_deliver, "deliver");
+	}
+	if (!err_code)
+	{
+		err_code = construct_string(&cmd_print, "print");
+	}
+	if (!err_code)
+	{
+		err_code = construct_string(&cmd_print_delivered, "delivered");
+	}
+	if (!err_code)
+	{
+		err_code = construct_string(&cmd_print_expired, "expired");
+	}
+
+	if (!err_code)
+	{
+		printf("cmds: exit add remove print search deliver delivered expired\n");
+	}
+	
 	int run_flag = 1;
 	while (run_flag && !err_code)
 	{
-		printf("cmd: ");
-		// WRITE CMD
 		String cmd, mailID;
 		construct_string(&cmd, NULL);
 		construct_string(&mailID, NULL);
+		// READ CMD
+		printf("cmd: ");
 		err_code = read_string_line(&cmd);
 		printf("\n");
 		// EXECUTE CMD
@@ -316,6 +358,7 @@ int main(int argc, char** argv)
 			printf("\n");
 		}
 	}
+	
 	destruct_string(&cmd_exit);
 	destruct_string(&cmd_add);
 	destruct_string(&cmd_remove);
@@ -325,6 +368,13 @@ int main(int argc, char** argv)
 	destruct_string(&cmd_print_delivered);
 	destruct_string(&cmd_print_expired);
 	destruct_post(&post);
+	
+	if (err_code)
+	{
+		printf("CRITICAL ERROR:\n");
+		print_error(err_code);
+		return err_code;
+	}
 }
 
 // PART I (STRINGS) IMPLEMENTATION
@@ -900,6 +950,7 @@ status_codes construct_post(Post* post, const Address addr)
 	post->mail_arr = (Mail*) malloc(sizeof(Mail) * 2);
 	if (post->mail_arr == NULL)
 	{
+		post->mail_size = 0;
 		return BAD_ALLOC;
 	}
 	return OK;
