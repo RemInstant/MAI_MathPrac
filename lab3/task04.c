@@ -190,8 +190,10 @@ int main(int argc, char** argv)
 	{
 		printf("cmd: ");
 		// WRITE CMD
-		String cmd;
-		err_code = read_string_line(&cmd);	
+		String cmd, mailID;
+		construct_string(&cmd, NULL);
+		construct_string(&mailID, NULL);
+		err_code = read_string_line(&cmd);
 		printf("\n");
 		// EXECUTE CMD
 		if (!err_code)
@@ -228,7 +230,6 @@ int main(int argc, char** argv)
 			else if (equal_string(cmd, cmd_remove))
 			{
 				printf("Enter mail ID: ");
-				String mailID;
 				cmd_code = read_string_line(&mailID);
 				if (!cmd_code)
 				{
@@ -248,7 +249,6 @@ int main(int argc, char** argv)
 			else if (equal_string(cmd, cmd_search))
 			{
 				printf("Enter mail ID: ");
-				String mailID;
 				ull ind;
 				cmd_code = read_string_line(&mailID);
 				if (!cmd_code)
@@ -269,7 +269,6 @@ int main(int argc, char** argv)
 			else if (equal_string(cmd, cmd_deliver))
 			{
 				printf("Enter mail ID: ");
-				String mailID;
 				ull ind;
 				cmd_code = read_string_line(&mailID);
 				if (!cmd_code)
@@ -312,14 +311,19 @@ int main(int argc, char** argv)
 			{
 				print_error(cmd_code);
 			}
+			destruct_string(&cmd);
+			destruct_string(&mailID);
 			printf("\n");
 		}
 	}
 	destruct_string(&cmd_exit);
 	destruct_string(&cmd_add);
 	destruct_string(&cmd_remove);
-	destruct_string(&cmd_print);
 	destruct_string(&cmd_search);
+	destruct_string(&cmd_deliver);
+	destruct_string(&cmd_print);
+	destruct_string(&cmd_print_delivered);
+	destruct_string(&cmd_print_expired);
 	destruct_post(&post);
 }
 
@@ -463,7 +467,7 @@ status_codes read_string_line(String* str_line)
 		line[iter++] = ch;
 		ch = getchar();
 	}
-	(line)[iter] = '\0';
+	line[iter] = '\0';
 	str_line->len = iter;
 	str_line->data = line;
 	return OK;
@@ -944,7 +948,7 @@ status_codes search_mail(const Post post, const String mailID, ull* ind)
 		return INVALID_INPUT;
 	}
 	// do you hear about binary search buddy?
-	for (ull i = 0; i < post.mail_size; ++i)
+	for (ull i = 0; i < post.mail_cnt; ++i)
 	{
 		if (equal_string(post.mail_arr[i].mail_id, mailID))
 		{

@@ -661,15 +661,7 @@ int main(int argc, char** argv)
 	unsigned n = 2;
 	matrix_n matrix;
 	construct_matrix(n, &matrix);
-	//fill_matrix(matrix, 3.0, -3.0, 5.0, -7.0, 8.0, 1.0, 9.0, 3.0, -4.0, 7.0, -4.0, 5.0, 1.0, 5.0, 8.0, -2.0);
 	fill_matrix(matrix, 5.0, 0.0, -8.0, 5.0);
-	// |  3 -3  5 -7 |
-	// |  8  1  9  3 |
-	// | -4  7 -4  5 |
-	// |  1  5  8 -2 |
-	//double det;
-	//calc_matrix_det(n, matrix, &det);
-	//printf("%lf\n", det);
 	
 	vec_n vec1, vec2, vec3;
 	construct_vector(n, &vec1);
@@ -684,8 +676,8 @@ int main(int argc, char** argv)
 	vec_n* vecs2;
 	vec_n* vecs3;
 	
-	code = solve(n, 1e-3, calc_norm_inf, calc_norm_p, 5, calc_norm_matrix, matrix, &cnt1, &vecs1, &cnt2, &vecs2, &cnt3, &vecs3,
-			3, vec1, vec2, vec3);
+	code = solve(n, 1e-3, calc_norm_inf, calc_norm_p, 5, calc_norm_matrix, matrix,
+			&cnt1, &vecs1, &cnt2, &vecs2, &cnt3, &vecs3, 3, vec1, vec2, vec3);
 	
 	if (code != OK)
 	{

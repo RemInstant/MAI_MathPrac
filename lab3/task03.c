@@ -261,6 +261,7 @@ status_codes write_employees(const char* path, ull emp_cnt, Employee** emps)
 			fprintf(file, "\n");
 		}
 	}
+	fclose(file);
 	return OK;
 }
 
@@ -268,7 +269,7 @@ int main(int argc, char** argv)
 {
 	if (argc == 1)
 	{
-		printf("Usage:\n");
+		printf("Usage: <input> <flag> <output>\n");
 		return OK;
 	}
 	
