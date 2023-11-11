@@ -998,7 +998,6 @@ status_codes search_mail(const Post post, const String mailID, ull* ind)
 	{
 		return INVALID_INPUT;
 	}
-	// do you hear about binary search buddy?
 	for (ull i = 0; i < post.mail_cnt; ++i)
 	{
 		if (equal_string(post.mail_arr[i].mail_id, mailID))

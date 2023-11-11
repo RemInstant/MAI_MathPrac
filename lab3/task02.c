@@ -676,7 +676,7 @@ int main(int argc, char** argv)
 	vec_n* vecs2;
 	vec_n* vecs3;
 	
-	code = solve(n, 1e-3, calc_norm_inf, calc_norm_p, 5, calc_norm_matrix, matrix,
+	code = solve(n, 1e-5, calc_norm_inf, calc_norm_p, 5, calc_norm_matrix, matrix,
 			&cnt1, &vecs1, &cnt2, &vecs2, &cnt3, &vecs3, 3, vec1, vec2, vec3);
 	
 	if (code != OK)

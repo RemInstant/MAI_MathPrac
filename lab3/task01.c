@@ -167,6 +167,13 @@ status_codes convert_to_base_2r(ll num, int r, char* res)
 		res[i] = '0';
 	}
 	
+	int neg_flag = 0;
+	if (num < 0)
+	{
+		num = negative(num);
+		neg_flag = 1;
+	}
+	
 	int mask = minus(1 << r, 1);
 	for (ll i = 0; product(r, i) < 64; increment(&i))
 	{
@@ -186,13 +193,28 @@ status_codes convert_to_base_2r(ll num, int r, char* res)
 		}
 		res[minus(64, zero_cnt)] = '\0';
 	}
+	if (neg_flag)
+	{
+		for (ll i = 63; i >= 1; --i)
+		{
+			res[i] = res[i-1];
+		}
+		res[0] = '-';
+	}
 	return OK;
 }
 
 int main(int argc, char** argv)
 {
 	char res[65];
-	status_codes code = convert_to_base_2r(LLONG_MAX, 4, res);
+	status_codes code = convert_to_base_2r(-284, 5, res);
+	if (code != OK)
+	{
+		print_error(code);
+		return code;
+	}
+	printf("%s\n", res);
+	code = convert_to_base_2r(284, 5, res);
 	if (code != OK)
 	{
 		print_error(code);
