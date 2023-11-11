@@ -75,10 +75,15 @@ status_codes validate_string(char* str, validation_type type, ll char_n);
 status_codes read_line(char** line);
 status_codes read_students(FILE* file, ull* studs_cnt, Student** studs);
 
+typedef enum
+{
+	STUD_NAME,
+	STUD_SURNAME,
+	STUD_GROUP
+} search_type;
+
 status_codes search_stud_by_id(ull studs_cnt, Student* studs, ull id, Student** found_stud);
-status_codes search_stud_by_surname(ull studs_cnt, Student* studs, const char* surname, ull* found_studs_cnt, Student** found_studs);
-status_codes search_stud_by_name(ull studs_cnt, Student* studs, const char* name, ull* found_studs_cnt, Student** found_studs);
-status_codes search_stud_by_group(ull studs_cnt, Student* studs, const char* group, ull* found_studs_cnt, Student** found_studs);
+status_codes search_stud_by_str(ull s_cnt, Student* studs, search_type type, const char* surname, ull* found_cnt, Student** found);
 
 int stud_id_comp(const void* l, const void* r);
 int stud_surname_comp(const void* l, const void* r);
@@ -190,7 +195,8 @@ int main(int argc, char** argv)
 				printf("Enter name: ");
 				cmd_code = read_line(&name);
 				cmd_code = cmd_code ? cmd_code : validate_string(name, NON_VOID_ALPHA_STRING, -1);
-				cmd_code = cmd_code ? cmd_code : search_stud_by_name(studs_cnt, studs, name, &studs_print_cnt, &studs_print);
+				cmd_code = cmd_code ? cmd_code :
+						search_stud_by_str(studs_cnt, studs, STUD_NAME, name, &studs_print_cnt, &studs_print);
 				cmd_code = cmd_code ? cmd_code : print_studs(studs_print_cnt, studs_print);
 				free(name);
 			}
@@ -201,7 +207,8 @@ int main(int argc, char** argv)
 				printf("Enter surname: ");
 				cmd_code = read_line(&surname);
 				cmd_code = cmd_code ? cmd_code : validate_string(surname, NON_VOID_ALPHA_STRING, -1);
-				cmd_code = cmd_code ? cmd_code : search_stud_by_surname(studs_cnt, studs, surname, &studs_print_cnt, &studs_print);
+				cmd_code = cmd_code ? cmd_code :
+						search_stud_by_str(studs_cnt, studs, STUD_SURNAME, surname, &studs_print_cnt, &studs_print);
 				cmd_code = cmd_code ? cmd_code : print_studs(studs_print_cnt, studs_print);
 				free(surname);
 			}
@@ -212,7 +219,8 @@ int main(int argc, char** argv)
 				printf("Enter group: ");
 				cmd_code = read_line(&group);
 				cmd_code = cmd_code ? cmd_code : validate_string(group, NON_VOID_STRING, -1);
-				cmd_code = cmd_code ? cmd_code : search_stud_by_group(studs_cnt, studs, group, &studs_print_cnt, &studs_print);
+				cmd_code = cmd_code ? cmd_code :
+						search_stud_by_str(studs_cnt, studs, STUD_GROUP, group, &studs_print_cnt, &studs_print);
 				cmd_code = cmd_code ? cmd_code : print_studs(studs_print_cnt, studs_print);
 				free(group);
 			}
@@ -266,6 +274,10 @@ int main(int argc, char** argv)
 	}
 	
 	fclose(output);
+	for (ull i = 0; i < studs_cnt; ++i)
+	{
+		free(studs[i].marks);
+	}
 	free(studs);
 	if (err_code)
 	{
@@ -371,7 +383,6 @@ status_codes read_students(FILE* file, ull* studs_cnt, Student** studs)
 	Student* studs_tmp = (Student*) malloc(sizeof(Student) * 2);
 	if (studs == NULL)
 	{
-		fclose(file);
 		return BAD_ALLOC;
 	}
 	
@@ -420,8 +431,6 @@ status_codes read_students(FILE* file, ull* studs_cnt, Student** studs)
 			studs_tmp[cnt++] = stud;
 		}
 	}
-	
-	fclose(file);
 	if (err_code)
 	{
 		for (ull i = 0; i < cnt; ++i)
@@ -454,9 +463,9 @@ status_codes search_stud_by_id(ull studs_cnt, Student* studs, ull id, Student** 
 	return OK;
 }
 
-status_codes search_stud_by_surname(ull studs_cnt, Student* studs, const char* surname, ull* found_studs_cnt, Student** found_studs)
+status_codes search_stud_by_str(ull s_cnt, Student* studs, search_type type, const char* str, ull* found_cnt, Student** found)
 {
-	if (studs == NULL || found_studs == NULL)
+	if (studs == NULL || found == NULL)
 	{
 		return INVALID_INPUT;
 	}
@@ -467,9 +476,11 @@ status_codes search_stud_by_surname(ull studs_cnt, Student* studs, const char* s
 	{
 		return BAD_ALLOC;
 	}
-	for (ull i = 0; i < studs_cnt; ++i)
+	for (ull i = 0; i < s_cnt; ++i)
 	{
-		if (!strcmp(studs[i].surname, surname))
+		if ((type == STUD_NAME && !strcmp(studs[i].name, str))
+				|| (type == STUD_SURNAME && !strcmp(studs[i].surname, str))
+				|| (type == STUD_GROUP && !strcmp(studs[i].group, str)))
 		{
 			if (cnt == size)
 			{
@@ -485,80 +496,8 @@ status_codes search_stud_by_surname(ull studs_cnt, Student* studs, const char* s
 			studs_tmp[cnt++] = studs[i];
 		}
 	}
-	*found_studs_cnt = cnt;
-	*found_studs = studs_tmp;
-	return OK;
-}
-
-status_codes search_stud_by_name(ull studs_cnt, Student* studs, const char* name, ull* found_studs_cnt, Student** found_studs)
-{
-	if (studs == NULL || found_studs == NULL)
-	{
-		return INVALID_INPUT;
-	}
-	ull size = 2;
-	ull cnt = 0;
-	Student* studs_tmp = (Student*) malloc(sizeof(Student) * 2);
-	if (studs_tmp == NULL)
-	{
-		return BAD_ALLOC;
-	}
-	for (ull i = 0; i < studs_cnt; ++i)
-	{
-		if (!strcmp(studs[i].name, name))
-		{
-			if (cnt == size)
-			{
-				size *= 2;
-				Student* tmp = (Student*) realloc(studs_tmp, sizeof(Student) * size);
-				if (tmp == NULL)
-				{
-					free(studs_tmp);
-					return BAD_ALLOC;
-				}
-				studs_tmp = tmp;
-			}
-			studs_tmp[cnt++] = studs[i];
-		}
-	}
-	*found_studs_cnt = cnt;
-	*found_studs = studs_tmp;
-	return OK;
-}
-
-status_codes search_stud_by_group(ull studs_cnt, Student* studs, const char* group, ull* found_studs_cnt, Student** found_studs)
-{
-	if (studs == NULL || found_studs == NULL)
-	{
-		return INVALID_INPUT;
-	}
-	ull size = 2;
-	ull cnt = 0;
-	Student* studs_tmp = (Student*) malloc(sizeof(Student) * 2);
-	if (studs_tmp == NULL)
-	{
-		return BAD_ALLOC;
-	}
-	for (ull i = 0; i < studs_cnt; ++i)
-	{
-		if (!strcmp(studs[i].group, group))
-		{
-			if (cnt == size)
-			{
-				size *= 2;
-				Student* tmp = (Student*) realloc(studs_tmp, sizeof(Student) * size);
-				if (tmp == NULL)
-				{
-					free(studs_tmp);
-					return BAD_ALLOC;
-				}
-				studs_tmp = tmp;
-			}
-			studs_tmp[cnt++] = studs[i];
-		}
-	}
-	*found_studs_cnt = cnt;
-	*found_studs = studs_tmp;
+	*found_cnt = cnt;
+	*found = studs_tmp;
 	return OK;
 }
 
