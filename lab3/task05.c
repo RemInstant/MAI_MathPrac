@@ -102,7 +102,7 @@ int main(int argc, char** argv)
 		return OK;
 	}
 	
-	if (argc != 3)
+	if (argc != 3 || !strcmp(argv[1], argv[2]))
 	{
 		print_error(INVALID_INPUT);
 		return INVALID_INPUT;
@@ -398,7 +398,7 @@ status_codes read_students(FILE* file, ull* studs_cnt, Student** studs)
 		// READ
 		if (!err_code)
 		{
-			if (fscanf(file, " %llu %32[^ ] %32[^ ] %16[^ ] %hu %hu %hu %hu %hu",
+			if (fscanf(file, "%llu %32[^ ] %32[^ ] %16[^ ] %hu %hu %hu %hu %hu\n",
 					&(stud.id), stud.name, stud.surname, stud.group, &(stud.marks[0]),
 					&(stud.marks[1]), &(stud.marks[2]), &(stud.marks[3]), &(stud.marks[4])) != 9)
 			{

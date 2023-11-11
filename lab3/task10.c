@@ -300,16 +300,24 @@ void fprint_tree(FILE* file, const Tree tree)
 
 int main(int argc, char** argv)
 {
-	FILE* input = fopen("lab3/t10_input", "r");
-	if (input == NULL)
+	if (argc == 1)
 	{
-		print_error(FILE_OPENING_ERROR);
-		return FILE_OPENING_ERROR;
+		printf("Usage: cmd_path <input> <output>\n");
+		return OK;
 	}
-	FILE* output = fopen("output", "w");
-	if (output == NULL)
+	
+	if (argc != 3)
+	{
+		print_error(INVALID_INPUT);
+		return INVALID_INPUT;
+	}
+	
+	FILE* input = fopen(argv[1], "r");
+	FILE* output = fopen(argv[2], "w");
+	if (input == NULL || output == NULL)
 	{
 		fclose(input);
+		fclose(output);
 		print_error(FILE_OPENING_ERROR);
 		return FILE_OPENING_ERROR;
 	}
