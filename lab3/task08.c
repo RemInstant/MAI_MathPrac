@@ -19,7 +19,9 @@ typedef enum
 	FILE_OPENING_ERROR,
 	FILE_CONTENT_ERROR,
 	OVERFLOW,
-	BAD_ALLOC
+	DIVISION_BY_ZERO,
+	BAD_ALLOC,
+	CORRUPTED_MEMORY
 } status_codes;
 
 void print_error(status_codes code)
@@ -46,8 +48,14 @@ void print_error(status_codes code)
 		case OVERFLOW:
 			printf("An overflow occurred\n");
 			return;
+		case DIVISION_BY_ZERO:
+			printf("Division by zero occurred\n");
+			return;
 		case BAD_ALLOC:
 			printf("Memory lack error occurred\n");
+			return;
+		case CORRUPTED_MEMORY:
+			printf("Memory was corrupted\n");
 			return;
 		default:
 			printf("Unexpected error occurred\n");
@@ -77,6 +85,7 @@ typedef struct
 void iter_next(List_iter* iter);
 int iter_equal(const List_iter iter_l, const List_iter iter_r);
 
+status_codes list_set_null(List* list);
 status_codes list_construct(List* list);
 status_codes list_copy(const List list, List* copy);
 status_codes list_destruct(List* list);
@@ -84,11 +93,11 @@ List_iter list_begin(const List list);
 List_iter list_end(const List list);
 status_codes list_insert(List *list, List_iter iter, ull pow, double coef);
 status_codes list_remove(List *list, List_iter iter);
-void list_print(const List list);
+void list_print(double eps, const List list);
 
-// Interpreter functions
 typedef enum
 {
+	NONE,
 	ADD,
 	SUB,
 	MULT,
@@ -97,44 +106,178 @@ typedef enum
 	EVAL,
 	DIFF,
 	CMPS
-} commands;
+} polynomial_command;
 
-status_codes add_polynomial(const List* poly1, const List* poly2, List* summator);
-status_codes sub_polynomial(const List* poly1, const List* poly2, List* summator);
-status_codes mult_polynomial(const List* poly1, const List* poly2, List* summator);
-status_codes div_polynomial(const List* poly1, const List* poly2, List* summator);
-status_codes mod_polynomial(const List* poly1, const List* poly2, List* summator);
-status_codes eval_polynomial(const List* poly, double x, List* summator);
-status_codes diff_polynomial(const List* poly1, List* summator);
-status_codes cmps_polynomial(const List* poly1, const List* poly2, List* summator);
+status_codes polynomial_construct(double eps, const char* str, List* poly);
+status_codes polynomial_normalize(List* poly);
+status_codes polynomial_remove_zero(double eps, List* poly);
+status_codes polynomial_add(double eps, List poly1, List poly2, List* summator);
+status_codes polynomial_sub(double eps, List poly1, List poly2, List* summator);
+status_codes polynomial_mult(double eps, List poly1, List poly2, List* summator);
+status_codes polynomial_div(double eps, List poly1, List poly2, List* summator);
+status_codes polynomial_mod(double eps, List poly1, List poly2, List* summator);
+status_codes polynomial_eval(List poly, double x, double* value);
+status_codes polynomial_diff(double eps, List poly, List* summator);
+status_codes polynomial_cmps(double eps, List poly1, List poly2, List* summator);
+
+status_codes sread_until(const char* src, const char* delims, const char** end_ptr, char** str);
+status_codes fread_cmd(FILE* file, char** str);
+status_codes parse_cmd(const char* src, polynomial_command* cmd, ull* arg_cnt, char** arg1, char** arg2);
 
 int main(int argc, char** argv)
 {
-	// Processing inp
+	if (argc == 1)
+	{
+		//printf("Usage: cmd_path <input>\n");
+		//return OK;
+	}
+	if (argc != 2)
+	{
+		//return INVALID_INPUT;
+	}
 	
-	List poly1, poly2, summator;
-	list_construct(&poly1);
-	list_construct(&poly2);
-	list_construct(&summator);
+	double eps = EPS; // ARGV???
 	
-	// x + 1
-	list_insert(&poly1, list_end(poly1), 1, 1);
-	list_insert(&poly1, list_end(poly1), 0, 1);
+	FILE* input = fopen("lab3/t08_input", "r");
+	//FILE* input = fopen(argv[1], "r");
+	if (input == NULL)
+	{
+		return FILE_OPENING_ERROR;
+	}
 	
-	// x - 1
-	list_insert(&poly2, list_end(poly2), 1, 1);
-	list_insert(&poly2, list_end(poly2), 0, -1);
+	List summator;
+	list_set_null(&summator);
+	status_codes err_code = list_construct(&summator);
 	
-	list_print(poly1);
-	list_print(poly2);
+	while(!err_code && !feof(input))
+	{
+		char* cmd = NULL;
+		err_code = fread_cmd(input, &cmd);
+		
+		polynomial_command cmd_type;
+		ull arg_cnt;
+		char* arg1 = NULL;
+		char* arg2 = NULL;
+		
+		err_code = err_code ? err_code : parse_cmd(cmd, &cmd_type, &arg_cnt, &arg1, &arg2);
+		free(cmd);
+		
+		int full_arg_cmd = 1;
+		double x = 0, value = 0;
+		List poly1, poly2, res;
+		list_set_null(&poly1);
+		list_set_null(&poly2);
+		list_set_null(&res);
+		
+		switch (cmd_type)
+		{
+			case NONE:
+				break;
+			case ADD:
+			case SUB:
+			case MULT:
+			case DIV:
+			case MOD:
+			case CMPS:
+			{
+				if (arg_cnt == 2)
+				{
+					err_code = err_code ? err_code : polynomial_construct(eps, arg1, &poly1);
+					err_code = err_code ? err_code : polynomial_construct(eps, arg2, &poly2);
+				}
+				else
+				{
+					poly1 = summator;
+					err_code = err_code ? err_code : polynomial_construct(eps, arg1, &poly2);
+					full_arg_cmd = 0;
+				}
+				err_code = err_code ? err_code : list_construct(&res);
+				break;
+			}
+			case EVAL:
+			{
+				char* check_ptr;
+				x = strtod(arg1, &check_ptr);
+				err_code = err_code ? err_code : (*check_ptr == '\0' ? OK : INVALID_INPUT);
+				break;
+			}
+			case DIFF:
+			{
+				if (arg_cnt == 1)
+				{
+					err_code = err_code ? err_code : polynomial_construct(eps, arg1, &poly1);
+				}
+				else
+				{
+					poly1 = summator;
+					full_arg_cmd = 0;
+				}
+				err_code = err_code ? err_code : list_construct(&res);
+				break;
+			}
+		}
+		
+		free(arg1);
+		free(arg2);
+		
+		switch (cmd_type)
+		{
+			case NONE:
+				break;
+			case ADD:
+				err_code = err_code ? err_code : polynomial_add(eps, poly1, poly2, &summator);
+				break;
+			case SUB:
+				err_code = err_code ? err_code : polynomial_sub(eps, poly1, poly2, &summator);
+				break;
+			case MULT:
+				err_code = err_code ? err_code : polynomial_mult(eps, poly1, poly2, &summator);
+				break;
+			case DIV:
+				err_code = err_code ? err_code : polynomial_div(eps, poly1, poly2, &summator);
+				break;
+			case MOD:
+				err_code = err_code ? err_code : polynomial_mod(eps, poly1, poly2, &summator);
+				break;
+			case CMPS:
+				err_code = err_code ? err_code : polynomial_cmps(eps, poly1, poly2, &summator);
+				break;
+			case EVAL:
+				err_code = err_code ? err_code : polynomial_eval(summator, x, &value);
+				break;
+			case DIFF:
+				err_code = err_code ? err_code : polynomial_diff(eps, poly1, &summator);
+				break;
+		}
+		
+		if (!err_code)
+		{
+			if (cmd_type == EVAL)
+			{
+				printf("value of summator at %.3lf is %.3lf\n", x, value);
+			}
+			else if (cmd_type != NONE)
+			{
+				list_print(eps, summator);
+			}
+		}
+		
+		if (full_arg_cmd)
+		{
+			list_destruct(&poly1);
+		}
+		list_destruct(&poly2);
+		list_destruct(&res);
+	}
 	
-	mult_polynomial(&poly1, &poly2, &summator);
-	
-	list_print(summator);
-	
-	list_destruct(&poly1);
-	list_destruct(&poly2);
+	fclose(input);
 	list_destruct(&summator);
+	
+	if (err_code)
+	{
+		print_error(err_code);
+		return err_code;
+	}
 }
 
 void iter_next(List_iter* iter)
@@ -149,6 +292,18 @@ void iter_next(List_iter* iter)
 int iter_equal(const List_iter iter_l, const List_iter iter_r)
 {
 	return iter_l.cur == iter_r.cur;
+}
+
+status_codes list_set_null(List* list)
+{
+	if (list == NULL)
+	{
+		return INVALID_INPUT;
+	}
+	list->begin = NULL;
+	list->end = NULL;
+	list->size = 0;
+	return OK;
 }
 
 status_codes list_construct(List* list)
@@ -201,6 +356,10 @@ status_codes list_destruct(List* list)
 	if (list == NULL)
 	{
 		return INVALID_INPUT;
+	}
+	if (list->begin == NULL || list->end == NULL)
+	{
+		return list->begin == list->end ? OK : CORRUPTED_MEMORY;
 	}
 	list_elem* elem = list->begin;
 	list_elem* next_elem = elem->next;
@@ -274,56 +433,261 @@ status_codes list_remove(List *list, List_iter iter)
 		return INVALID_INPUT;
 	}
 	
-	list_elem* prev = list->begin;
 	list_elem* cur = iter.cur;
-	while (prev->next != cur)
+	if (list->begin == cur)
 	{
-		prev = prev->next;
-		if (prev == list->end)
-		{
-			return INVALID_INPUT;
-		}
+		list->begin = cur->next;
 	}
-	
-	prev->next = cur->next;
+	else
+	{
+		list_elem* prev = list->begin;
+		while (prev->next != cur)
+		{
+			prev = prev->next;
+			if (prev == list->end)
+			{
+				return INVALID_INPUT;
+			}
+		}
+		prev->next = cur->next;
+	}
 	free(cur);
 	list->size--;
 	return OK;
 }
 
-void list_print(const List list)
+void list_print(double eps, const List list)
 {
 	list_elem* elem = list.begin;
+	if (list.size == 0)
+	{
+		printf("0");
+	}
 	while (elem != list.end)
 	{
-		printf("%lfx^%llu ", elem->coef, elem->pow);
+		if (elem->coef < 0)
+		{
+			printf("-");
+		}
+		else if (elem != list.begin)
+		{
+			printf("+");
+		}
+		if (fabs(fabs(elem->coef) - 1) >= eps)
+		{
+			printf("%.2lf", fabs(elem->coef));
+		}
+		if (elem->pow != 0)
+		{
+			printf("x^%llu", elem->pow);
+		}
 		elem = elem->next;
 	}
 	printf("\n");
 }
 
-
-
-status_codes add_polynomial(const List* poly1, const List* poly2, List* summator)
+status_codes polynomial_construct(double eps, const char* src, List* poly)
 {
-	if (poly2 == NULL || summator == NULL)
+	if (src == NULL || poly == NULL)
 	{
 		return INVALID_INPUT;
 	}
-	if (poly1 == NULL)
+	
+	list_set_null(poly);
+	status_codes err_code = list_construct(poly);
+	int state = 0; // 0 - coef, 1 - var skip, 2 - pow, 3 - appending
+	
+	const char* ptr = src;
+	ull pow = 0;
+	double coef = 0;
+	while (!err_code && (*ptr != '\0' || state == 3))
 	{
-		poly1 = summator;
+		char* str = NULL;
+		// READ COEF
+		if (state == 0)
+		{
+			int sign = *ptr == '-' ? -1 : 1;
+			char* check_ptr;
+			if (*ptr == '-' || *ptr == '+')
+			{
+				++ptr;
+			}
+			err_code = sread_until(ptr, "x+-", &ptr, &str);
+			if (str[0] == '\0')
+			{
+				coef = sign;
+			}
+			else
+			{
+				coef = strtod(str, &check_ptr);
+				coef *= sign;
+				err_code = err_code ? err_code : (*check_ptr == '\0' ? OK : INVALID_INPUT);
+			}
+			if (*ptr == 'x')
+			{
+				state = 1;
+			}
+			else
+			{
+				pow = 0;
+				state = 3;
+			}
+		}
+		// SKIP VARIABLE
+		else if (state == 1)
+		{
+			++ptr;
+			if (*ptr == '+' || *ptr == '-' || *ptr == '\0')
+			{
+				pow = 1;
+				state = 3;
+			}
+			else if (*ptr == '^')
+			{
+				state = 2;
+			}
+			else
+			{
+				err_code = INVALID_INPUT;
+			}
+		}
+		// READ POW
+		else if (state == 2)
+		{
+			++ptr;
+			char* check_ptr;
+			err_code = sread_until(ptr, "+-", &ptr, &str);
+			errno = 0;
+			pow = strtoull(str, &check_ptr, 10);
+			err_code = err_code ? err_code : (errno == ERANGE ? OVERFLOW : OK);
+			err_code = err_code ? err_code : (*check_ptr == '\0' ? OK : INVALID_INPUT);
+			state = 3;
+		}
+		// SAVE DATA
+		else if (state == 3)
+		{
+			err_code = list_insert(poly, list_end(*poly), pow, coef);
+			state = 0;
+		}
+		free(str);
+	}
+	
+	err_code = err_code ? err_code : polynomial_normalize(poly);
+	err_code = err_code ? err_code : polynomial_remove_zero(eps, poly);
+	if (err_code)
+	{
+		list_destruct(poly);
+		return err_code;
+	}
+	return OK;
+}
+
+status_codes polynomial_normalize(List* poly)
+{
+	if (poly == NULL)
+	{
+		return INVALID_INPUT;
+	}
+	
+	status_codes err_code = OK;
+	List_iter iter_end = list_end(*poly);
+	ull sorted_cnt = 0;
+	while (sorted_cnt + 1 < poly->size)
+	{
+		List_iter iter1 = list_begin(*poly);
+		for (ull i = 0; i < sorted_cnt; ++i)
+		{
+			iter_next(&iter1);
+		}
+		
+		List_iter iter2 = iter1;
+		List_iter iter_max = iter1;
+		while (!iter_equal(iter2, iter_end))
+		{
+			if (iter2.cur->pow > iter_max.cur->pow)
+			{
+				iter_max = iter2;
+			}
+			iter_next(&iter2);
+		}
+		
+		err_code = list_insert(poly, iter1, iter_max.cur->pow, iter_max.cur->coef);
+		if (!err_code)
+		{
+			list_remove(poly, iter_max);
+			++sorted_cnt;
+		}
+	}
+	List_iter iter = list_begin(*poly);
+	List_iter iter_copy = iter;
+	iter_next(&iter_copy);
+	while (!err_code && !iter_equal(iter_copy, iter_end))
+	{
+		while (iter.cur->pow == iter_copy.cur->pow)
+		{
+			iter.cur->coef += iter_copy.cur->coef;
+			list_remove(poly, iter_copy);
+			iter_copy = iter;
+			iter_next(&iter_copy);
+		}
+		iter_next(&iter);
+		iter_next(&iter_copy);
+	}
+	if (err_code)
+	{
+		return err_code;
+	}
+	return OK;
+}
+
+status_codes polynomial_remove_zero(double eps, List* poly)
+{
+	if (poly == NULL || eps <= 0)
+	{
+		return INVALID_INPUT;
+	}
+	
+	List_iter iter = list_begin(*poly);
+	List_iter iter_end = list_end(*poly);
+	while (!iter_equal(iter, iter_end))
+	{
+		if (fabs(iter.cur->coef) <= eps)
+		{
+			List_iter iter_copy = iter;
+			iter_next(&iter);
+			status_codes code = list_remove(poly, iter_copy);
+			if (code)
+			{
+				return code;
+			}
+		}
+		else
+		{
+			iter_next(&iter);
+		}
+	}
+	return OK;
+}
+
+status_codes polynomial_add(double eps, List poly1, List poly2, List* summator)
+{
+	if (summator == NULL)
+	{
+		return INVALID_INPUT;
 	}
 	
 	List res;
+	list_set_null(&res);
 	status_codes err_code = list_construct(&res);
 	
-	List_iter iter1 = list_begin(*poly1);
-	List_iter iter2 = list_begin(*poly2);
+	List_iter iter1 = list_begin(poly1);
+	List_iter iter2 = list_begin(poly2);
+	List_iter iter1_end = list_end(poly1);
+	List_iter iter2_end = list_end(poly2);
 	
-	int end_flag1 = iter_equal(iter1, list_end(*poly1));
-	int end_flag2 = iter_equal(iter2, list_end(*poly2));
-	
+	int end_flag1 = iter_equal(iter1, iter1_end);
+	int end_flag2 = iter_equal(iter2, iter2_end);
+
 	while (!err_code && (!end_flag1 || !end_flag2))
 	{
 		if (!end_flag1 && !end_flag2 && iter1.cur->pow == iter2.cur->pow)
@@ -348,8 +712,15 @@ status_codes add_polynomial(const List* poly1, const List* poly2, List* summator
 			err_code = list_insert(&res, list_end(res), pow, coef);
 			iter_next(&iter2);
 		}
-		end_flag1 = iter_equal(iter1, list_end(*poly1));
-		end_flag2 = iter_equal(iter2, list_end(*poly2));
+		end_flag1 = iter_equal(iter1, iter1_end);
+		end_flag2 = iter_equal(iter2, iter2_end);
+	}
+	
+	err_code = err_code ? err_code : polynomial_remove_zero(eps, &res);
+	if (err_code)
+	{
+		list_destruct(&res);
+		return err_code;
 	}
 	
 	list_destruct(summator);
@@ -357,25 +728,24 @@ status_codes add_polynomial(const List* poly1, const List* poly2, List* summator
 	return OK;
 }
 
-status_codes sub_polynomial(const List* poly1, const List* poly2, List* summator)
+status_codes polynomial_sub(double eps, List poly1, List poly2, List* summator)
 {
-	if (poly2 == NULL || summator == NULL)
+	if (summator == NULL)
 	{
 		return INVALID_INPUT;
 	}
-	if (poly1 == NULL)
-	{
-		poly1 = summator;
-	}
 	
 	List res;
+	list_set_null(&res);
 	status_codes err_code = list_construct(&res);
 	
-	List_iter iter1 = list_begin(*poly1);
-	List_iter iter2 = list_begin(*poly2);
+	List_iter iter1 = list_begin(poly1);
+	List_iter iter2 = list_begin(poly2);
+	List_iter iter1_end = list_end(poly1);
+	List_iter iter2_end = list_end(poly2);
 	
-	int end_flag1 = iter_equal(iter1, list_end(*poly1));
-	int end_flag2 = iter_equal(iter2, list_end(*poly2));
+	int end_flag1 = iter_equal(iter1, iter1_end);
+	int end_flag2 = iter_equal(iter2, iter2_end);
 	
 	while (!err_code && (!end_flag1 || !end_flag2))
 	{
@@ -401,8 +771,15 @@ status_codes sub_polynomial(const List* poly1, const List* poly2, List* summator
 			err_code = list_insert(&res, list_end(res), pow, coef);
 			iter_next(&iter2);
 		}
-		end_flag1 = iter_equal(iter1, list_end(*poly1));
-		end_flag2 = iter_equal(iter2, list_end(*poly2));
+		end_flag1 = iter_equal(iter1, iter1_end);
+		end_flag2 = iter_equal(iter2, iter2_end);
+	}
+	
+	err_code = err_code ? err_code : polynomial_remove_zero(eps, &res);
+	if (err_code)
+	{
+		list_destruct(&res);
+		return err_code;
 	}
 	
 	list_destruct(summator);
@@ -410,113 +787,514 @@ status_codes sub_polynomial(const List* poly1, const List* poly2, List* summator
 	return OK;
 }
 
-status_codes mult_polynomial(const List* poly1, const List* poly2, List* summator)
+status_codes polynomial_mult(double eps, List poly1, List poly2, List* summator)
 {
-	if (poly2 == NULL || summator == NULL)
+	if (summator == NULL)
 	{
 		return INVALID_INPUT;
-	}
-	if (poly1 == NULL)
-	{
-		poly1 = summator;
 	}
 	
 	List res;
+	list_set_null(&res);
 	status_codes err_code = list_construct(&res);
-	if (err_code)
-	{
-		return BAD_ALLOC;
-	}
 	
-	List_iter iter1 = list_begin(*poly1);
-	while(!err_code && !iter_equal(iter1, list_end(*poly1)))
+	List_iter iter1 = list_begin(poly1);
+	List_iter iter1_end = list_end(poly1);
+	while(!err_code && !iter_equal(iter1, iter1_end))
 	{
 		List tmp;
-		err_code = list_copy(*poly2, &tmp);
-		if (err_code)
-		{
-			list_destruct(&res);
-			return BAD_ALLOC;
-		}
-		List_iter iter2 = list_begin(*poly2);
-		while (!iter_equal(iter2, list_end(*poly2)))
+		list_set_null(&tmp);
+		err_code = list_copy(poly2, &tmp);
+		List_iter iter2 = list_begin(tmp);
+		List_iter iter2_end = list_end(tmp);
+		while (!err_code && !iter_equal(iter2, iter2_end))
 		{
 			iter2.cur->pow += iter1.cur->pow;
 			iter2.cur->coef *= iter1.cur->coef;
 			iter_next(&iter2);
 		}
-		err_code = add_polynomial(&res, &tmp, &res);
+		err_code = err_code ? err_code : polynomial_add(eps, res, tmp, &res);
 		list_destruct(&tmp);
 		iter_next(&iter1);
 	}
+	
+	err_code = err_code ? err_code : polynomial_remove_zero(eps, &res);
 	if (err_code)
 	{
 		list_destruct(&res);
 		return err_code;
 	}
-		
+	
 	list_destruct(summator);
 	*summator = res;
 	return OK;
 }
 
-status_codes div_polynomial(const List* poly1, const List* poly2, List* summator)
+status_codes polynomial_div(double eps, List poly1, List poly2, List* summator)
 {
-	if (poly2 == NULL || summator == NULL)
+	if (summator == NULL)
 	{
 		return INVALID_INPUT;
 	}
-	if (poly1 == NULL)
+	if (poly2.size == 0)
 	{
-		poly1 = summator;
+		return DIVISION_BY_ZERO;
 	}
 	
 	List res, tmp;
+	list_set_null(&res);
+	list_set_null(&tmp);
+	
 	status_codes err_code = list_construct(&res);
-	if (err_code)
+	err_code = err_code ? err_code : list_copy(poly1, &tmp);
+	
+	ull cur_pow = list_begin(tmp).cur->pow;
+	ull div_pow = list_begin(poly2).cur->pow;
+	double cur_coef = list_begin(tmp).cur->coef;
+	double div_coef = list_begin(poly2).cur->coef;
+
+	while(!err_code && (cur_pow >= div_pow) && tmp.size > 0)
 	{
-		return BAD_ALLOC;
+		List subtr;
+		list_set_null(&subtr);
+		err_code = list_copy(poly2, &subtr);
+		
+		ull res_pow = cur_pow - div_pow;
+		double res_coef = cur_coef / div_coef;
+		err_code = err_code ? err_code : list_insert(&res, list_end(res), res_pow, res_coef);
+		
+		List_iter iter = list_begin(subtr);
+		List_iter iter_end = list_end(subtr);
+		while (!err_code && !iter_equal(iter, iter_end))
+		{
+			iter.cur->pow += res_pow;
+			iter.cur->coef *= res_coef;
+			iter_next(&iter);
+		}
+		
+		List new_tmp;
+		list_set_null(&new_tmp);
+		err_code = err_code ? err_code : list_construct(&new_tmp);
+		err_code = err_code ? err_code : polynomial_sub(eps, tmp, subtr, &new_tmp);
+		list_destruct(&subtr);
+		list_destruct(&tmp);
+		tmp = new_tmp;
+		
+		if (!err_code)
+		{
+			cur_pow = list_begin(tmp).cur->pow;
+			cur_coef = list_begin(tmp).cur->coef;
+		}
 	}
-	err_code = list_copy(*poly1, &tmp);
+	
+	list_destruct(&tmp);
+	err_code = err_code ? err_code : polynomial_remove_zero(eps, &res);
 	if (err_code)
 	{
 		list_destruct(&res);
-		return BAD_ALLOC;
+		return err_code;
+	}
+
+	list_destruct(summator);
+	*summator = res;
+	return OK;
+}
+
+status_codes polynomial_mod(double eps, List poly1, List poly2, List* summator)
+{
+	if (summator == NULL)
+	{
+		return INVALID_INPUT;
+	}
+	if (poly2.size == 0)
+	{
+		return DIVISION_BY_ZERO;
 	}
 	
-	List_iter iter1 = list_begin(*poly1);
-	while(!err_code && !iter_equal(iter1, list_end(*poly1)))
+	List res;
+	list_set_null(&res);
+	status_codes err_code = list_copy(poly1, &res);
+	
+	ull cur_pow = list_begin(res).cur->pow;
+	ull div_pow = list_begin(poly2).cur->pow;
+	double cur_coef = list_begin(res).cur->coef;
+	double div_coef = list_begin(poly2).cur->coef;
+
+	while(!err_code && (cur_pow >= div_pow) && res.size > 0)
 	{
-		List tmp;
-		err_code = list_copy(*poly2, &tmp);
-		if (err_code)
+		List subtr;
+		list_set_null(&subtr);
+		err_code = err_code ? err_code : list_copy(poly2, &subtr);
+		
+		ull pow = cur_pow - div_pow;
+		double coef = cur_coef / div_coef;
+		List_iter iter = list_begin(subtr);
+		List_iter iter_end = list_end(subtr);
+		while (!err_code && !iter_equal(iter, iter_end))
 		{
-			list_destruct(&res);
-			return BAD_ALLOC;
+			iter.cur->pow += pow;
+			iter.cur->coef *= coef;
+			iter_next(&iter);
 		}
-		List_iter iter2 = list_begin(*poly2);
-		while (!iter_equal(iter2, list_end(*poly2)))
+		
+		List new_res;
+		list_set_null(&new_res);
+		err_code = err_code ? err_code : list_construct(&new_res);
+		err_code = err_code ? err_code : polynomial_sub(eps, res, subtr, &new_res);
+		list_destruct(&subtr);
+		list_destruct(&res);
+		res = new_res;
+
+		if (!err_code)
 		{
-			iter2.cur->pow += iter1.cur->pow;
-			iter2.cur->coef *= iter1.cur->coef;
-			iter_next(&iter2);
+			cur_pow = list_begin(res).cur->pow;
+			cur_coef = list_begin(res).cur->coef;
 		}
-		err_code = add_polynomial(&res, &tmp, &res);
-		list_destruct(&tmp);
-		iter_next(&iter1);
+	}
+	
+	err_code = err_code ? err_code : polynomial_remove_zero(eps, &res);
+	if (err_code)
+	{
+		list_destruct(&res);
+		return err_code;
+	}
+
+	list_destruct(summator);
+	*summator = res;
+	return OK;
+}
+
+status_codes polynomial_eval(List poly, double x, double* value)
+{
+	double res = 0;
+	double prev_pow = 0;
+	List_iter iter = list_begin(poly);
+	List_iter iter_end = list_end(poly);
+	while(!iter_equal(iter, iter_end))
+	{
+		for (ull i = iter.cur->pow; i < prev_pow; ++i)
+		{
+			res *= x;
+		}
+		res += iter.cur->coef;
+		prev_pow = iter.cur->pow;
+		iter_next(&iter);
+	}
+	*value = res;
+	return OK;
+}
+
+status_codes polynomial_diff(double eps, List poly, List* summator)
+{
+	if (summator == NULL)
+	{
+		return INVALID_INPUT;
+	}
+	
+	List res;
+	list_set_null(&res);
+	status_codes err_code = list_construct(&res);
+	
+	List_iter iter = list_begin(poly);
+	List_iter iter_end = list_end(poly);
+	
+	while(!err_code && !iter_equal(iter, iter_end))
+	{
+		if (iter.cur->pow > 0)
+		{
+			ull pow = iter.cur->pow - 1;
+			double coef = iter.cur->coef * iter.cur->pow;
+			err_code = list_insert(&res, list_end(res), pow, coef);
+		}
+		iter_next(&iter);
 	}
 	if (err_code)
 	{
 		list_destruct(&res);
 		return err_code;
 	}
-		
+	
 	list_destruct(summator);
 	*summator = res;
 	return OK;
 }
 
-status_codes mod_polynomial(const List* poly1, const List* poly2, List* summator);
-status_codes eval_polynomial(const List* poly, double x, List* summator);
-status_codes diff_polynomial(const List* poly1, List* summator);
-status_codes cmps_polynomial(const List* poly1, const List* poly2, List* summator);
+status_codes polynomial_cmps(double eps, List poly1, List poly2, List* summator)
+{
+	if (summator == NULL)
+	{
+		return INVALID_INPUT;
+	}
+	
+	List res;
+	list_set_null(&res);
+	status_codes err_code = list_construct(&res);
+	
+	ull prev_pow = 0;
+	List_iter iter = list_begin(poly1);
+	List_iter iter_end = list_end(poly1);
+	while (!err_code && !iter_equal(iter, iter_end))
+	{
+		for (ull i = iter.cur->pow; i < prev_pow; ++i)
+		{
+			List res_tmp;
+			list_set_null(&res_tmp);
+			err_code = err_code ? err_code : polynomial_mult(eps, res, poly2, &res_tmp);
+			list_destruct(&res);
+			res = res_tmp;
+		}
+
+		List res_tmp, tmp;
+		list_set_null(&res_tmp);
+		list_set_null(&tmp);
+		err_code = err_code ? err_code : list_insert(&tmp, list_end(tmp), 0, iter.cur->coef);
+		err_code = err_code ? err_code : polynomial_add(eps, res, tmp, &res_tmp);
+		list_destruct(&res);
+		res = res_tmp;
+		prev_pow = iter.cur->pow;
+		iter_next(&iter);
+	}
+	for (ull i = 0; i < prev_pow; ++i)
+	{
+		List res_tmp;
+		list_set_null(&res_tmp);
+		err_code = err_code ? err_code : polynomial_mult(eps, res, poly2, &res_tmp);
+		list_destruct(&res);
+		res = res_tmp;
+	}
+	
+	err_code = err_code ? err_code : polynomial_remove_zero(eps, &res);
+	if (err_code)
+	{
+		list_destruct(&res);
+		return err_code;
+	}
+	
+	list_destruct(summator);
+	*summator = res;
+	return OK;
+}
+
+status_codes sread_until(const char* src, const char* delims, const char** end_ptr, char** str)
+{
+	if (src == NULL || str == NULL)
+	{
+		return INVALID_INPUT;
+	}
+	ull cnt = 0;
+	ull size = 2;
+	*str = (char*) malloc(sizeof(char) * size);
+	if (*str == NULL)
+	{
+		return BAD_ALLOC;
+	}
+	
+	char flags[256];
+	for (ull i = 0; i < 256; ++i)
+	{
+		flags[i] = 1;
+	}
+	for (ull i = 0; delims[i]; ++i)
+	{
+		flags[(int) delims[i]] = 0;
+	}
+	const char* ptr = src;
+	
+	while (flags[(int) *ptr] && *ptr != '\0')
+	{
+		if (cnt + 1 == size)
+		{
+			size *= 2;
+			char* temp_word = realloc(*str, sizeof(char) * size);
+			if (temp_word == NULL)
+			{
+				free(*str);
+				return BAD_ALLOC;
+			}
+			*str = temp_word;
+		}
+		(*str)[cnt++] = *ptr;
+		++ptr;
+	}
+	(*str)[cnt] = '\0';
+	*end_ptr = ptr;
+	return OK;
+}
+
+status_codes fread_cmd(FILE* file, char** str)
+{
+	if (file == NULL || str == NULL)
+	{
+		return INVALID_INPUT;
+	}
+	ull cnt = 0;
+	ull size = 2;
+	*str = (char*) malloc(sizeof(char) * size);
+	if (*str == NULL)
+	{
+		return BAD_ALLOC;
+	}
+	
+	char ch = getc(file);
+	int skip_flag = 1;
+	while (skip_flag)
+	{
+		while (ch == ' ' || ch == '\t' || ch == '\n')
+		{
+			ch = getc(file);
+		}
+		skip_flag = 0;
+		
+		if (ch == '%')
+		{
+			while (ch != '\n' && !feof(file))
+			{
+				ch = getc(file);
+			}
+			ch = getc(file);
+			skip_flag = 1;
+		}
+		else if (ch == '[')
+		{
+			while (ch != ']' && !feof(file))
+			{
+				ch = getc(file);
+			}
+			if (ch != ']')
+			{
+				free(*str);
+				return FILE_CONTENT_ERROR;
+			}
+			ch = getc(file);
+			skip_flag = 1;
+		}
+	}
+	
+	while (ch != ';' && !feof(file))
+	{
+		if (cnt + 2 == size)
+		{
+			size *= 2;
+			char* temp_word = realloc(*str, sizeof(char) * size);
+			if (temp_word == NULL)
+			{
+				free(*str);
+				return BAD_ALLOC;
+			}
+			*str = temp_word;
+		}
+		(*str)[cnt++] = ch;
+		ch = getc(file);
+	}
+	if (ch == ';')
+	{
+		(*str)[cnt++] = ch;
+	}
+	(*str)[cnt] = '\0';
+	return OK;
+}
+
+status_codes parse_cmd(const char* src, polynomial_command* cmd, ull* arg_cnt, char** arg1, char** arg2)
+{
+	if (src == NULL || cmd == NULL || arg_cnt == NULL || arg1 == NULL || arg2 == NULL)
+	{
+		return INVALID_INPUT;
+	}
+	
+	if (src[0] == '\0')
+	{
+		*cmd = NONE;
+		*arg_cnt = 0;
+		*arg1 = NULL;
+		*arg2 = NULL;
+		return OK;
+	}
+	
+	status_codes err_code = OK;
+	const char* ptr = src;
+	ull arg_cnt_tmp = 0;
+	char* str_cmd = NULL;
+	polynomial_command cmd_tmp;
+	char* arg1_tmp = NULL;
+	char* arg2_tmp = NULL;
+	
+	err_code = sread_until(ptr, "(", &ptr, &str_cmd);
+	++ptr;
+	if (!err_code && *ptr != ')')
+	{
+		err_code = sread_until(ptr, ",)", &ptr, &arg1_tmp);
+		++arg_cnt_tmp;
+	}
+	if (!err_code && *ptr == ',')
+	{
+		++ptr;
+		err_code =  sread_until(ptr, ")", &ptr, &arg2_tmp);
+		++arg_cnt_tmp;
+	}
+	
+	err_code = err_code ? err_code : (*ptr == ')' ? OK : INVALID_INPUT);
+	++ptr;
+	err_code = err_code ? err_code : (*ptr == ';' ? OK : INVALID_INPUT);
+	++ptr;
+	err_code = err_code ? err_code : (*ptr == '\0' ? OK : INVALID_INPUT);
+	
+	if (!err_code)
+	{
+		if (!strcmp(str_cmd, "Add"))
+		{
+			cmd_tmp = ADD;
+			err_code = (arg_cnt_tmp == 2 || arg_cnt_tmp == 1) ? OK : INVALID_INPUT;
+		}
+		else if (!strcmp(str_cmd, "Sub"))
+		{
+			cmd_tmp = SUB;
+			err_code = (arg_cnt_tmp == 2 || arg_cnt_tmp == 1) ? OK : INVALID_INPUT;
+		}
+		else if (!strcmp(str_cmd, "Mult"))
+		{
+			cmd_tmp = MULT;
+			err_code = (arg_cnt_tmp == 2 || arg_cnt_tmp == 1) ? OK : INVALID_INPUT;
+		}
+		else if (!strcmp(str_cmd, "Div"))
+		{
+			cmd_tmp = DIV;
+			err_code = (arg_cnt_tmp == 2 || arg_cnt_tmp == 1) ? OK : INVALID_INPUT;
+		}
+		else if (!strcmp(str_cmd, "Mod"))
+		{
+			cmd_tmp = MOD;
+			err_code = (arg_cnt_tmp == 2 || arg_cnt_tmp == 1) ? OK : INVALID_INPUT;
+		}
+		else if (!strcmp(str_cmd, "Eval"))
+		{
+			cmd_tmp = EVAL;
+			err_code = (arg_cnt_tmp == 1) ? OK : INVALID_INPUT;
+		}
+		else if (!strcmp(str_cmd, "Diff"))
+		{
+			cmd_tmp = DIFF;
+			err_code = (arg_cnt_tmp == 1 || arg_cnt_tmp == 0) ? OK : INVALID_INPUT;
+		}
+		else if (!strcmp(str_cmd, "Cmps"))
+		{
+			cmd_tmp = CMPS;
+			err_code = (arg_cnt_tmp == 2 || arg_cnt_tmp == 1) ? OK : INVALID_INPUT;
+		}
+		else
+		{
+			err_code = INVALID_INPUT;
+		}
+	}
+	free(str_cmd);
+	if (err_code)
+	{
+		free(arg1_tmp);
+		free(arg2_tmp);
+		return err_code;
+	}
+	*cmd = cmd_tmp;
+	*arg_cnt = arg_cnt_tmp;
+	*arg1 = arg1_tmp;
+	*arg2 = arg2_tmp;
+	return OK;
+}

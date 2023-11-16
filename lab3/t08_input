@@ -1,0 +1,24 @@
+
+Add(x);
+Mult(x+1);
+Mult(x+2);
+Div(x+1);
+Div(1);
+Mod(1);
+
+[
+	this is	
+	a cool    
+	comment
+	
+]
+
+Add(x);
+% Div(0);
+Add(x^5-x^3);
+Diff();
+Eval(2);
+Sub(5x^4-x+1);
+
+Cmps(x+1);
+Cmps(x^2+5x+1,x-3); % (x-3)^2 + 5(x-3) + 1 = x^2 - 6x + 9 + 5x - 15 + 1 = x^2 - x - 5
