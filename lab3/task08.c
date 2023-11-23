@@ -472,7 +472,14 @@ void list_print(const List list)
 		}
 		if (elem->pow != 0)
 		{
-			printf("x^%llu", elem->pow);
+			if (elem->pow != 1)
+			{
+				printf("x^%llu", elem->pow);
+			}
+			else
+			{
+				printf("x");
+			}
 		}
 		elem = elem->next;
 	}
@@ -929,6 +936,10 @@ status_codes polynomial_eval(List poly, ll x, ll* value)
 		prev_pow = iter.cur->pow;
 		iter_next(&iter);
 	}
+	for (ull i = 0; i < prev_pow; ++i)
+	{
+		res *= x;
+	}
 	*value = res;
 	return OK;
 }
@@ -1189,6 +1200,14 @@ status_codes parse_cmd(const char* src, polynomial_command* cmd, ull* arg_cnt, c
 	++ptr;
 	err_code = err_code ? err_code : (*ptr == '\0' ? OK : INVALID_INPUT);
 	
+	if (!err_code && arg1_tmp != NULL)
+	{
+		err_code = arg1_tmp[0] != '\0' ? OK : INVALID_INPUT;
+	}
+	if (!err_code && arg2_tmp != NULL)
+	{
+		err_code = arg2_tmp[0] != '\0' ? OK : INVALID_INPUT;
+	}
 	if (!err_code)
 	{
 		if (!strcmp(str_cmd, "Add"))
