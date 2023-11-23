@@ -996,8 +996,11 @@ status_codes polynomial_cmps(List poly1, List poly2, List* summator)
 		List res_tmp, tmp;
 		list_set_null(&res_tmp);
 		list_set_null(&tmp);
+		err_code = err_code ? err_code : list_construct(&res_tmp);
+		err_code = err_code ? err_code : list_construct(&tmp);
 		err_code = err_code ? err_code : list_insert(&tmp, list_end(tmp), 0, iter.cur->coef);
 		err_code = err_code ? err_code : polynomial_add(res, tmp, &res_tmp);
+		list_destruct(&tmp);
 		list_destruct(&res);
 		res = res_tmp;
 		prev_pow = iter.cur->pow;
