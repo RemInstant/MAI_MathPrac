@@ -114,15 +114,15 @@ int main(int argc, char** argv)
 {
 	if (argc == 1)
 	{
-		//printf("Usage: cmd_path <input>\n");
-		//return OK;
+		printf("Usage: cmd_path <input>\n");
+		return OK;
 	}
 	if (argc != 2)
 	{
-		//return INVALID_INPUT;
+		return INVALID_INPUT;
 	}
 	
-	//FILE* input = fopen(argv[1], "r");
+	FILE* input = fopen(argv[1], "r");
 	FILE* input = fopen("lab4/t07_input", "r");
 	if (input == NULL)
 	{
@@ -267,6 +267,10 @@ status_codes memory_destruct(Memory* memory)
 	if (memory == NULL)
 	{
 		return INVALID_ARG;
+	}
+	for (ull i = 0; i < memory->cnt; ++i)
+	{
+		free(memory->vars[i].name);
 	}
 	free(memory->vars);
 	memory->size = 0;
