@@ -122,7 +122,6 @@ int main(int argc, char** argv)
 		return INVALID_INPUT;
 	}
 	
-	FILE* input = fopen(argv[1], "r");
 	FILE* input = fopen("lab4/t07_input", "r");
 	if (input == NULL)
 	{
@@ -181,6 +180,7 @@ int main(int argc, char** argv)
 			{
 				err_code = err_code ? err_code : get_arg_value(memory, arg2, &val1);
 				err_code = err_code ? err_code : get_arg_value(memory, arg3, &val2);
+				err_code = err_code ? err_code : (val2 != 0 ? OK : DIVISION_BY_ZERO);
 				err_code = err_code ? err_code : memory_set_var(&memory, arg1, val1 / val2);
 				break;
 			}
