@@ -188,6 +188,7 @@ int main(int argc, char** argv)
 			{
 				err_code = err_code ? err_code : get_arg_value(memory, arg2, &val1);
 				err_code = err_code ? err_code : get_arg_value(memory, arg3, &val2);
+				err_code = err_code ? err_code : (val2 != 0 ? OK : DIVISION_BY_ZERO);
 				err_code = err_code ? err_code : memory_set_var(&memory, arg1, val1 % val2);
 				break;
 			}
