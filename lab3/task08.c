@@ -513,9 +513,11 @@ status_codes polynomial_construct(const char* src, List* poly)
 				++ptr;
 			}
 			err_code = sread_until(ptr, "x+-", &ptr, &str);
+			int wait_variable = 0;
 			if (str[0] == '\0')
 			{
 				coef = sign;
+				wait_variable = 1;
 			}
 			else
 			{
@@ -525,12 +527,17 @@ status_codes polynomial_construct(const char* src, List* poly)
 			}
 			if (*ptr == 'x')
 			{
+				wait_variable = 0;
 				state = 1; // skip variable
 			}
 			else
 			{
 				pow = 0;
 				state = 3; // save data
+			}
+			if (!err_code && wait_variable)
+			{
+				err_code = INVALID_INPUT;
 			}
 		}
 		// SKIP VARIABLE
