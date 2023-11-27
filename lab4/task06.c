@@ -3,8 +3,10 @@
 #include <ctype.h>
 #include <limits.h>
 #include <string.h>
+#include <time.h>
 #include <math.h>
 #include <errno.h>
+#include <stdbool.h>
 
 typedef long long ll;
 typedef unsigned long long ull;
@@ -74,8 +76,8 @@ typedef enum
 {
 	NONE,
 	VAR,
-	LEFT_BRACKET,
-	RIGHT_BRACKET,
+	L_BRACKET,
+	R_BRACKET,
 	CONST,
 	CONJUCTION,
 	DISJUCTION,
@@ -123,24 +125,22 @@ status_codes stack_pop(Stack* stack, tree_node** node);
 typedef struct
 {
 	tree_node* root;
-	int varFlag[26];
+	char var_cnt;
+	bool var_flag[26];  // if var_flag[i] == 1, then tree contains ('A' + i) variable
 } Expression_tree;
 
-status_codes get_token(const char* src, const char** end_ptr, node_content* content, char* data);
-status_codes to_postfix_notaion(const char* infix, char** postfix);
-status_codes count_vars(const char* expr);
+status_codes get_expr_token(const char* src, const char** end_ptr, node_content* content, char* data);
 status_codes expr_tree_set_null(Expression_tree* etree);
 status_codes expr_tree_construct(Expression_tree* etree, const char* infix);
 status_codes expr_tree_destruct(Expression_tree* etree);
 status_codes expr_tree_destruct(Expression_tree* etree);
-status_codes expr_tree_calc(Expression_tree etree, int values[26], int* res);
-status_codes expr_tree_print_table(Expression_tree etree);
+status_codes expr_tree_node_calc(const tree_node* node, const bool var_table[26], bool* res);
+status_codes expr_tree_calc(Expression_tree etree, const bool* var_values, bool* res);
+status_codes expr_tree_fprint_table(FILE* file, Expression_tree etree);
 
 status_codes fread_line(FILE* file, char** str);
-
-status_codes sread_until(const char* src, const char* delims, const char** end_ptr, char** str);
-status_codes fread_expr(FILE* file, char** str);
-//status_codes parse_expr(const char* src, operation* op, ull* arg_cnt, char** arg1, char** arg2, char** arg3);
+status_codes generate_random_str(char** str);
+status_codes construct_output_path(const char* input, const char* output_name, char** output);
 
 int main(int argc, char** argv)
 {
@@ -151,30 +151,53 @@ int main(int argc, char** argv)
 	}
 	if (argc != 2)
 	{
+		//print_error(INVALID_INPUT);
 		//return INVALID_INPUT;
 	}
 	
-	//FILE* input = fopen(argv[1], "r");
-	FILE* input = fopen("lab4/t06_input", "r");
-	if (input == NULL)
-	{
-		return FILE_OPENING_ERROR;
-	}
-	
-	char* infix_expr;
-	status_codes err_code = fread_line(input, &infix_expr);
-	
-	Expression_tree etree;
-	expr_tree_set_null(&etree);
-	err_code = err_code ? err_code : expr_tree_construct(&etree, infix_expr);
-	
-	free(infix_expr);
-	expr_tree_destruct(&etree);
+	srand(time(NULL));
+	char* output_name = NULL;
+	char input_path[16] = "lab4/t06_input";
+	char* output_path = NULL;
+	status_codes err_code = generate_random_str(&output_name);
+	err_code = err_code ? err_code : construct_output_path(input_path, output_name, &output_path);
+	free(output_name);
 	if (err_code)
 	{
 		print_error(err_code);
 		return err_code;
 	}
+	
+	FILE* input = fopen(input_path, "r");
+	FILE* output = fopen(output_path, "w");
+	if (input == NULL || output == NULL)
+	{
+		free(output_path);
+		fclose(input);
+		fclose(output);
+		print_error(FILE_OPENING_ERROR);
+		return FILE_OPENING_ERROR;
+	}
+	printf("Output file path: %s\n", output_path);
+	free(output_path);
+	
+	char* infix_expr;
+	err_code = fread_line(input, &infix_expr);
+	
+	Expression_tree etree;
+	expr_tree_set_null(&etree);
+	err_code = err_code ? err_code : expr_tree_construct(&etree, infix_expr);
+	err_code = err_code ? err_code : expr_tree_fprint_table(output, etree);
+	
+	expr_tree_destruct(&etree);
+	free(infix_expr);
+	fclose(input);
+	fclose(output);
+	if (err_code)
+	{
+		print_error(err_code);
+	}
+	return err_code;
 }
 
 status_codes tree_node_dynamic_construct(tree_node** node, node_content content, char data)
@@ -341,9 +364,9 @@ int is_operation(node_content content)
 	}
 }
 
-int get_priority(node_content op)
+int get_operation_priority(node_content operation)
 {
-	switch (op)
+	switch (operation)
 	{
 		case INVERSION:
 			return 3;
@@ -362,7 +385,7 @@ int get_priority(node_content op)
 	}
 }
 
-status_codes get_token(const char* src, const char** end_ptr, node_content* content, char* data)
+status_codes get_expr_token(const char* src, const char** end_ptr, node_content* content, char* data)
 {
 	if (src == NULL || end_ptr == NULL || content == NULL || data == NULL)
 	{
@@ -372,7 +395,7 @@ status_codes get_token(const char* src, const char** end_ptr, node_content* cont
 	if (isalpha(*src))
 	{
 		*content = VAR;
-		*data = *src;
+		*data = toupper(*src);
 	}
 	else if (*src == '1' || *src == '0')
 	{
@@ -405,11 +428,11 @@ status_codes get_token(const char* src, const char** end_ptr, node_content* cont
 	}
 	else if (*src == '(')
 	{
-		*content = LEFT_BRACKET;
+		*content = L_BRACKET;
 	}
 	else if (*src == ')')
 	{
-		*content = RIGHT_BRACKET;
+		*content = R_BRACKET;
 	}
 	else if (*src == '-')
 	{
@@ -463,7 +486,7 @@ status_codes get_token(const char* src, const char** end_ptr, node_content* cont
 
 status_codes validate_token_combination(node_content prev, node_content cur)
 {
-	if (is_operation(prev) && is_operation(cur))
+	if (is_operation(prev) && is_operation(cur) && cur != INVERSION)
 	{
 		return INVALID_INPUT;
 	}
@@ -471,16 +494,16 @@ status_codes validate_token_combination(node_content prev, node_content cur)
 	{
 		return INVALID_INPUT;
 	}
-	if ((prev == LEFT_BRACKET && cur == RIGHT_BRACKET) || (prev == RIGHT_BRACKET && cur == RIGHT_BRACKET))
+	if ((prev == L_BRACKET && cur == R_BRACKET) || (prev == R_BRACKET && cur == L_BRACKET))
 	{
 		return INVALID_INPUT;
 	}
-	if ((is_operation(prev) && cur == RIGHT_BRACKET) || (prev == LEFT_BRACKET && is_operation(cur)))
+	if ((is_operation(prev) && cur == R_BRACKET) || (prev == L_BRACKET && is_operation(cur)))
 	{
 		return INVALID_INPUT;
 	}
-	if (((prev == CONST || prev == VAR) && cur == LEFT_BRACKET)
-			|| (prev == RIGHT_BRACKET && (cur == CONST || cur == VAR)))
+	if (((prev == CONST || prev == VAR) && cur == L_BRACKET)
+			|| (prev == R_BRACKET && (cur == CONST || cur == VAR)))
 	{
 		return INVALID_INPUT;
 	}
@@ -502,8 +525,12 @@ status_codes expr_tree_construct(Expression_tree* etree, const char* infix)
 	
 	status_codes err_code = OK;
 	Expression_tree etree_tmp;
-	Stack args;
-	Stack opers;
+	for (ull i = 0; i < 26; ++i)
+	{
+		etree_tmp.var_flag[i] = false;
+	}
+	
+	Stack args, opers;
 	expr_tree_set_null(&etree_tmp);
 	stack_set_null(&args);
 	stack_set_null(&opers);
@@ -512,15 +539,23 @@ status_codes expr_tree_construct(Expression_tree* etree, const char* infix)
 	
 	node_content prev_content = NONE;
 	const char* ptr = infix;
-	while(!err_code && *ptr)
+	while (!err_code && *ptr)
 	{
 		node_content content = NONE;
 		char data = 0;
-		err_code = get_token(ptr, &ptr, &content, &data);
+		err_code = get_expr_token(ptr, &ptr, &content, &data);
 		err_code = err_code ? err_code : validate_token_combination(prev_content, content);
 		// --- HANDLE VARIABLE AND CONSTANT ---
 		if (!err_code && (content == VAR || content == CONST))
 		{
+			if (content == VAR)
+			{
+				if (!etree_tmp.var_flag[data - 'A'])
+				{
+					etree_tmp.var_cnt++;
+				}
+				etree_tmp.var_flag[data - 'A'] = 1;
+			}
 			tree_node* tnode = NULL;
 			err_code = tree_node_dynamic_construct(&tnode, content, data);
 			err_code = err_code ? err_code : stack_push(&args, tnode);
@@ -530,41 +565,51 @@ status_codes expr_tree_construct(Expression_tree* etree, const char* infix)
 		{
 			tree_node* tnode = NULL;
 			stack_top(opers, &tnode);
-			int cur_prior = get_priority(content);
-			int other_prior = tnode != NULL ? get_priority(tnode->content) : -1;
-			while (!err_code && other_prior >= cur_prior)
+			node_content other_content = tnode != NULL ? tnode->content : NONE;
+			int cur_prior = get_operation_priority(content);
+			int other_prior = get_operation_priority(other_content);
+			while (!err_code && other_prior >= cur_prior && content != INVERSION)
 			{
-				err_code = args.size >= 2 ? OK : INVALID_INPUT;
-				// combine operation with 2 args
-				err_code = err_code ? err_code : stack_pop(&args, &tnode->right);
+				int op_arg_cnt = other_content == INVERSION ? 1 : 2;
+				err_code = args.size >= op_arg_cnt ? OK : INVALID_INPUT;
+				// combine operation with 1/2 args
+				if (op_arg_cnt == 2)
+				{
+					err_code = err_code ? err_code : stack_pop(&args, &tnode->right);
+				}
 				err_code = err_code ? err_code : stack_pop(&args, &tnode->left);
 				err_code = err_code ? err_code : stack_push(&args, tnode);
 				// prepare to check next operation
 				err_code = err_code ? err_code : stack_pop(&opers, NULL);
 				stack_top(opers, &tnode);
-				other_prior = tnode != NULL ? get_priority(tnode->content) : -1;
+				other_content = tnode != NULL ? tnode->content : NONE;
+				other_prior = get_operation_priority(other_content);
 			}
 			err_code = err_code ? err_code : tree_node_dynamic_construct(&tnode, content, data);
 			err_code = err_code ? err_code : stack_push(&opers, tnode);
 		}
 		// --- HANDLE LEFT BRACKET ---
-		else if (!err_code && content == LEFT_BRACKET)
+		else if (!err_code && content == L_BRACKET)
 		{
 			tree_node* tnode = NULL;
 			err_code = tree_node_dynamic_construct(&tnode, content, data);
 			err_code = err_code ? err_code : stack_push(&opers, tnode);
 		}
 		// --- HANDLE RIGHT BRACKET ---
-		else if (!err_code && content == RIGHT_BRACKET)
+		else if (!err_code && content == R_BRACKET)
 		{
 			tree_node* tnode = NULL;
 			stack_top(opers, &tnode);
 			err_code = tnode != NULL ? OK : INVALID_INPUT;
-			while (!err_code && tnode->content != LEFT_BRACKET)
+			while (!err_code && tnode->content != L_BRACKET)
 			{
-				err_code = args.size >= 2 ? OK : INVALID_INPUT;
-				// combine operation with 2 args
-				err_code = err_code ? err_code : stack_pop(&args, &tnode->right);
+				int op_arg_cnt = tnode->content == INVERSION ? 1 : 2;
+				err_code = args.size >= op_arg_cnt ? OK : INVALID_INPUT;
+				// combine operation with 1/2 args
+				if (op_arg_cnt == 2)
+				{
+					err_code = err_code ? err_code : stack_pop(&args, &tnode->right);
+				}
 				err_code = err_code ? err_code : stack_pop(&args, &tnode->left);
 				err_code = err_code ? err_code : stack_push(&args, tnode);
 				// prepare to check next operation
@@ -580,12 +625,20 @@ status_codes expr_tree_construct(Expression_tree* etree, const char* infix)
 	}
 	while (!err_code && opers.size > 0)
 	{
+		int op_arg_cnt;
 		tree_node* tnode = NULL;
 		err_code = stack_pop(&opers, &tnode);
-		err_code = err_code ? err_code : (tnode->content != LEFT_BRACKET ? OK : INVALID_INPUT);
-		err_code = err_code ? err_code : (args.size >= 2 ? OK : INVALID_INPUT);
-		// combine operation with 2 args
-		err_code = err_code ? err_code : stack_pop(&args, &tnode->right);
+		if (!err_code)
+		{
+			op_arg_cnt = tnode->content == INVERSION ? 1 : 2;
+		}
+		err_code = err_code ? err_code : (tnode->content != L_BRACKET ? OK : INVALID_INPUT);
+		err_code = err_code ? err_code : (args.size >= op_arg_cnt ? OK : INVALID_INPUT);
+		// combine operation with 1/2 args
+		if (op_arg_cnt == 2)
+		{
+			err_code = err_code ? err_code : stack_pop(&args, &tnode->right);
+		}
 		err_code = err_code ? err_code : stack_pop(&args, &tnode->left);
 		err_code = err_code ? err_code : stack_push(&args, tnode);
 	}
@@ -596,14 +649,15 @@ status_codes expr_tree_construct(Expression_tree* etree, const char* infix)
 		err_code = err_code ? err_code : stack_pop(&args, &tnode);
 		etree_tmp.root = tnode;
 	}
+	stack_destruct(&args);
+	stack_destruct(&opers);
 	if (err_code)
 	{
 		expr_tree_destruct(&etree_tmp);
-		stack_destruct(&args);
-		stack_destruct(&opers);
 		return err_code;
 	}
 	*etree = etree_tmp;
+	memcpy(etree->var_flag, etree_tmp.var_flag, sizeof(bool) * 26);
 	return OK;
 }
 
@@ -615,6 +669,178 @@ status_codes expr_tree_destruct(Expression_tree* etree)
 	}
 	tree_node_destruct(etree->root);
 	free(etree->root);
+	return OK;
+}
+
+status_codes expr_tree_node_calc(const tree_node* node, const bool var_table[26], bool* res)
+{
+	if (res == NULL)
+	{
+		return INVALID_ARG;
+	}
+	
+	switch (node->content)
+	{
+		case NONE:
+		case L_BRACKET:
+		case R_BRACKET:
+			return INVALID_INPUT;
+		case VAR:
+			if (node->data - 'A' < 0 || node->data - 'A' > 25)
+			{
+				return INVALID_INPUT;
+			}
+			*res = var_table[node->data - 'A'];
+			return OK;
+		case CONST:
+			if (node->data != '0' && node->data != '1')
+			{
+				return INVALID_INPUT;
+			}
+			*res = node->data == '1' ? true : false;
+			return OK;
+		default:
+			break;
+	}
+	
+	if (node->content == INVERSION)
+	{
+		if (node->left == NULL)
+		{
+			return INVALID_INPUT;
+		}
+		status_codes err_code = expr_tree_node_calc(node->left, var_table, res);
+		*res = err_code ? *res : !(*res);
+		return err_code;
+	}
+	if (node->left == NULL || node->right == NULL)
+	{
+		return INVALID_INPUT;
+	}
+	bool res_left, res_right;
+	status_codes err_code = expr_tree_node_calc(node->left, var_table, &res_left);
+	err_code = err_code ? err_code : expr_tree_node_calc(node->right, var_table, &res_right);
+	if (err_code)
+	{
+		return err_code;
+	}
+	
+	switch (node->content)
+	{
+		case CONJUCTION:
+			*res = res_left && res_right;
+			return OK;
+		case DISJUCTION:
+			*res = res_left || res_right;
+			return OK;
+		case IMPLICATION:
+			*res = !res_left || res_right;
+			return OK;
+		case COIMPLICATION:
+			*res = res_left && !res_right;
+			return OK;
+		case EXCLUSIVE:
+			*res = res_left ^ res_right;
+			return OK;
+		case EQUIVALENCE:
+			*res = res_left == res_right;
+			return OK;
+		case SHEFFER_STROKE:
+			*res = !(res_left && res_right);
+			return OK;
+		case WEBB_FUNCTION:
+			*res = !(res_left || res_right);
+			return OK;
+		default:
+			return INVALID_INPUT;
+	}
+}
+
+status_codes expr_tree_calc(Expression_tree etree, const bool* var_values, bool* res)
+{
+	if (etree.root == NULL || var_values == NULL || res == NULL)
+	{
+		return INVALID_ARG;
+	}
+	
+	bool var_table[26];
+	for (ull i = 0, j = 0; i < 26; ++i)
+	{
+		if (etree.var_flag[i])
+		{
+			var_table[i] = var_values[j++];
+		}
+	}
+	
+	bool res_tmp;
+	status_codes err_code = expr_tree_node_calc(etree.root, var_table, &res_tmp);
+	if (err_code)
+	{
+		return err_code;
+	}
+	*res = res_tmp;
+	return OK;
+}
+
+status_codes expr_tree_fprint_table(FILE* file, Expression_tree etree)
+{
+	if (etree.root == NULL)
+	{
+		return INVALID_ARG;
+	}
+	
+	status_codes err_code = OK;
+	bool* var_values = (bool*) malloc(sizeof(bool) * etree.var_cnt);
+	if (var_values == NULL)
+	{
+		return BAD_ALLOC;
+	}
+	
+	if (etree.var_cnt == 0)
+	{
+		bool res;
+		err_code = expr_tree_calc(etree, var_values, &res);
+		free(var_values);
+		if (err_code)
+		{
+			return err_code;
+		}
+		fprintf(file, "Value of the expression is %d\n", res);
+		return OK;
+	}
+	
+	for (ull i = 0; i < 26; ++i)
+	{
+		if (etree.var_flag[i])
+		{
+			fprintf(file, "| %c ", 'A' + (int) i);
+		}
+	}
+	fprintf(file, "| Value |\n");
+	
+	ull mask_end = 2 << (etree.var_cnt - 1);
+	for (ull var_mask = 0; var_mask < mask_end; ++var_mask)
+	{
+		ull var_mask2 = var_mask;
+		for (ull i = etree.var_cnt; i > 0; --i)
+		{
+			var_values[i - 1] = var_mask2 & 1;
+			var_mask2 >>= 1;
+		}
+		bool res;
+		err_code = expr_tree_calc(etree, var_values, &res);
+		if (err_code)
+		{
+			free(var_values);
+			return err_code;
+		}
+		for (ull i = 0; i < etree.var_cnt; ++i)
+		{
+			fprintf(file, "| %d ", var_values[i]);
+		}
+		fprintf(file, "|   %d   |\n", res);
+	}
+	free(var_values);
 	return OK;
 }
 
@@ -652,12 +878,66 @@ status_codes fread_line(FILE* file, char** line)
 	return OK;
 }
 
+status_codes generate_random_str(char** str)
+{
+	if (str == NULL)
+	{
+		return INVALID_ARG;
+	}
+	ull iter = 0;
+	ull size = 2;
+	*str = (char*) malloc(sizeof(char) * size);
+	if (*str == NULL)
+	{
+		return BAD_ALLOC;
+	}
+	char symbols[63] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+	
+	char ch = symbols[rand() % 63];
+	while ((ch != '\0' || iter == 0) && iter < 63)
+	{
+		while (iter == 0 && ch == '\0')
+		{
+			ch = symbols[rand() % 63];
+		}
+		if (iter > size - 2)
+		{
+			size *= 2;
+			char* temp_line = realloc(*str, size);
+			if (temp_line == NULL)
+			{
+				free(*str);
+				return BAD_ALLOC;
+			}
+			*str = temp_line;
+		}
+		(*str)[iter++] = ch;
+		ch = symbols[rand() % 63];
+	}
+	(*str)[iter] = '\0';
+	return OK;
+}
 
-
-
-
-
-
-
-
-
+status_codes construct_output_path(const char* input, const char* output_name, char** output)
+{
+	if (input == NULL || output_name == NULL || output == NULL)
+	{
+		return INVALID_ARG;
+	}
+	ull last_delim_pos = 0;
+	for (ull i = 0; input[i]; ++i)
+	{
+		if (input[i] == '/' || input[i] == '\\')
+		{
+			last_delim_pos = i;
+		}
+	}
+	*output = (char*) malloc(sizeof(char) * (last_delim_pos + strlen(output_name) + 2));
+	if (*output == NULL)
+	{
+		return BAD_ALLOC;
+	}
+	memcpy(*output, input, sizeof(char) * (last_delim_pos + 1));
+	strcpy(*output + last_delim_pos + 1, output_name);
+	return OK;
+}
