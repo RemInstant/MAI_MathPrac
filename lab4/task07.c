@@ -114,14 +114,14 @@ int main(int argc, char** argv)
 {
 	if (argc == 1)
 	{
-		printf("Usage: cmd_path <input>\n");
-		return OK;
+		//printf("Usage: cmd_path <input>\n");
+		//return OK;
 	}
 	if (argc != 2)
 	{
-		return INVALID_INPUT;
+		//return INVALID_INPUT;
 	}
-	
+	//argv[1]
 	FILE* input = fopen("lab4/t07_input", "r");
 	if (input == NULL)
 	{
@@ -241,7 +241,11 @@ int is_number(const char* str)
 	{
 		return 0;
 	}
-	for (ull i = 0; str[i]; ++i)
+	if (!isdigit(str[0]) && str[0] != '-' && str[0] != '+')
+	{
+		return 0;
+	}
+	for (ull i = 1; str[i]; ++i)
 	{
 		if (!isdigit(str[i]))
 		{
@@ -456,7 +460,6 @@ status_codes get_arg_value(Memory memory, const char* arg, ll* val)
 		ll tmp = strtoll(arg, NULL, 10);
 		if (errno == ERANGE)
 		{
-			*val = LLONG_MAX;
 			return OVERFLOW;
 		}
 		*val = tmp;
@@ -651,7 +654,25 @@ status_codes parse_expr(const char* src, operation* op, ull* arg_cnt, char** arg
 	{
 		err_code = *ptr == '=' ? OK : INVALID_INPUT;
 		op_tmp = ASSIGN;
-		err_code = err_code ? err_code : sread_until(++ptr, "+-*/%;", &ptr, &arg2_tmp);
+		++ptr;
+		if (!err_code && (*ptr == '-' || *ptr == '+'))
+		{
+			char sign = *ptr;
+			char* tmp = NULL;
+			err_code = sread_until(++ptr, "+-*/%;", &ptr, &tmp);
+			arg2_tmp = err_code ? NULL : ((char*) malloc(sizeof(char) * (strlen(tmp) + 2)));
+			err_code = err_code ? err_code : (arg2_tmp != NULL ? OK : BAD_ALLOC);
+			if (!err_code)
+			{
+				strcpy(arg2_tmp + 1, tmp);
+				arg2_tmp[0] = sign;
+			}
+			free(tmp);
+		}
+		else
+		{
+			err_code = err_code ? err_code : sread_until(ptr, "+-*/%;", &ptr, &arg2_tmp);
+		}
 		++arg_cnt_tmp;
 		if (!err_code && is_arithmetic_operation(*ptr))
 		{
