@@ -23,9 +23,9 @@ typedef enum
 	DIVISION_BY_ZERO,
 	BAD_ALLOC,
 	CORRUPTED_MEMORY
-} status_codes;
+} status_code;
 
-void print_error(status_codes code)
+void print_error(status_code code)
 {
 	switch (code)
 	{
@@ -83,16 +83,16 @@ typedef struct
 	Memory_cell* vars;
 } Memory;
 
-status_codes memory_set_null(Memory* memory);
-status_codes memory_destruct(Memory* memory);
-status_codes memory_insert(Memory* memory, const char* name, ll val);
-status_codes memory_search(Memory memory, const char* name, ll* pos);
-status_codes memory_get_var(Memory memory, const char* name, ll* val);
-status_codes memory_set_var(Memory* memory, const char* name, ll val);
-status_codes memory_print_var(Memory memory, const char* name);
-status_codes memory_print_all(Memory memory);
+status_code memory_set_null(Memory* memory);
+status_code memory_destruct(Memory* memory);
+status_code memory_insert(Memory* memory, const char* name, ll val);
+status_code memory_search(Memory memory, const char* name, ll* pos);
+status_code memory_get_var(Memory memory, const char* name, ll* val);
+status_code memory_set_var(Memory* memory, const char* name, ll val);
+status_code memory_print_var(Memory memory, const char* name);
+status_code memory_print_all(Memory memory);
 
-status_codes get_arg_value(Memory memory, const char* arg, ll* val);
+status_code get_arg_value(Memory memory, const char* arg, ll* val);
 
 typedef enum
 {
@@ -106,9 +106,9 @@ typedef enum
 	PRINT
 } operation;
 
-status_codes sread_until(const char* src, const char* delims, const char** end_ptr, char** str);
-status_codes fread_expr(FILE* file, char** str);
-status_codes parse_expr(const char* src, operation* op, ull* arg_cnt, char** arg1, char** arg2, char** arg3);
+status_code sread_until(const char* src, const char* delims, const char** end_ptr, char** str);
+status_code fread_expr(FILE* file, char** str);
+status_code parse_expr(const char* src, operation* op, ull* arg_cnt, char** arg1, char** arg2, char** arg3);
 
 int main(int argc, char** argv)
 {
@@ -129,7 +129,7 @@ int main(int argc, char** argv)
 	
 	Memory memory;
 	memory_set_null(&memory);
-	status_codes err_code = OK;
+	status_code err_code = OK;
 	
 	while(!err_code && !feof(input))
 	{
@@ -254,7 +254,7 @@ int is_number(const char* str)
 	return 1;
 }
 
-status_codes memory_set_null(Memory* memory)
+status_code memory_set_null(Memory* memory)
 {
 	if (memory == NULL)
 	{
@@ -266,7 +266,7 @@ status_codes memory_set_null(Memory* memory)
 	return OK;
 }
 
-status_codes memory_destruct(Memory* memory)
+status_code memory_destruct(Memory* memory)
 {
 	if (memory == NULL)
 	{
@@ -290,7 +290,7 @@ int memory_comp(const void* l, const void* r)
 	return strcmp(lcell->name, rcell->name);
 }
 
-status_codes memory_insert(Memory* memory, const char* name, ll val)
+status_code memory_insert(Memory* memory, const char* name, ll val)
 {
 	if (memory == NULL)
 	{
@@ -329,7 +329,7 @@ status_codes memory_insert(Memory* memory, const char* name, ll val)
 	return OK;
 }
 
-status_codes memory_search(Memory memory, const char* name, ll* pos)
+status_code memory_search(Memory memory, const char* name, ll* pos)
 {
 	if (name == NULL || pos == NULL)
 	{
@@ -364,14 +364,14 @@ status_codes memory_search(Memory memory, const char* name, ll* pos)
 	return OK;
 }
 
-status_codes memory_get_var(Memory memory, const char* name, ll* val)
+status_code memory_get_var(Memory memory, const char* name, ll* val)
 {
 	if (name == NULL || val == NULL)
 	{
 		return INVALID_ARG;
 	}
 	ll pos;
-	status_codes err_code = memory_search(memory, name, &pos);
+	status_code err_code = memory_search(memory, name, &pos);
 	if (err_code)
 	{
 		return err_code;
@@ -384,14 +384,14 @@ status_codes memory_get_var(Memory memory, const char* name, ll* val)
 	return OK;
 }
 
-status_codes memory_set_var(Memory* memory, const char* name, ll val)
+status_code memory_set_var(Memory* memory, const char* name, ll val)
 {
 	if (memory == NULL || name == NULL)
 	{
 		return INVALID_ARG;
 	}
 	ll pos;
-	status_codes err_code = memory_search(*memory, name, &pos);
+	status_code err_code = memory_search(*memory, name, &pos);
 	if (err_code)
 	{
 		return err_code;
@@ -405,7 +405,7 @@ status_codes memory_set_var(Memory* memory, const char* name, ll val)
 	return OK;
 }
 
-status_codes memory_print_var(Memory memory, const char* name)
+status_code memory_print_var(Memory memory, const char* name)
 {
 	if (name == NULL)
 	{
@@ -416,7 +416,7 @@ status_codes memory_print_var(Memory memory, const char* name)
 		return INVALID_INPUT;
 	}
 	ll pos;
-	status_codes err_code = memory_search(memory, name, &pos);
+	status_code err_code = memory_search(memory, name, &pos);
 	if (err_code)
 	{
 		return err_code;
@@ -429,7 +429,7 @@ status_codes memory_print_var(Memory memory, const char* name)
 	return OK;
 }
 
-status_codes memory_print_all(Memory memory)
+status_code memory_print_all(Memory memory)
 {
 	printf("Memory dump:\n");
 	if (memory.cnt == 0)
@@ -443,7 +443,7 @@ status_codes memory_print_all(Memory memory)
 	return OK;
 }
 
-status_codes get_arg_value(Memory memory, const char* arg, ll* val)
+status_code get_arg_value(Memory memory, const char* arg, ll* val)
 {
 	if (arg == NULL || val == NULL)
 	{
@@ -467,7 +467,7 @@ status_codes get_arg_value(Memory memory, const char* arg, ll* val)
 	return INVALID_INPUT;
 }
 
-status_codes sread_until(const char* src, const char* delims, const char** end_ptr, char** str)
+status_code sread_until(const char* src, const char* delims, const char** end_ptr, char** str)
 {
 	if (src == NULL || str == NULL)
 	{
@@ -513,7 +513,7 @@ status_codes sread_until(const char* src, const char* delims, const char** end_p
 	return OK;
 }
 
-status_codes fread_expr(FILE* file, char** str)
+status_code fread_expr(FILE* file, char** str)
 {
 	if (file == NULL || str == NULL)
 	{
@@ -612,7 +612,7 @@ operation char_to_operation(char ch)
 	}
 }
 
-status_codes parse_expr(const char* src, operation* op, ull* arg_cnt, char** arg1, char** arg2, char** arg3)
+status_code parse_expr(const char* src, operation* op, ull* arg_cnt, char** arg1, char** arg2, char** arg3)
 {
 	if (src == NULL || op == NULL || arg_cnt == NULL || arg1 == NULL || arg2 == NULL || arg3 == NULL)
 	{
@@ -629,7 +629,7 @@ status_codes parse_expr(const char* src, operation* op, ull* arg_cnt, char** arg
 		return OK;
 	}
 	
-	status_codes err_code = OK;
+	status_code err_code = OK;
 	const char* ptr = src;
 	ull arg_cnt_tmp = 0;
 	operation op_tmp;

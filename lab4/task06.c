@@ -25,9 +25,9 @@ typedef enum
 	DIVISION_BY_ZERO,
 	BAD_ALLOC,
 	CORRUPTED_MEMORY
-} status_codes;
+} status_code;
 
-void print_error(status_codes code)
+void print_error(status_code code)
 {
 	switch (code)
 	{
@@ -98,8 +98,8 @@ typedef struct tree_node
 	struct tree_node* right;
 } tree_node;
 
-status_codes tree_node_dynamic_construct(tree_node** node, node_content content, char data);
-status_codes tree_node_destruct(tree_node* node);
+status_code tree_node_dynamic_construct(tree_node** node, node_content content, char data);
+status_code tree_node_destruct(tree_node* node);
 
 typedef struct stack_node
 {
@@ -114,13 +114,13 @@ typedef struct
 	ull size;
 } Stack;
 
-status_codes stack_set_null(Stack* stack);
-status_codes stack_construct(Stack* stack);
-status_codes stack_destruct(Stack* stack);
-status_codes stack_empty(Stack* stack, int* empty);
-status_codes stack_top(Stack stack, tree_node** node);
-status_codes stack_push(Stack* stack, tree_node* node);
-status_codes stack_pop(Stack* stack, tree_node** node);
+status_code stack_set_null(Stack* stack);
+status_code stack_construct(Stack* stack);
+status_code stack_destruct(Stack* stack);
+status_code stack_empty(Stack* stack, int* empty);
+status_code stack_top(Stack stack, tree_node** node);
+status_code stack_push(Stack* stack, tree_node* node);
+status_code stack_pop(Stack* stack, tree_node** node);
 
 typedef struct
 {
@@ -129,18 +129,18 @@ typedef struct
 	bool var_flag[26];  // if var_flag[i] == 1, then tree contains ('A' + i) variable
 } Expression_tree;
 
-status_codes get_expr_token(const char* src, const char** end_ptr, node_content* content, char* data);
-status_codes expr_tree_set_null(Expression_tree* etree);
-status_codes expr_tree_construct(Expression_tree* etree, const char* infix);
-status_codes expr_tree_destruct(Expression_tree* etree);
-status_codes expr_tree_destruct(Expression_tree* etree);
-status_codes expr_tree_node_calc(const tree_node* node, const bool var_table[26], bool* res);
-status_codes expr_tree_calc(Expression_tree etree, const bool* var_values, bool* res);
-status_codes expr_tree_fprint_table(FILE* file, Expression_tree etree);
+status_code get_expr_token(const char* src, const char** end_ptr, node_content* content, char* data);
+status_code expr_tree_set_null(Expression_tree* etree);
+status_code expr_tree_construct(Expression_tree* etree, const char* infix);
+status_code expr_tree_destruct(Expression_tree* etree);
+status_code expr_tree_destruct(Expression_tree* etree);
+status_code expr_tree_node_calc(const tree_node* node, const bool var_table[26], bool* res);
+status_code expr_tree_calc(Expression_tree etree, const bool* var_values, bool* res);
+status_code expr_tree_fprint_table(FILE* file, Expression_tree etree);
 
-status_codes fread_line(FILE* file, char** str);
-status_codes generate_random_str(char** str);
-status_codes construct_output_path(const char* input, const char* output_name, char** output);
+status_code fread_line(FILE* file, char** str);
+status_code generate_random_str(char** str);
+status_code construct_output_path(const char* input, const char* output_name, char** output);
 
 int main(int argc, char** argv)
 {
@@ -155,7 +155,7 @@ int main(int argc, char** argv)
 		return INVALID_INPUT;
 	}
 	
-	status_codes err_code = OK;
+	status_code err_code = OK;
 	srand(time(NULL));
 	char* output_name = NULL;
 	char* input_path = argv[1];
@@ -206,7 +206,7 @@ int main(int argc, char** argv)
 	return err_code;
 }
 
-status_codes tree_node_dynamic_construct(tree_node** node, node_content content, char data)
+status_code tree_node_dynamic_construct(tree_node** node, node_content content, char data)
 {
 	if (node == NULL)
 	{
@@ -223,7 +223,7 @@ status_codes tree_node_dynamic_construct(tree_node** node, node_content content,
 	return OK;
 }
 
-status_codes tree_node_destruct(tree_node* node)
+status_code tree_node_destruct(tree_node* node)
 {
 	if (node == NULL)
 	{
@@ -242,7 +242,7 @@ status_codes tree_node_destruct(tree_node* node)
 	return OK;
 }
 
-status_codes stack_set_null(Stack* stack)
+status_code stack_set_null(Stack* stack)
 {
 	if (stack == NULL)
 	{
@@ -253,7 +253,7 @@ status_codes stack_set_null(Stack* stack)
 	return OK;
 }
 
-status_codes stack_construct(Stack* stack)
+status_code stack_construct(Stack* stack)
 {
 	if (stack == NULL)
 	{
@@ -271,7 +271,7 @@ status_codes stack_construct(Stack* stack)
 	return OK;
 }
 
-status_codes stack_destruct(Stack* stack)
+status_code stack_destruct(Stack* stack)
 {
 	if (stack == NULL)
 	{
@@ -292,7 +292,7 @@ status_codes stack_destruct(Stack* stack)
 	return OK;
 }
 
-status_codes stack_empty(Stack* stack, int* empty)
+status_code stack_empty(Stack* stack, int* empty)
 {
 	if (stack == NULL || empty == NULL)
 	{
@@ -302,7 +302,7 @@ status_codes stack_empty(Stack* stack, int* empty)
 	return OK;
 }
 
-status_codes stack_top(Stack stack, tree_node** node)
+status_code stack_top(Stack stack, tree_node** node)
 {
 	if (node == NULL)
 	{
@@ -312,7 +312,7 @@ status_codes stack_top(Stack stack, tree_node** node)
 	return OK;
 }
 
-status_codes stack_push(Stack* stack, tree_node* tr_node)
+status_code stack_push(Stack* stack, tree_node* tr_node)
 {
 	if (stack == NULL)
 	{
@@ -330,7 +330,7 @@ status_codes stack_push(Stack* stack, tree_node* tr_node)
 	return OK;
 }
 
-status_codes stack_pop(Stack* stack, tree_node** node)
+status_code stack_pop(Stack* stack, tree_node** node)
 {
 	if (stack == NULL)
 	{
@@ -391,13 +391,13 @@ int get_operation_priority(node_content operation)
 	}
 }
 
-status_codes get_expr_token(const char* src, const char** end_ptr, node_content* content, char* data)
+status_code get_expr_token(const char* src, const char** end_ptr, node_content* content, char* data)
 {
 	if (src == NULL || end_ptr == NULL || content == NULL || data == NULL)
 	{
 		return INVALID_ARG;
 	}
-	status_codes err_code = OK;
+	status_code err_code = OK;
 	if (isalpha(*src))
 	{
 		*content = VAR;
@@ -490,7 +490,7 @@ status_codes get_expr_token(const char* src, const char** end_ptr, node_content*
 	return OK;
 }
 
-status_codes validate_token_combination(node_content prev, node_content cur)
+status_code validate_token_combination(node_content prev, node_content cur)
 {
 	if (is_operation(prev) && is_operation(cur) && cur != INVERSION)
 	{
@@ -516,20 +516,20 @@ status_codes validate_token_combination(node_content prev, node_content cur)
 	return OK;
 }
 
-status_codes expr_tree_set_null(Expression_tree* etree)
+status_code expr_tree_set_null(Expression_tree* etree)
 {
 	etree->root = NULL;
 	return OK;
 }
 
-status_codes expr_tree_construct(Expression_tree* etree, const char* infix)
+status_code expr_tree_construct(Expression_tree* etree, const char* infix)
 {
 	if (etree == NULL || infix == NULL)
 	{
 		return INVALID_ARG;
 	}
 	
-	status_codes err_code = OK;
+	status_code err_code = OK;
 	Expression_tree etree_tmp;
 	etree_tmp.var_cnt = 0;
 	for (ull i = 0; i < 26; ++i)
@@ -673,7 +673,7 @@ status_codes expr_tree_construct(Expression_tree* etree, const char* infix)
 	return OK;
 }
 
-status_codes expr_tree_destruct(Expression_tree* etree)
+status_code expr_tree_destruct(Expression_tree* etree)
 {
 	if (etree == NULL)
 	{
@@ -684,7 +684,7 @@ status_codes expr_tree_destruct(Expression_tree* etree)
 	return OK;
 }
 
-status_codes expr_tree_node_calc(const tree_node* node, const bool var_table[26], bool* res)
+status_code expr_tree_node_calc(const tree_node* node, const bool var_table[26], bool* res)
 {
 	if (res == NULL)
 	{
@@ -721,7 +721,7 @@ status_codes expr_tree_node_calc(const tree_node* node, const bool var_table[26]
 		{
 			return INVALID_INPUT;
 		}
-		status_codes err_code = expr_tree_node_calc(node->left, var_table, res);
+		status_code err_code = expr_tree_node_calc(node->left, var_table, res);
 		*res = err_code ? *res : !(*res);
 		return err_code;
 	}
@@ -730,7 +730,7 @@ status_codes expr_tree_node_calc(const tree_node* node, const bool var_table[26]
 		return INVALID_INPUT;
 	}
 	bool res_left, res_right;
-	status_codes err_code = expr_tree_node_calc(node->left, var_table, &res_left);
+	status_code err_code = expr_tree_node_calc(node->left, var_table, &res_left);
 	err_code = err_code ? err_code : expr_tree_node_calc(node->right, var_table, &res_right);
 	if (err_code)
 	{
@@ -768,7 +768,7 @@ status_codes expr_tree_node_calc(const tree_node* node, const bool var_table[26]
 	}
 }
 
-status_codes expr_tree_calc(Expression_tree etree, const bool* var_values, bool* res)
+status_code expr_tree_calc(Expression_tree etree, const bool* var_values, bool* res)
 {
 	if (etree.root == NULL || var_values == NULL || res == NULL)
 	{
@@ -785,7 +785,7 @@ status_codes expr_tree_calc(Expression_tree etree, const bool* var_values, bool*
 	}
 	
 	bool res_tmp;
-	status_codes err_code = expr_tree_node_calc(etree.root, var_table, &res_tmp);
+	status_code err_code = expr_tree_node_calc(etree.root, var_table, &res_tmp);
 	if (err_code)
 	{
 		return err_code;
@@ -794,14 +794,14 @@ status_codes expr_tree_calc(Expression_tree etree, const bool* var_values, bool*
 	return OK;
 }
 
-status_codes expr_tree_fprint_table(FILE* file, Expression_tree etree)
+status_code expr_tree_fprint_table(FILE* file, Expression_tree etree)
 {
 	if (etree.root == NULL)
 	{
 		return INVALID_ARG;
 	}
 	
-	status_codes err_code = OK;
+	status_code err_code = OK;
 	bool* var_values = (bool*) malloc(sizeof(bool) * etree.var_cnt);
 	if (var_values == NULL)
 	{
@@ -856,7 +856,7 @@ status_codes expr_tree_fprint_table(FILE* file, Expression_tree etree)
 	return OK;
 }
 
-status_codes fread_line(FILE* file, char** line)
+status_code fread_line(FILE* file, char** line)
 {
 	if (file == NULL || line == NULL)
 	{
@@ -890,7 +890,7 @@ status_codes fread_line(FILE* file, char** line)
 	return OK;
 }
 
-status_codes generate_random_str(char** str)
+status_code generate_random_str(char** str)
 {
 	if (str == NULL)
 	{
@@ -930,7 +930,7 @@ status_codes generate_random_str(char** str)
 	return OK;
 }
 
-status_codes construct_output_path(const char* input, const char* output_name, char** output)
+status_code construct_output_path(const char* input, const char* output_name, char** output)
 {
 	if (input == NULL || output_name == NULL || output == NULL)
 	{
