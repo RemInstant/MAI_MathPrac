@@ -146,21 +146,27 @@ int main(int argc, char** argv)
 {
 	if (argc == 1)
 	{
-		//printf("Usage: cmd_path <input>\n");
-		//return OK;
+		printf("Usage: cmd_path <input>\n");
+		return OK;
 	}
 	if (argc != 2)
 	{
-		//print_error(INVALID_INPUT);
-		//return INVALID_INPUT;
+		print_error(INVALID_INPUT);
+		return INVALID_INPUT;
 	}
 	
+	status_codes err_code = OK;
 	srand(time(NULL));
 	char* output_name = NULL;
-	char input_path[16] = "lab4/t06_input";
+	char* input_path = argv[1];
 	char* output_path = NULL;
-	status_codes err_code = generate_random_str(&output_name);
-	err_code = err_code ? err_code : construct_output_path(input_path, output_name, &output_path);
+	while (!err_code && (output_path == NULL || !strcmp(input_path, output_path)))
+	{
+		free(output_name);
+		free(output_path);
+		err_code = generate_random_str(&output_name);
+		err_code = err_code ? err_code : construct_output_path(input_path, output_name, &output_path);
+	}
 	free(output_name);
 	if (err_code)
 	{
@@ -525,6 +531,7 @@ status_codes expr_tree_construct(Expression_tree* etree, const char* infix)
 	
 	status_codes err_code = OK;
 	Expression_tree etree_tmp;
+	etree_tmp.var_cnt = 0;
 	for (ull i = 0; i < 26; ++i)
 	{
 		etree_tmp.var_flag[i] = false;
@@ -641,6 +648,11 @@ status_codes expr_tree_construct(Expression_tree* etree, const char* infix)
 		}
 		err_code = err_code ? err_code : stack_pop(&args, &tnode->left);
 		err_code = err_code ? err_code : stack_push(&args, tnode);
+		if (err_code)
+		{
+			tree_node_destruct(tnode);
+			free(tnode);
+		}
 	}
 	if (!err_code)
 	{
