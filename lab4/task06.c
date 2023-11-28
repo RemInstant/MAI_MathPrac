@@ -870,7 +870,7 @@ status_code fread_line(FILE* file, char** line)
 		return BAD_ALLOC;
 	}
 	char ch = getc(file);
-	while (!feof(file))
+	while (!feof(file) && ch != '\n')
 	{
 		if (iter > size - 2)
 		{
