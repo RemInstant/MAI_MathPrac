@@ -21,58 +21,17 @@ typedef enum
 	INVALID_BRACKET_ORDER,
 	FILE_OPENING_ERROR,
 	FILE_CONTENT_ERROR,
+	FILE_END,
 	OVERFLOW,
 	UNINITIALIZED_USAGE,
 	DIVISION_BY_ZERO,
 	NEGATIVE_POWER,
 	BAD_ALLOC,
 	CORRUPTED_MEMORY
-} status_codes;
+} status_code;
 
-void print_error(status_codes code)
-{
-	switch (code)
-	{
-		case OK:
-			return;
-		case INVALID_ARG:
-			printf("Invalid function argument\n");
-			return;
-		case INVALID_INPUT:
-			printf("Invalid input\n");
-			return;
-		case INVALID_FLAG:
-			printf("Invalid flag\n");
-			return;
-		case INVALID_NUMBER:
-			printf("Invalid number\n");
-			return;
-		case FILE_OPENING_ERROR:
-			printf("File cannot be opened\n");
-			return;
-		case FILE_CONTENT_ERROR:
-			printf("Invalid content of file\n");
-			return;
-		case OVERFLOW:
-			printf("An overflow occurred\n");
-			return;
-		case UNINITIALIZED_USAGE:
-			printf("Uninitialized variable was used\n");
-			return;
-		case DIVISION_BY_ZERO:
-			printf("Division by zero occurred\n");
-			return;
-		case BAD_ALLOC:
-			printf("Memory lack error occurred\n");
-			return;
-		case CORRUPTED_MEMORY:
-			printf("Memory was corrupted\n");
-			return;
-		default:
-			printf("Unexpected error occurred\n");
-			return;
-	}
-}
+void print_error(status_code code);
+void fprint_error(FILE* file, status_code code);
 
 typedef enum
 {
@@ -107,28 +66,38 @@ typedef struct
 	ull size;
 } Deque;
 
-status_codes deque_set_null(Deque* deque);
-status_codes deque_construct(Deque* deque);
-status_codes deque_destruct(Deque* deque);
-status_codes deque_empty(Deque* deque, int* empty);
-status_codes deque_first(Deque deque, node_content* content, void** data);
-status_codes deque_last(Deque deque, node_content* content, void** data);
-status_codes deque_push_front(Deque* deque, node_content content, void* data);
-status_codes deque_push_back(Deque* deque, node_content content, void* data);
-status_codes deque_pop_front(Deque* deque, node_content* content, void** data);
-status_codes deque_pop_back(Deque* deque, node_content* content, void** data);
-status_codes deque_print(Deque deque);
+status_code deque_set_null(Deque* deque);
+status_code deque_construct(Deque* deque);
+status_code deque_destruct(Deque* deque);
+status_code deque_empty(Deque* deque, int* empty);
+status_code deque_first(Deque deque, node_content* content, void** data);
+status_code deque_last(Deque deque, node_content* content, void** data);
+status_code deque_push_front(Deque* deque, node_content content, void* data);
+status_code deque_push_back(Deque* deque, node_content content, void* data);
+status_code deque_pop_front(Deque* deque, node_content* content, void** data);
+status_code deque_pop_back(Deque* deque, node_content* content, void** data);
+status_code deque_print(Deque deque);
 Deque_iter deque_begin(Deque deque);
 Deque_iter deque_end(Deque deque);
 
-status_codes sread_until(const char* src, const char* delims, const char** end_ptr, char** str);
-status_codes get_expr_token(const char* src, const char** end_ptr, node_content* content, void** data);
-status_codes to_postfix_notation(const char* infix, Deque* postfix);
-status_codes postfix_calc(Deque postfix, ll* res);
+status_code sread_until(const char* src, const char* delims, const char** end_ptr, char** str);
+status_code get_expr_const(const char* src, const char** end_ptr, void** data);
+status_code get_expr_oper(const char* src, const char** end_ptr, node_content* content, void** data);
+status_code to_postfix_notation(const char* infix, Deque* postfix);
+status_code calc_operation(char operation, ll arg1, ll arg2, ll* res);
+status_code postfix_calc(Deque postfix, ll* res);
 
-status_codes handle_file(FILE* file, ll* expr_cnt, char*** infixes, char*** postfixes, ll** res);
-status_codes fread_line(FILE* file, char** str);
-status_codes generate_error_file(const char* input, char** output);
+typedef struct
+{
+	status_code valid_code;
+	char* infix;
+	Deque postfix;
+	ll res;
+} expr_data;
+
+status_code handle_file(FILE* file, ull* expr_cnt, expr_data** data_arr);
+status_code fread_line(FILE* file, char** str);
+status_code generate_error_path(const char* input, char** output);
 
 int main(int argc, char** argv)
 {
@@ -150,21 +119,93 @@ int main(int argc, char** argv)
 		return FILE_OPENING_ERROR;
 	}
 	
-	char* infix = NULL;
-	status_codes err_code = fread_line(input, &infix);
-	
-	printf("%s\n", infix);
-	Deque postfix;
-	deque_set_null(&postfix);
-	err_code = err_code ? err_code : to_postfix_notation(infix, &postfix);
-	err_code = err_code ? err_code : deque_print(postfix);
-	
-	ll res = 0;
-	err_code = err_code ? err_code : postfix_calc(postfix, &res);
-	printf("\n%lld\n", res);
-	
+	char* path = NULL;
+	status_code err_code = fread_line(input, &path);
+	if (err_code == FILE_END)
+	{
+		printf("There is no pathes in the input file\n");
+	}
+	while (!err_code)
+	{
+		status_code file_code = OK;
+		FILE* file = fopen(path, "r");
+		if (file == NULL)
+		{
+			file_code = FILE_OPENING_ERROR;
+		}
+		ull cnt = 0;
+		expr_data* data = NULL;
+		file_code = file_code ? file_code : handle_file(file, &cnt, &data);
+		printf("FILE %s:\n", path);
+		if (!file_code)
+		{
+			status_code err_file_code = OK;
+			char* error_path = NULL;
+			FILE* err_file = NULL;
+			if (cnt == 0)
+			{
+				printf("There are no expressions in the file\n");
+			}
+			for (ull i = 0; i < cnt && !file_code; ++i)
+			{
+				if (data[i].valid_code)
+				{
+					if (err_file == NULL && err_file_code == OK)
+					{
+						err_file_code = generate_error_path(path, &error_path);
+						if (!err_file_code)
+						{
+							err_file = fopen(error_path, "w");
+						}
+						if (!err_file_code && err_file == NULL)
+						{
+							err_file_code = FILE_OPENING_ERROR;
+						}
+					}
+					if (!err_file_code)
+					{
+						fprintf(err_file, "%llu: %s - ", i, data[i].infix);
+						fprint_error(err_file, data[i].valid_code);
+					}
+				}
+				else
+				{
+					printf("%llu: %s -> ", i, data[i].infix);
+					file_code = deque_print(data[i].postfix);
+					printf("-> %lld\n", data[i].res);
+				}
+			}
+			if (!err_file_code && err_file != NULL)
+			{
+				printf("There are errors in this file which are printed into the error file: %s\n", error_path);
+			}
+			if (err_file_code)
+			{
+				printf("An error occurred while creating/opening error file: ");
+				print_error(err_file_code);
+			}
+			for (ull i = 0; i < cnt; ++i)
+			{
+				free(data[i].infix);
+				deque_destruct(&data[i].postfix);
+			}
+			free(data);
+			free(error_path);
+			fclose(err_file);
+		}
+		if (file_code)
+		{
+			print_error(file_code);
+		}
+		free(path);
+		err_code = err_code ? err_code : fread_line(input, &path);
+		printf("\n");
+	}
+	if (err_code == FILE_END)
+	{
+		err_code = OK;
+	}
 	fclose(input);
-	deque_destruct(&postfix);
 	if (err_code)
 	{
 		print_error(err_code);
@@ -187,7 +228,7 @@ int iter_equal(Deque_iter iter_l, Deque_iter iter_r)
 	return iter_l.node == iter_r.node;
 }
 
-status_codes deque_set_null(Deque* deque)
+status_code deque_set_null(Deque* deque)
 {
 	if (deque == NULL)
 	{
@@ -198,7 +239,7 @@ status_codes deque_set_null(Deque* deque)
 	return OK;
 }
 
-status_codes deque_construct(Deque* deque)
+status_code deque_construct(Deque* deque)
 {
 	if (deque == NULL)
 	{
@@ -217,7 +258,7 @@ status_codes deque_construct(Deque* deque)
 	return OK;
 }
 
-status_codes deque_destruct(Deque* deque)
+status_code deque_destruct(Deque* deque)
 {
 	if (deque == NULL)
 	{
@@ -237,7 +278,7 @@ status_codes deque_destruct(Deque* deque)
 	return OK;
 }
 
-status_codes deque_empty(Deque* deque, int* empty)
+status_code deque_empty(Deque* deque, int* empty)
 {
 	if (deque == NULL || empty == NULL)
 	{
@@ -247,7 +288,7 @@ status_codes deque_empty(Deque* deque, int* empty)
 	return OK;
 }
 
-status_codes deque_first(Deque deque, node_content* content, void** data)
+status_code deque_first(Deque deque, node_content* content, void** data)
 {
 	if (data== NULL)
 	{
@@ -264,7 +305,7 @@ status_codes deque_first(Deque deque, node_content* content, void** data)
 	return OK;
 }
 
-status_codes deque_last(Deque deque, node_content* content, void** data)
+status_code deque_last(Deque deque, node_content* content, void** data)
 {
 	if (data== NULL)
 	{
@@ -281,7 +322,7 @@ status_codes deque_last(Deque deque, node_content* content, void** data)
 	return OK;
 }
 
-status_codes deque_push_front(Deque* deque, node_content content, void* data)
+status_code deque_push_front(Deque* deque, node_content content, void* data)
 {
 	if (deque == NULL)
 	{
@@ -301,7 +342,7 @@ status_codes deque_push_front(Deque* deque, node_content content, void* data)
 	return OK;
 }
 
-status_codes deque_push_back(Deque* deque, node_content content, void* data)
+status_code deque_push_back(Deque* deque, node_content content, void* data)
 {
 	if (deque == NULL)
 	{
@@ -329,7 +370,7 @@ status_codes deque_push_back(Deque* deque, node_content content, void* data)
 	return OK;
 }
 
-status_codes deque_pop_front(Deque* deque, node_content* content, void** data)
+status_code deque_pop_front(Deque* deque, node_content* content, void** data)
 {
 	if (deque == NULL)
 	{
@@ -354,7 +395,7 @@ status_codes deque_pop_front(Deque* deque, node_content* content, void** data)
 	return OK;
 }
 
-status_codes deque_pop_back(Deque* deque, node_content* content, void** data)
+status_code deque_pop_back(Deque* deque, node_content* content, void** data)
 {
 	if (deque == NULL)
 	{
@@ -388,7 +429,7 @@ status_codes deque_pop_back(Deque* deque, node_content* content, void** data)
 	return OK;
 }
 
-status_codes deque_print(Deque deque)
+status_code deque_print(Deque deque)
 {
 	if (deque.begin == NULL)
 	{
@@ -459,7 +500,7 @@ int get_operation_priority(char operation)
 	}
 }
 
-status_codes str_to_ll(const char* str, ll* res)
+status_code str_to_ll(const char* str, ll* res)
 {
 	if (str == NULL || res == NULL)
 	{
@@ -484,7 +525,7 @@ status_codes str_to_ll(const char* str, ll* res)
 	return OK;
 }
 
-status_codes sread_until(const char* src, const char* delims, const char** end_ptr, char** str)
+status_code sread_until(const char* src, const char* delims, const char** end_ptr, char** str)
 {
 	if (src == NULL || str == NULL)
 	{
@@ -530,13 +571,42 @@ status_codes sread_until(const char* src, const char* delims, const char** end_p
 	return OK;
 }
 
-status_codes get_expr_token(const char* src, const char** end_ptr, node_content* content, void** data)
+status_code get_expr_const(const char* src, const char** end_ptr, void** data)
+{
+	if (src == NULL || end_ptr == NULL || data == NULL)
+	{
+		return INVALID_ARG;
+	}
+	status_code err_code = OK;
+	char* str_data = NULL;
+	ll* data_tmp = (ll*) malloc(sizeof(ll));
+	int sign = 1;
+	err_code = data_tmp != NULL ? OK : BAD_ALLOC;
+	if (*src == '+' || *src == '-')
+	{
+		sign = *src == '-' ? -1 : 1;
+		++src;
+	}
+	err_code = err_code ? err_code : sread_until(src, "()+-*/%^", end_ptr, &str_data);
+	err_code = err_code ? err_code : str_to_ll(str_data, data_tmp);
+	free(str_data);
+	if (err_code)
+	{
+		free(data_tmp);
+		return err_code;
+	}
+	*data_tmp *= sign;
+	*data = data_tmp;
+	return OK;
+}
+
+status_code get_expr_oper(const char* src, const char** end_ptr, node_content* content, void** data)
 {
 	if (src == NULL || end_ptr == NULL || content == NULL || data == NULL)
 	{
 		return INVALID_ARG;
 	}
-	status_codes err_code = OK;
+	status_code err_code = OK;
 	if (*src == '(')
 	{
 		*content = L_BRACKET;
@@ -558,23 +628,6 @@ status_codes get_expr_token(const char* src, const char** end_ptr, node_content*
 		*content = OPERATION;
 		*data = data_tmp;
 	}
-	else if (isdigit(*src))
-	{
-		char* str_data = NULL;
-		ll* data_tmp = (ll*) malloc(sizeof(ll));
-		err_code = data_tmp != NULL ? OK : BAD_ALLOC;
-		err_code = sread_until(src, "()+-*/%^", end_ptr, &str_data);
-		err_code = err_code ? err_code : str_to_ll(str_data, data_tmp);
-		free(str_data);
-		if (err_code)
-		{
-			free(data_tmp);
-			return err_code;
-		}
-		*content = CONST;
-		*data = data_tmp;
-		return OK;
-	}
 	else
 	{
 		err_code = INVALID_INPUT;
@@ -588,7 +641,7 @@ status_codes get_expr_token(const char* src, const char** end_ptr, node_content*
 	return OK;
 }
 
-status_codes validate_token_combination(node_content prev, node_content cur)
+status_code validate_token_combination(node_content prev, node_content cur)
 {
 	if (prev == OPERATION && cur == OPERATION)
 	{
@@ -613,14 +666,14 @@ status_codes validate_token_combination(node_content prev, node_content cur)
 	return OK;
 }
 
-status_codes to_postfix_notation(const char* infix, Deque* postfix)
+status_code to_postfix_notation(const char* infix, Deque* postfix)
 {
 	if (infix == NULL || postfix == NULL)
 	{
 		return INVALID_ARG;
 	}
 	
-	status_codes err_code = OK;
+	status_code err_code = OK;
 	Deque postfix_tmp, opers;
 	deque_set_null(&postfix_tmp);
 	deque_set_null(&opers);
@@ -633,7 +686,15 @@ status_codes to_postfix_notation(const char* infix, Deque* postfix)
 	{
 		node_content content;
 		void* data;
-		err_code = get_expr_token(ptr, &ptr, &content, &data);
+		if (prev_content != CONST && prev_content != R_BRACKET && *ptr != '(')
+		{
+			err_code = get_expr_const(ptr, &ptr, &data);
+			content = CONST;
+		}
+		else
+		{
+			err_code = get_expr_oper(ptr, &ptr, &content, &data);
+		}
 		err_code = err_code ? err_code : validate_token_combination(prev_content, content);
 		// --- HANDLE NUMBER ---
 		if (!err_code && content == CONST)
@@ -699,7 +760,7 @@ status_codes to_postfix_notation(const char* infix, Deque* postfix)
 	return OK;
 }
 
-status_codes bpow(ll base, ll pow, ll* res)
+status_code bpow(ll base, ll pow, ll* res)
 {
 	if (res == NULL)
 	{
@@ -715,24 +776,30 @@ status_codes bpow(ll base, ll pow, ll* res)
 	{
 		if (pow & 1)
 		{
-			if ((res_tmp > LLONG_MAX / mult) || (res_tmp < LLONG_MIN / mult))
+			ll check = mult < 0 ? -mult : mult;
+			if ((res_tmp > LLONG_MAX / check) || (res_tmp < LLONG_MIN / check))
 			{
 				return OVERFLOW;
 			}
 			res_tmp *= mult;
 		}
-		mult *= base;
+		mult *= mult;
 		pow >>= 1;
 	}
 	*res = res_tmp;
 	return OK;
 }
 
-status_codes calc_operation(char operation, ll arg1, ll arg2, ll* res)
+status_code calc_operation(char operation, ll arg1, ll arg2, ll* res)
 {
 	if (res == NULL)
 	{
 		return INVALID_ARG;
+	}
+	if (arg2 < 0 && (operation == '+' || operation == '-'))
+	{
+		operation = operation == '+' ? '-' : '+';
+		arg2 *= -1;
 	}
 	switch (operation)
 	{
@@ -756,7 +823,8 @@ status_codes calc_operation(char operation, ll arg1, ll arg2, ll* res)
 		}
 		case '*':
 		{
-			if ((arg1 > LLONG_MAX / arg2) || (arg1 < LLONG_MIN / arg2))
+			ll check = arg2 < 0 ? -arg2 : arg2;
+			if ((arg1 > LLONG_MAX / check) || (arg1 < LLONG_MIN / check))
 			{
 				return OVERFLOW;
 			}
@@ -788,7 +856,7 @@ status_codes calc_operation(char operation, ll arg1, ll arg2, ll* res)
 	}
 }
 
-status_codes postfix_calc(Deque postfix, ll* res)
+status_code postfix_calc(Deque postfix, ll* res)
 {
 	if (postfix.begin == NULL || res == NULL)
 	{
@@ -797,7 +865,7 @@ status_codes postfix_calc(Deque postfix, ll* res)
 	
 	Deque args;
 	deque_set_null(&args);
-	status_codes err_code = deque_construct(&args);
+	status_code err_code = deque_construct(&args);
 	
 	Deque_iter iter = deque_begin(postfix);
 	Deque_iter iter_end = deque_end(postfix);
@@ -821,8 +889,8 @@ status_codes postfix_calc(Deque postfix, ll* res)
 			void* arg2 = NULL;
 			ll* local_res = (ll*) malloc(sizeof(ll));
 			err_code = res != NULL ? OK : BAD_ALLOC;
-			err_code = err_code ? err_code : deque_pop_back(&args, NULL, &arg1);
 			err_code = err_code ? err_code : deque_pop_back(&args, NULL, &arg2);
+			err_code = err_code ? err_code : deque_pop_back(&args, NULL, &arg1);
 			err_code = err_code ? err_code : calc_operation(*operation, *((ll*) arg1), *((ll*) arg2), local_res);
 			err_code = err_code ? err_code : deque_push_back(&args, CONST, local_res);
 			free(arg1);
@@ -851,7 +919,96 @@ status_codes postfix_calc(Deque postfix, ll* res)
 	return OK;
 }
 
-status_codes fread_line(FILE* file, char** line)
+status_code handle_file(FILE* file, ull* expr_cnt, expr_data** data_arr)
+{
+	if (file == NULL || expr_cnt == NULL || data_arr == NULL)
+	{
+		return INVALID_ARG;
+	}
+	
+	ull cnt = 0;
+	ull size = 2;
+	expr_data* data_arr_tmp = (expr_data*) malloc(sizeof(expr_data) * 2);
+	
+	char* infix = NULL;
+	status_code err_code = fread_line(file, &infix);
+	if (err_code == FILE_END)
+	{
+		free(data_arr_tmp);
+		*expr_cnt = 0;
+		*data_arr = NULL;
+		return OK;
+	}
+	while (!err_code)
+	{
+		Deque postfix;
+		ll res = 0;
+		deque_set_null(&postfix);
+		status_code expr_code = deque_construct(&postfix);
+		expr_code = expr_code ? expr_code : to_postfix_notation(infix, &postfix);
+		expr_code = expr_code ? expr_code : postfix_calc(postfix, &res);
+		if (expr_code)
+		{
+			deque_destruct(&postfix);
+		}
+		expr_data data;
+		data.valid_code = expr_code;
+		data.infix = infix;
+		data.postfix = postfix;
+		data.res = res;
+		if (cnt == size)
+		{
+			size *= 2;
+			expr_data* tmp = (expr_data*) realloc(data_arr_tmp, sizeof(expr_data) * size);
+			if (tmp == NULL)
+			{
+				err_code = BAD_ALLOC;
+				free(infix);
+				deque_destruct(&postfix);
+			}
+			else
+			{
+				data_arr_tmp = tmp;
+			}
+		}
+		if (!err_code)
+		{
+			data_arr_tmp[cnt++] = data;
+		}
+		err_code = err_code ? err_code : fread_line(file, &infix);
+	}
+	if (err_code == FILE_END)
+	{
+		err_code = OK;
+	}
+	if (!err_code)
+	{
+		expr_data* tmp = (expr_data*) realloc(data_arr_tmp, sizeof(expr_data) * cnt);
+		if (tmp == NULL)
+		{
+			err_code = BAD_ALLOC;
+		}
+		else
+		{
+			data_arr_tmp = tmp;
+		}
+	}
+	if (err_code)
+	{
+		for (ull i = 0; i < cnt; ++i)
+		{
+			free(data_arr_tmp[0].infix);
+			deque_destruct(&data_arr_tmp[0].postfix);
+		}
+		free(data_arr_tmp);
+		return err_code;
+	}
+	*expr_cnt = cnt;
+	*data_arr = data_arr_tmp;
+	return OK;
+}
+
+status_code fread_line(FILE* file, char** line)
 {
 	if (file == NULL || line == NULL)
 	{
@@ -865,7 +1022,13 @@ status_codes fread_line(FILE* file, char** line)
 		return BAD_ALLOC;
 	}
 	char ch = getc(file);
-	while (!feof(file))
+	if (feof(file))
+	{
+		free(*line);
+		*line = NULL;
+		return FILE_END;
+	}
+	while (!feof(file) && ch != '\n')
 	{
 		if (iter > size - 2)
 		{
@@ -885,66 +1048,96 @@ status_codes fread_line(FILE* file, char** line)
 	return OK;
 }
 
-status_codes generate_random_str(char** str)
+status_code generate_error_path(const char* input, char** output)
 {
-	if (str == NULL)
+	if (input == NULL || output == NULL)
 	{
 		return INVALID_ARG;
 	}
-	ull iter = 0;
-	ull size = 2;
-	*str = (char*) malloc(sizeof(char) * size);
-	if (*str == NULL)
+	
+	char* output_tmp = (char*) malloc(sizeof(char) * (strlen(input) + 5));
+	if (output_tmp == NULL)
 	{
 		return BAD_ALLOC;
 	}
-	char symbols[63] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 	
-	char ch = symbols[rand() % 63];
-	while ((ch != '\0' || iter == 0) && iter < 63)
+	ll dot_pos = -1;
+	for (ull i = 0; input[i]; ++i)
 	{
-		while (iter == 0 && ch == '\0')
+		if (input[i] == '.')
 		{
-			ch = symbols[rand() % 63];
+			dot_pos = i;
 		}
-		if (iter > size - 2)
+		if (input[i] == '/' || input[i] == '\\')
 		{
-			size *= 2;
-			char* temp_line = realloc(*str, size);
-			if (temp_line == NULL)
-			{
-				free(*str);
-				return BAD_ALLOC;
-			}
-			*str = temp_line;
+			dot_pos = -1;
 		}
-		(*str)[iter++] = ch;
-		ch = symbols[rand() % 63];
 	}
-	(*str)[iter] = '\0';
+	if (dot_pos != -1)
+	{
+		sprintf(output_tmp, "%s", input);
+		sprintf(output_tmp + dot_pos, "_err");
+	}
+	else
+	{
+		sprintf(output_tmp, "%s_err", input);
+	}
+	*output = output_tmp;
 	return OK;
 }
 
-status_codes construct_output_path(const char* input, const char* output_name, char** output)
+void print_error(status_code code)
 {
-	if (input == NULL || output_name == NULL || output == NULL)
+	fprint_error(stdin, code);
+}
+
+void fprint_error(FILE* file, status_code code)
+{
+	switch (code)
 	{
-		return INVALID_ARG;
+		case OK:
+			return;
+		case INVALID_ARG:
+			fprintf(file, "Invalid function argument\n");
+			return;
+		case INVALID_INPUT:
+			fprintf(file, "Invalid input\n");
+			return;
+		case INVALID_FLAG:
+			fprintf(file, "Invalid flag\n");
+			return;
+		case INVALID_NUMBER:
+			fprintf(file, "Invalid number\n");
+			return;
+		case INVALID_BRACKET_ORDER:
+			fprintf(file, "Invalid bracket order\n");
+			return;
+		case FILE_OPENING_ERROR:
+			fprintf(file, "File cannot be opened\n");
+			return;
+		case FILE_CONTENT_ERROR:
+			fprintf(file, "Invalid content of file\n");
+			return;
+		case FILE_END:
+			fprintf(file, "Unexpected end of file\n");
+			return;
+		case OVERFLOW:
+			fprintf(file, "An overflow occurred\n");
+			return;
+		case UNINITIALIZED_USAGE:
+			fprintf(file, "Uninitialized variable was used\n");
+			return;
+		case DIVISION_BY_ZERO:
+			fprintf(file, "Division by zero occurred\n");
+			return;
+		case BAD_ALLOC:
+			fprintf(file, "Memory lack error occurred\n");
+			return;
+		case CORRUPTED_MEMORY:
+			fprintf(file, "Memory was corrupted\n");
+			return;
+		default:
+			fprintf(file, "Unexpected error occurred\n");
+			return;
 	}
-	ull last_delim_pos = 0;
-	for (ull i = 0; input[i]; ++i)
-	{
-		if (input[i] == '/' || input[i] == '\\')
-		{
-			last_delim_pos = i;
-		}
-	}
-	*output = (char*) malloc(sizeof(char) * (last_delim_pos + strlen(output_name) + 2));
-	if (*output == NULL)
-	{
-		return BAD_ALLOC;
-	}
-	memcpy(*output, input, sizeof(char) * (last_delim_pos + 1));
-	strcpy(*output + last_delim_pos + 1, output_name);
-	return OK;
 }
