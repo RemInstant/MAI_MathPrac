@@ -160,6 +160,14 @@ int main(int argc, char** argv)
 	char* output_name = NULL;
 	char* input_path = argv[1];
 	char* output_path = NULL;
+	
+	FILE* input = fopen(input_path, "r");
+	if (input == NULL)
+	{
+		print_error(FILE_OPENING_ERROR);
+		return FILE_OPENING_ERROR;
+	}
+	
 	while (!err_code && (output_path == NULL || !strcmp(input_path, output_path)))
 	{
 		free(output_name);
@@ -170,17 +178,16 @@ int main(int argc, char** argv)
 	free(output_name);
 	if (err_code)
 	{
+		fclose(input);
 		print_error(err_code);
 		return err_code;
 	}
 	
-	FILE* input = fopen(input_path, "r");
 	FILE* output = fopen(output_path, "w");
-	if (input == NULL || output == NULL)
+	if (output == NULL)
 	{
-		free(output_path);
-		fclose(input);
 		fclose(output);
+		free(output_path);
 		print_error(FILE_OPENING_ERROR);
 		return FILE_OPENING_ERROR;
 	}

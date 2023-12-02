@@ -103,16 +103,16 @@ int main(int argc, char** argv)
 {
 	if (argc == 1)
 	{
-		//printf("Usage: cmd_path <input>\n");
-		//return OK;
+		printf("Usage: cmd_path <input>\n");
+		return OK;
 	}
 	if (argc != 2)
 	{
-		//print_error(INVALID_INPUT);
-		//return INVALID_INPUT;
+		print_error(INVALID_INPUT);
+		return INVALID_INPUT;
 	}
 	
-	FILE* input = fopen("lab4/t05_input", "r");
+	FILE* input = fopen(argv[1], "r");
 	if (input == NULL)
 	{
 		print_error(FILE_OPENING_ERROR);
@@ -189,9 +189,16 @@ int main(int argc, char** argv)
 				free(data[i].infix);
 				deque_destruct(&data[i].postfix);
 			}
+			if (file != NULL)
+			{
+				fclose(file);
+			}
+			if (err_file != NULL)
+			{
+				fclose(err_file);
+			}
 			free(data);
 			free(error_path);
-			fclose(err_file);
 		}
 		if (file_code)
 		{
@@ -205,7 +212,10 @@ int main(int argc, char** argv)
 	{
 		err_code = OK;
 	}
-	fclose(input);
+	if (input != NULL)
+	{
+		fclose(input);
+	}
 	if (err_code)
 	{
 		print_error(err_code);
@@ -893,6 +903,10 @@ status_code postfix_calc(Deque postfix, ll* res)
 			err_code = err_code ? err_code : deque_pop_back(&args, NULL, &arg1);
 			err_code = err_code ? err_code : calc_operation(*operation, *((ll*) arg1), *((ll*) arg2), local_res);
 			err_code = err_code ? err_code : deque_push_back(&args, CONST, local_res);
+			if (err_code)
+			{
+				free(local_res);
+			}
 			free(arg1);
 			free(arg2);
 		}
@@ -944,8 +958,7 @@ status_code handle_file(FILE* file, ull* expr_cnt, expr_data** data_arr)
 		Deque postfix;
 		ll res = 0;
 		deque_set_null(&postfix);
-		status_code expr_code = deque_construct(&postfix);
-		expr_code = expr_code ? expr_code : to_postfix_notation(infix, &postfix);
+		status_code expr_code = to_postfix_notation(infix, &postfix);
 		expr_code = expr_code ? expr_code : postfix_calc(postfix, &res);
 		if (expr_code)
 		{
