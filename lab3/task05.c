@@ -109,11 +109,16 @@ int main(int argc, char** argv)
 	}
 	
 	FILE* input = fopen(argv[1], "r");
+	if (input == NULL)
+	{
+		print_error(FILE_OPENING_ERROR);
+		return FILE_OPENING_ERROR;
+	}
+	
 	FILE* output = fopen(argv[2], "w");
-	if (input == NULL || output == NULL)
+	if (output == NULL)
 	{
 		fclose(input);
-		fclose(output);
 		print_error(FILE_OPENING_ERROR);
 		return FILE_OPENING_ERROR;
 	}
@@ -387,7 +392,7 @@ status_codes read_students(FILE* file, ull* studs_cnt, Student** studs)
 	}
 	
 	status_codes err_code = OK;
-	while (!feof(file))
+	while (!err_code && !feof(file))
 	{
 		Student stud;
 		stud.marks = (unsigned short*) malloc(sizeof(unsigned short) * 5);
@@ -437,7 +442,7 @@ status_codes read_students(FILE* file, ull* studs_cnt, Student** studs)
 		{
 			free(studs_tmp[i].marks);
 		}
-		free(studs);
+		free(studs_tmp);
 		return err_code;
 	}
 	*studs_cnt = cnt;

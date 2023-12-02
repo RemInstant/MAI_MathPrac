@@ -129,12 +129,14 @@ int main(int argc, char** argv)
 	}
 	if (argc != 2)
 	{
+		print_error(INVALID_INPUT);
 		return INVALID_INPUT;
 	}
 	
 	FILE* input = fopen(argv[1], "r");
 	if (input == NULL)
 	{
+		print_error(FILE_OPENING_ERROR);
 		return FILE_OPENING_ERROR;
 	}
 	
