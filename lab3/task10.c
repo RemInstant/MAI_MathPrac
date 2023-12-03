@@ -12,6 +12,7 @@ typedef unsigned long long ull;
 typedef enum
 {
 	OK,
+	INVALID_ARG,
 	INVALID_INPUT,
 	INVALID_FLAG,
 	INVALID_NUMBER,
@@ -26,6 +27,9 @@ void print_error(status_codes code)
 	switch (code)
 	{
 		case OK:
+			return;
+		case INVALID_ARG:
+			printf("Invalid function argument\n");
 			return;
 		case INVALID_INPUT:
 			printf("Invalid input\n");
@@ -58,7 +62,7 @@ status_codes fread_line(FILE* file, char** str)
 {
 	if (file == NULL || str == NULL)
 	{
-		return INVALID_INPUT;
+		return INVALID_ARG;
 	}
 	ull iter = 0;
 	ull size = 2;
@@ -105,7 +109,7 @@ status_codes create_node(tree_node** node, const char key)
 {
 	if (node == NULL)
 	{
-		return INVALID_INPUT;
+		return INVALID_ARG;
 	}
 	*node = (tree_node*) malloc(sizeof(tree_node));
 	if (*node == NULL)
@@ -123,7 +127,7 @@ status_codes add_child(tree_node* node, const char key, tree_node** created_node
 {
 	if (node == NULL)
 	{
-		return INVALID_INPUT;
+		return INVALID_ARG;
 	}
 	
 	tree_node* new_node;
@@ -158,7 +162,7 @@ status_codes destruct_tree_node(tree_node* tree)
 {
 	if (tree == NULL)
 	{
-		return INVALID_INPUT;
+		return INVALID_ARG;
 	}
 	if (tree->child != NULL)
 	{
@@ -177,7 +181,7 @@ status_codes destruct_tree(Tree* tree)
 {
 	if (tree == NULL)
 	{
-		return INVALID_INPUT;
+		return INVALID_ARG;
 	}
 	status_codes code = destruct_tree_node(tree->root);
 	if (code != OK)
@@ -193,7 +197,7 @@ status_codes construct_tree(const char* str, Tree* tree)
 {
 	if (str == NULL || tree == NULL)
 	{
-		return INVALID_INPUT;
+		return INVALID_ARG;
 	}
 	
 	const char* ptr = str;
@@ -217,10 +221,13 @@ status_codes construct_tree(const char* str, Tree* tree)
 		if (key_waiting_flag)
 		{
 			key_waiting_flag = 0;
-			if (cur_node == NULL)
+			if (*ptr == ')')
+			{
+				cur_node = cur_node->parent;
+			}
+			else if (cur_node == NULL)
 			{
 				err_code = create_node(&(tree->root), *ptr);
-				cur_node = tree->root;
 				last_added_node = tree->root;
 			}
 			else
@@ -352,6 +359,7 @@ int main(int argc, char** argv)
 				fprintf(output, "\n");
 			}
 			err_code = destruct_tree(&tree);
+			err_code = err_code == INVALID_ARG ? OK : err_code;
 		}
 		free(str);
 		++iter;
