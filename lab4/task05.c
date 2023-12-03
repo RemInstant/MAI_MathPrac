@@ -26,6 +26,7 @@ typedef enum
 	UNINITIALIZED_USAGE,
 	DIVISION_BY_ZERO,
 	NEGATIVE_POWER,
+	ZERO_POWERED_ZERO,
 	BAD_ALLOC,
 	CORRUPTED_MEMORY
 } status_code;
@@ -780,6 +781,10 @@ status_code bpow(ll base, ll pow, ll* res)
 	{
 		return NEGATIVE_POWER;
 	}
+	if (base == 0 && pow == 0)
+	{
+		return ZERO_POWERED_ZERO;
+	}
 	ll res_tmp = 1;
 	ll mult = base;
 	while (pow > 0)
@@ -1135,13 +1140,16 @@ void fprint_error(FILE* file, status_code code)
 			fprintf(file, "Unexpected end of file\n");
 			return;
 		case OVERFLOW:
-			fprintf(file, "An overflow occurred\n");
+			fprintf(file, "Tried to overflow\n");
 			return;
 		case UNINITIALIZED_USAGE:
 			fprintf(file, "Uninitialized variable was used\n");
 			return;
 		case DIVISION_BY_ZERO:
-			fprintf(file, "Division by zero occurred\n");
+			fprintf(file, "Tried to divide by zero\n");
+			return;
+		case ZERO_POWERED_ZERO:
+			fprintf(file, "Tried to raise zero into power zero\n");
 			return;
 		case BAD_ALLOC:
 			fprintf(file, "Memory lack error occurred\n");

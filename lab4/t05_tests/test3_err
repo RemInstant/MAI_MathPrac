@@ -1,3 +1,4 @@
 2: 1234-(123 - Invalid bracket order
-3: 5000/0 - Division by zero occurred
-4: 9999999999999999999-1 - An overflow occurred
+3: 5000/0 - Tried to divide by zero
+4: 9999999999999999999-1 - Tried to overflow
+6: (1-1)^(1-1) - Tried to raise zero into power zero
