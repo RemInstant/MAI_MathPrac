@@ -1,0 +1,20 @@
+
+% comment
+[comment
+ [comment]
+]
+
+Eval([comment]{});
+	Add(2_x+3_x_y, 2_y+4_x_y);
+% Eval({});
+Eval({x:2,y:2,z:555});
+
+Sub(7_x_y);
+Mult(x+2_y);
+PartDeriv(x);
+Add(15);
+PartAntideriv(z);
+PartAntideriv(x);
+PartDeriv(y);
+Grad();
+
