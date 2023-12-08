@@ -34,7 +34,6 @@ int main(int argc, char** argv)
 	
 	Polynomial summator;
 	polynomial_set_null(&summator);
-	err_code = err_code ? err_code : polynomial_construct(&summator, eps, "");
 	while (!err_code)
 	{
 		char* cmd = NULL;

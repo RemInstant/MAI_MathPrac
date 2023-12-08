@@ -84,9 +84,9 @@ status_code trie_node_destruct(trie_node* node)
 			trie_node_destruct(node->children[i]);
 		}
 		free(node->children[i]);
-		node->parent = NULL;
 		node->children[i] = NULL;
 	}
+	node->parent = NULL;
 	return OK;
 }
 
@@ -230,12 +230,13 @@ status_code trie_clean_branch(Trie trie, trie_node* node, trie_node* cleaned_chi
 			child_flag = 1;
 		}
 	}
-	if (child_flag || trie.root == node)
+	if (child_flag || trie.root == node || node->val != 0)
 	{
 		return OK;
 	}
 	trie_node* parent = node->parent;
 	trie_node_destruct(node);
+	free(node);
 	return trie_clean_branch(trie, parent, node);
 }
 
