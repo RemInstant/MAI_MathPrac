@@ -17,4 +17,4 @@ PartAntideriv(z);
 PartAntideriv(x);
 PartDeriv(y);
 Grad();
-
+Add(0, x^4_x^-3);

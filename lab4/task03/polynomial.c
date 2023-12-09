@@ -45,7 +45,7 @@ status_code monome_extract(const char* src, const char** end_ptr, char** monome_
 		prev = *ptr;
 		++ptr;
 		
-		if (prev != '_' && prev != '*' && (*ptr == '+' || *ptr == '-'))
+		if (prev != '_' && prev != '*' && prev != '^' && (*ptr == '+' || *ptr == '-'))
 		{
 			run_flag = 0;
 		}
@@ -148,6 +148,18 @@ status_code monome_construct(Monome* monome, const char* src)
 			++ptr;
 		}
 		free(token);
+	}
+	if (!err_code)
+	{
+		ull kv_cnt = 0;
+		trie_key_val* kv_arr = NULL;
+		err_code = trie_get_key_vals(monome->vars, &kv_cnt, &kv_arr);
+		for (ull i = 0; i < kv_cnt && !err_code; ++i)
+		{
+			err_code = kv_arr[i].val > 0 ? OK : INVALID_INPUT;
+			free(kv_arr[i].str);
+		}
+		free(kv_arr);
 	}
 	if (err_code)
 	{
@@ -550,6 +562,8 @@ status_code polynomial_destruct(Polynomial* poly)
 		monome_destruct(tmp);
 		free(tmp);
 	}
+	poly->begin = poly->end = NULL;
+	poly->size = 0;
 	return OK;
 }
 
