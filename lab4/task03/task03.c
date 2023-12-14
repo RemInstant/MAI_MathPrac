@@ -21,11 +21,21 @@ status_code parse_cmd_name(const char* cmd_name, command_code* cmd_code);
 
 int main(int argc, char** argv)
 {
-	status_code err_code = OK;
+	if (argc == 1)
+	{
+		printf("Usage: cmd_path <input>\n");
+		return OK;
+	}
+	if (argc != 2)
+	{
+		print_error(INVALID_INPUT);
+		return INVALID_INPUT;
+	}
 	
+	status_code err_code = OK;
 	double eps = 1e-9;
 	
-	FILE* input = fopen("input", "r");
+	FILE* input = fopen(argv[1], "r");
 	if (input == NULL)
 	{
 		print_error(FILE_OPENING_ERROR);
