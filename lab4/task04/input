@@ -1,0 +1,24 @@
+%read(A, );
+%read(A, -);
+%read(A, );
+%read(A, -2);
+%read(A, 37);
+%read(AAA, 5);
+%read(,);
+%read(,)
+%fread(A, 5);
+%(A,5);
+%LOL_AHAHA;
+%A := AA + B;
+%A := AA +;
+%A := + B;
+%A := \;
+%AAA := \W;
+%:= \W;
+%A := \W;
+
+read(A, 10);
+write(A, 36);
+B := \A;
+C := A<>B;
+write(C, 5);
