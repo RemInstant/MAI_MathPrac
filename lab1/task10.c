@@ -49,7 +49,7 @@ int is_stop(char* str)
 	{
 		return 0;
 	}
-	return str[0] == 's' && str[1] == 't' && str[2] == 'o' && str[3] == 'p' && !str[4];
+	return str[0] == 'S' && str[1] == 't' && str[2] == 'o' && str[3] == 'p' && !str[4];
 }
 
 status_codes read_word(char** word, int* size)

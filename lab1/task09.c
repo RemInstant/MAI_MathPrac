@@ -66,18 +66,18 @@ status_codes validate_string_integer(char* str_int)
 	return OK;
 }
 
-unsigned rand_unsigned()
+unsigned rand_32()
 {
 	unsigned x = rand() & 255;
 	x |= (rand() & 255) << 8;
 	x |= (rand() & 255) << 16;
 	x |= (rand() & 255) << 24;
-    return x;
+	return x;
 }
 
-unsigned rand_range(int mn, int mx)
+int rand_range(int mn, int mx)
 {
-	return mn + rand_unsigned() % (mx - mn + 1);
+	return mn + rand_32() % (mx - mn + 1);
 }
 
 void fill_rand(int* arr, int size, int mn, int mx)
@@ -206,12 +206,13 @@ status_codes do_b(int* arr_a, int size_a, int* arr_b, int size_b, int* arr_c)
 	for (int i = 0; i < size_a; ++i)
 	{
 		int pos = lower_bound(arr_b_copy, 0, size_b-1, arr_a[i]);
-		
+		int left_diff = arr_a[i] - arr_b_copy[pos - 1];
+		int right_diff = arr_b_copy[pos] - arr_a[i];
 		if (pos == size_b)
 		{
 			--pos;
 		}
-		else if (pos > 0 && (arr_a[i] - arr_b_copy[pos - 1]) < (arr_b_copy[pos] - arr_a[i]))
+		else if (pos > 0 && left_diff < right_diff)
 		{
 			--pos;
 		}
@@ -301,18 +302,9 @@ int main(int argc, char** argv)
 			
 			if(arr_a == NULL || arr_b == NULL || arr_c == NULL)
 			{
-				if (arr_a != NULL)
-				{
-					free(arr_a);
-				}
-				if (arr_b != NULL)
-				{
-					free(arr_b);
-				}
-				if (arr_c != NULL)
-				{
-					free(arr_c);
-				}
+				free(arr_a);
+				free(arr_b);
+				free(arr_c);
 				printf("Memory lack error\n");
 				return 3;
 			}

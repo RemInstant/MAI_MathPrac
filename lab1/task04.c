@@ -11,45 +11,41 @@ typedef enum
 	BAD_ALLOC
 } status_codes;
 
-status_codes modify_name_to_output(char* input_file_name, char** output_file_name)
+status_codes modify_name_to_output(char* input_name, char** output_name)
 {
-	if (input_file_name == NULL || output_file_name == NULL)
+	if (input_name == NULL || output_name == NULL)
 	{
 		return INVALID_INPUT;
 	}
 	
-	int len = strlen(input_file_name);
+	int len = strlen(input_name);
 	int last_sep_pos = len-1; // last position of a separator, i.e. '/', '\'
-	int dot_pos = len-1; // last position of a separator, i.e. '/', '\'
-	
-	while (input_file_name[last_sep_pos] != '\\' && input_file_name[last_sep_pos] != '/')
+	int dot_pos = len-1; // last position of a dot
+	while (input_name[last_sep_pos] != '\\' && input_name[last_sep_pos] != '/' && last_sep_pos > -1)
 	{
 		--last_sep_pos;
 	}
-	
-	while (input_file_name[dot_pos] != '.')
+	while (input_name[dot_pos] != '.' && dot_pos > 0)
 	{
 		--dot_pos;
 	}
+	if (dot_pos == 0)
+	{
+		dot_pos = len;
+	}
 	
 	int out_len = 3 + dot_pos - last_sep_pos;
-	(*output_file_name) = (char*) malloc(sizeof(char) * (out_len + 1));
-	
-	if (*output_file_name == NULL)
+	(*output_name) = (char*) malloc(sizeof(char) * (out_len + 1));
+	if (*output_name == NULL)
 	{
 		return BAD_ALLOC;
 	}
-	
-	sprintf(*output_file_name, "out_");
-	(*output_file_name)[out_len] = '\0';
-	
-	printf("%s\n", *output_file_name);
-	
+	sprintf(*output_name, "out_");
+	(*output_name)[out_len] = '\0';
 	for (int i = 4; i < out_len; ++i)
 	{
-		(*output_file_name)[i] = input_file_name[last_sep_pos - 3 + i];
+		(*output_name)[i] = input_name[last_sep_pos - 3 + i];
 	}
-	
 	return OK;
 }
 
@@ -237,16 +233,16 @@ int main(int argc, char** argv)
 		return 1;
 	}
 	
-	char* input_file_name = argv[2];
-	char* output_file_name = NULL;
+	char* input_name = argv[2];
+	char* output_name = NULL;
 	
 	if (output_flag)
 	{
-		output_file_name = argv[3];
+		output_name = argv[3];
 	}
 	else
 	{	
-		switch (modify_name_to_output(input_file_name, &output_file_name))
+		switch (modify_name_to_output(input_name, &output_name))
 		{
 			case OK:
 				break;
@@ -262,11 +258,11 @@ int main(int argc, char** argv)
 	FILE* input_file;
 	FILE* output_file;
 	
-	if ((input_file = fopen(input_file_name, "r")) == NULL)
+	if ((input_file = fopen(input_name, "r")) == NULL)
 	{
 		printf("Input file cannot be opened\n");
 	}
-	else if ((output_file = fopen(output_file_name, "w")) == NULL)
+	else if ((output_file = fopen(output_name, "w")) == NULL)
 	{
 		fclose(input_file);
 		printf("Output file cannot be opened\n");
@@ -276,7 +272,7 @@ int main(int argc, char** argv)
 	{
 		if (output_flag)
 		{
-			free(output_file_name);
+			free(output_name);
 		}
 		return 4;
 	}
@@ -302,6 +298,6 @@ int main(int argc, char** argv)
 	
 	if (output_flag)
 	{
-		free(output_file_name);
+		free(output_name);
 	}
 }

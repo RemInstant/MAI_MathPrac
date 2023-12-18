@@ -24,12 +24,10 @@ typedef enum
 status_codes validate_string_double(char* str_double)
 {
 	int dot_cnt = 0;
-	
 	if (!isdigit(str_double[0]) && str_double[0] != '-')
 	{
 		return INVALID_INPUT;
 	}
-	
 	for (int i = 1; str_double[i]; ++i)
 	{
 		if (str_double[i] == '.')

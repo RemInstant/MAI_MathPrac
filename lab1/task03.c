@@ -251,12 +251,12 @@ status_codes permutations(double eps, unsigned int cnt, double* numbers, unsigne
 		}
 	}
 	
-	int bound = *res_cnt - 1;
+	int bound = *res_cnt; // first element to be deleted
 	
 	// turn array into { unique permutations | repeating permutations }
 	for (int i = 0; i < bound; ++i)
 	{
-		for (int j = i+1; j <= bound; ++j)
+		for (int j = i+1; j < bound; ++j)
 		{
 			int flag = fabs((*res)[i][0] - (*res)[j][0]) < eps;
 			flag = flag && fabs((*res)[i][1] - (*res)[j][1]) < eps;
@@ -264,23 +264,31 @@ status_codes permutations(double eps, unsigned int cnt, double* numbers, unsigne
 			
 			if (flag)
 			{
-				double* temp = (*res)[bound];
-				(*res)[bound] = (*res)[j];
+				double* temp = (*res)[bound-1];
+				(*res)[bound-1] = (*res)[j];
 				(*res)[j] = temp;
 				--bound; --j;
 			}
 		}
 	}
-	
+	*res_cnt = bound;
+	double** tmp = (double**) realloc(*res, sizeof(double*) * (bound));
+	if (tmp == NULL)
+	{
+		for (int i = 0; i < *res_cnt; ++i)
+		{
+			free((*res)[i]);
+		}
+		free(*res);
+		*res = NULL;
+		return BAD_ALLOC;
+	}
 	// free repeating permutations
-	for (int i = bound+1; i < *res_cnt; ++i)
+	for (int i = bound; i < *res_cnt; ++i)
 	{
 		free((*res)[i]);
 	}
-	
-	*res_cnt = bound+1;
-	*res = (double**) realloc(*res, sizeof(double*) * (bound+1));
-	
+	*res = tmp;
 	return OK;
 }
 
