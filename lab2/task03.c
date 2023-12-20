@@ -54,9 +54,9 @@ void print_error(status_codes code)
 typedef struct
 {
 	ull line, letter;
-} occurrence;
+} occurence, occur;
 
-status_codes handle_file(char* path, char* pattern, ull* occ_cnt, occurrence** occ)
+status_codes handle_file(char* path, char* pattern, ull* occ_cnt, occur** occ)
 {
 	if (path == NULL || pattern == NULL || occ_cnt == NULL || occ == NULL)
 	{
@@ -71,7 +71,7 @@ status_codes handle_file(char* path, char* pattern, ull* occ_cnt, occurrence** o
 	
 	ull occ_size = 2;
 	*occ_cnt = 0;
-	*occ = (occurrence*) malloc(sizeof(occurrence) * occ_size);
+	*occ = (occur*) malloc(sizeof(occur) * occ_size);
 	if (*occ == NULL)
 	{
 		fclose(input);
@@ -117,7 +117,7 @@ status_codes handle_file(char* path, char* pattern, ull* occ_cnt, occurrence** o
 			if (*occ_cnt == occ_size)
 			{
 				occ_size *= 2;
-				occurrence* tmp = (occurrence*) realloc(*occ, sizeof(occurrence) * occ_size);
+				occur* tmp = (occur*) realloc(*occ, sizeof(occur) * occ_size);
 				if (tmp == NULL)
 				{
 					fclose(input);
@@ -127,7 +127,7 @@ status_codes handle_file(char* path, char* pattern, ull* occ_cnt, occurrence** o
 				}
 				*occ = tmp;
 			}
-			occurrence new_occ;
+			occur new_occ;
 			new_occ.line = line;
 			new_occ.letter = letter;
 			(*occ)[(*occ_cnt)++] = new_occ;
@@ -153,7 +153,7 @@ status_codes handle_file(char* path, char* pattern, ull* occ_cnt, occurrence** o
 	return OK;
 }
 
-status_codes find_occurences(char* pattern, ull** occ_cnts, occurrence*** occs, ull file_cnt, ...)
+status_codes find_occurrences(char* pattern, ull** occ_cnts, occur*** occs, ull file_cnt, ...)
 {
 	if (pattern == NULL || occs == NULL)
 	{
@@ -166,7 +166,7 @@ status_codes find_occurences(char* pattern, ull** occ_cnts, occurrence*** occs, 
 		return BAD_ALLOC;
 	}
 	
-	*occs = (occurrence**) malloc(sizeof(occurrence*) * file_cnt);
+	*occs = (occur**) malloc(sizeof(occur*) * file_cnt);
 	if (*occs == NULL)
 	{
 		free(*occ_cnts);
@@ -197,13 +197,18 @@ status_codes find_occurences(char* pattern, ull** occ_cnts, occurrence*** occs, 
 
 int main(int argc, char** argv)
 {
-	ull* occ_cnts = 0;
-	occurrence** occs = NULL;
+	if (argc == 1)
+	{
+		printf("Usage: cmd_path <substring>\n");
+		return 0;
+	}
 	
-	status_codes code = find_occurences(argv[1], &occ_cnts, &occs, 3, "input", "input2", "output");
+	ull* occ_cnts = 0;
+	occur** occs = NULL;
+	status_codes code = find_occurrences(argv[1], &occ_cnts, &occs, 3, "input", "input2", "output");
 	if (code != OK)
 	{
-		printf("exit code: %d\n", code);
+		print_error(code);
 		return code;
 	}
 	

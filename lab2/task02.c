@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <limits.h>
 #include <math.h>
-#include <complex.h>
 #include <ctype.h>
 #include <errno.h>
 #include <stdarg.h>
@@ -57,20 +56,13 @@ status_codes calc_geometric_mean(double* ans, int cnt, ...)
 	{
 		return NULL_POINTER_ERROR;
 	}
-	
 	va_list arg;
 	va_start(arg, cnt);
 	*ans = 1;
 	for (int i = 0; i < cnt; ++i)
 	{
-		double number = va_arg(arg, double);
-		*ans *= number;
+		*ans *= va_arg(arg, double);
 	}
-	if (!(cnt & 1) && (*ans < 0))
-	{
-		return INVALID_INPUT;
-	}
-	
 	int sign = 1;
 	if (*ans < 0)
 	{
@@ -101,7 +93,6 @@ status_codes bpow(double base, int exp, double* res)
 		*res = 0;
 		return OK;
 	}
-	
 	int neg_flag = 0;
 	if (exp < 0)
 	{
@@ -113,7 +104,6 @@ status_codes bpow(double base, int exp, double* res)
 		*res = 1;
 		return OK;
 	}
-	
 	double temp = 1;
 	status_codes code;
 	if (exp & 1)
@@ -125,15 +115,7 @@ status_codes bpow(double base, int exp, double* res)
 	{
 		code = bpow(base * base, exp >> 1, &temp);
 	}
-	
-	if (neg_flag)
-	{
-		*res = 1 / temp;
-	}
-	else
-	{
-		*res = temp;
-	}
+	*res = neg_flag ? (1 / temp) : temp;
 	return code;
 }
 

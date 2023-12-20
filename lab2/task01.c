@@ -244,7 +244,7 @@ status_codes group_chars(char* str, char** res)
 	return OK;
 }
 
-status_codes random_cat(ull cnt, char** strings, unsigned seed, char** res)
+status_codes random_cat(ull cnt, char** strings, unsigned seed, char** res) 
 {
 	if (strings == NULL || res == NULL)
 	{
