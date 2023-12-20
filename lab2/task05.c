@@ -89,6 +89,19 @@ int is_base_specifier(char ch)
 	return 0;
 }
 
+int is_extra_specifier_begin(char ch)
+{
+	char specs[6] = { 'R', 'Z', 'C', 't', 'T', 'm' };
+	for (int i = 0; i < 6; ++i)
+	{
+		if (ch == specs[i])
+		{
+			return 1;
+		}
+	}
+	return 0;
+}
+
 // min size of string roman - 16 (MMMDCCCLXXXVIII)
 void int_to_roman(int number, char roman[])
 {
@@ -235,7 +248,7 @@ int str_int_to_int(const char* str_int, int base, int uppercase, int* number)
 
 int overfprintf(FILE* file, const char* format, ...)
 {
-	if (file == NULL)
+	if (file == NULL || format == NULL)
 	{
 		return -1;
 	}
@@ -290,46 +303,48 @@ int overfprintf(FILE* file, const char* format, ...)
 				}
 				spec = tmp;
 			}
-			spec[spec_len++] = *frm_ptr;
-			if (isalpha(*frm_ptr))
+			spec[spec_len++] = *frm_ptr++;
+			char last_ch = spec[spec_len - 1];
+			// --- HANDLE BASE SPECIFIERS ---
+			if (is_base_specifier(last_ch))
 			{
 				spec[spec_len] = '\0';
-				spec[spec_len+1] = '\0';
-				// --- HANDLE BASE SPECIFIERS ---
-				if (is_base_specifier(*frm_ptr))
+				int cnt = vfprintf(file, spec, va);
+				va_arg(va, void*);
+				if (cnt == -1)
 				{
-					int cnt = vfprintf(file, spec, va);
-					va_arg(va, void*);
-					if (cnt == -1)
-					{
-						va_end(va);
-						free(spec);
-						return -1;
-					}
-					print_cnt += cnt;
+					va_end(va);
+					free(spec);
+					return -1;
 				}
-				// --- HANDLE ROMAN NUMERALS ---
-				else if (!strncmp(frm_ptr, "Ro", 2))
+				print_cnt += cnt;
+				spec_len = 1;
+				spec_flag = 0;
+			}
+			// --- HANDLE EXTRA SPECIFIERS ---
+			else if (is_extra_specifier_begin(last_ch))
+			{
+				spec[spec_len++] = *frm_ptr++;
+				spec[spec_len] = '\0';
+				// -- HANDLE ROMAN NUMERALS --
+				if (!strcmp(spec, "%Ro"))
 				{
-					++frm_ptr;
 					int number = va_arg(va, int);
 					char roman[16];
 					int_to_roman(number, roman);
 					print_cnt += fprintf(file, "%s", roman);
 				}
-				// --- HANDLE ZECKENDORF RESPRESENTATION ---
-				else if (!strncmp(frm_ptr, "Zr", 2))
+				// -- HANDLE ZECKENDORF RESPRESENTATION --
+				else if (!strcmp(spec, "%Zr"))
 				{
-					++frm_ptr;
 					unsigned number = va_arg(va, unsigned);
 					char zeckendorf[49];
 					uint_to_zeckendorf(number, zeckendorf);
 					print_cnt += fprintf(file, "%s", zeckendorf);
 				}
-				// --- HANDLE CONVERTING INTEGER TO CERTAIN BASE ---
-				else if (!strncmp(frm_ptr, "Cv", 2) || !strncmp(frm_ptr, "CV", 2))
+				// -- HANDLE CONVERTING INTEGER TO CERTAIN BASE --
+				else if (!strcmp(spec, "%Cv") || !strcmp(spec, "%CV"))
 				{
-					++frm_ptr;
 					int number = va_arg(va, int);
 					int base = va_arg(va, int);
 					int uppercase = *frm_ptr == 'V';
@@ -337,10 +352,9 @@ int overfprintf(FILE* file, const char* format, ...)
 					int_to_str_int(number, base, uppercase, str_int);
 					print_cnt += fprintf(file, "%s", str_int);
 				}
-				// --- HANDLE CONVERTING INTEGER FROM CERTAIN BASE ---
-				else if (!strncmp(frm_ptr, "to", 2) || !strncmp(frm_ptr, "TO", 2))
+				// -- HANDLE CONVERTING INTEGER FROM CERTAIN BASE --
+				else if (!strcmp(spec, "%to") || !strcmp(spec, "%TO"))
 				{
-					++frm_ptr;
 					char* str_int = va_arg(va, char*);
 					int base = va_arg(va, int);
 					int uppercase = *frm_ptr == 'O';
@@ -351,10 +365,9 @@ int overfprintf(FILE* file, const char* format, ...)
 					}
 					print_cnt += fprintf(file, "%d", number);
 				}
-				// --- HANDLE INT DUMP ---
-				else if (!strncmp(frm_ptr, "mi", 2))
+				// -- HANDLE INT DUMP --
+				else if (!strcmp(spec, "%mi"))
 				{
-					++frm_ptr;
 					ull data = va_arg(va, int);
 					for (ull i = 0; i < 8 * sizeof(int); ++i)
 					{
@@ -367,10 +380,9 @@ int overfprintf(FILE* file, const char* format, ...)
 					}
 					print_cnt += 35;
 				}
-				// --- HANDLE UINT DUMP ---
-				else if (!strncmp(frm_ptr, "mu", 2))
+				// -- HANDLE UINT DUMP --
+				else if (!strcmp(spec, "%mu"))
 				{
-					++frm_ptr;
 					ull data = va_arg(va, unsigned);
 					for (ull i = 0; i < 8 * sizeof(unsigned); ++i)
 					{
@@ -383,10 +395,9 @@ int overfprintf(FILE* file, const char* format, ...)
 					}
 					print_cnt += 35;
 				}
-				// --- HANDLE DOUBLE DUMP ---
-				else if (!strncmp(frm_ptr, "md", 2))
+				// -- HANDLE DOUBLE DUMP --
+				else if (!strcmp(spec, "%md"))
 				{
-					++frm_ptr;
 					ull data = va_arg(va, double);
 					for (ull i = 0; i < 8 * sizeof(double); ++i)
 					{
@@ -399,10 +410,9 @@ int overfprintf(FILE* file, const char* format, ...)
 					}
 					print_cnt += 35;
 				}
-				// --- HANDLE FLOAT DUMP ---
-				else if (!strncmp(frm_ptr, "mf", 2))
+				// -- HANDLE FLOAT DUMP --
+				else if (!strcmp(spec, "%mf"))
 				{
-					++frm_ptr;
 					ull data = va_arg(va, double);
 					for (ull i = 0; i < 8 * sizeof(float); ++i)
 					{
@@ -424,7 +434,13 @@ int overfprintf(FILE* file, const char* format, ...)
 				spec_len = 1;
 				spec_flag = 0;
 			}
-			++frm_ptr;
+			// --- HANDLE INVALID SPECIFIERS ---
+			else if (isalpha(last_ch) && last_ch != 'l' && last_ch != 'h')
+			{
+				va_end(va);
+				free(spec);
+				return -1;
+			}
 		}
 	}
 	va_end(va);
@@ -438,7 +454,7 @@ int overfprintf(FILE* file, const char* format, ...)
 
 int oversprintf(char* dest, const char* format, ...)
 {
-	if (dest == NULL)
+	if (dest == NULL || format == NULL)
 	{
 		return -1;
 	}
@@ -491,46 +507,48 @@ int oversprintf(char* dest, const char* format, ...)
 				}
 				spec = tmp;
 			}
-			spec[spec_len++] = *frm_ptr;
-			if (isalpha(*frm_ptr))
+			spec[spec_len++] = *frm_ptr++;
+			char last_ch = spec[spec_len - 1];
+			// --- HANDLE BASE SPECIFIERS ---
+			if (is_base_specifier(last_ch))
 			{
 				spec[spec_len] = '\0';
-				spec[spec_len+1] = '\0';
-				// --- HANDLE BASE SPECIFIERS ---
-				if (is_base_specifier(*frm_ptr))
+				int cnt = vsprintf(dest + dest_len, spec, va);
+				va_arg(va, void*);
+				if (cnt == -1)
 				{
-					int cnt = vsprintf(dest + dest_len, spec, va);
-					va_arg(va, void*);
-					if (cnt == -1)
-					{
-						va_end(va);
-						free(spec);
-						return -1;
-					}
-					dest_len += cnt;
+					va_end(va);
+					free(spec);
+					return -1;
 				}
-				// --- HANDLE ROMAN NUMERALS ---
-				else if (!strncmp(frm_ptr, "Ro", 2))
+				dest_len += cnt;
+				spec_len = 1;
+				spec_flag = 0;
+			}
+			// --- HANDLE EXTRA SPECIFIERS ---
+			else if (is_extra_specifier_begin(last_ch))
+			{
+				spec[spec_len++] = *frm_ptr++;
+				spec[spec_len] = '\0';
+				// -- HANDLE ROMAN NUMERALS --
+				if (!strcmp(spec, "%Ro"))
 				{
-					++frm_ptr;
 					int number = va_arg(va, int);
 					char roman[16];
 					int_to_roman(number, roman);
 					dest_len += sprintf(dest + dest_len, "%s", roman);
 				}
-				// --- HANDLE ZECKENDORF RESPRESENTATION ---
-				else if (!strncmp(frm_ptr, "Zr", 2))
+				// -- HANDLE ZECKENDORF RESPRESENTATION --
+				else if (!strcmp(spec, "%Zr"))
 				{
-					++frm_ptr;
 					unsigned number = va_arg(va, unsigned);
 					char zeckendorf[49];
 					uint_to_zeckendorf(number, zeckendorf);
 					dest_len += sprintf(dest + dest_len, "%s", zeckendorf);
 				}
-				// --- HANDLE CONVERTING INTEGER TO CERTAIN BASE ---
-				else if (!strncmp(frm_ptr, "Cv", 2) || !strncmp(frm_ptr, "CV", 2))
+				// -- HANDLE CONVERTING INTEGER TO CERTAIN BASE --
+				else if (!strcmp(spec, "%Cv") || !strcmp(spec, "%CV"))
 				{
-					++frm_ptr;
 					int number = va_arg(va, int);
 					int base = va_arg(va, int);
 					int uppercase = *frm_ptr == 'V';
@@ -538,10 +556,9 @@ int oversprintf(char* dest, const char* format, ...)
 					int_to_str_int(number, base, uppercase, str_int);
 					dest_len += sprintf(dest + dest_len, "%s", str_int);
 				}
-				// --- HANDLE CONVERTING INTEGER FROM CERTAIN BASE ---
-				else if (!strncmp(frm_ptr, "to", 2) || !strncmp(frm_ptr, "TO", 2))
+				// -- HANDLE CONVERTING INTEGER FROM CERTAIN BASE --
+				else if (!strcmp(spec, "%to") || !strcmp(spec, "%TO"))
 				{
-					++frm_ptr;
 					char* str_int = va_arg(va, char*);
 					int base = va_arg(va, int);
 					int uppercase = *frm_ptr == 'O';
@@ -552,15 +569,13 @@ int oversprintf(char* dest, const char* format, ...)
 					}
 					dest_len += sprintf(dest + dest_len, "%d", number);
 				}
-				// --- HANDLE INT DUMP ---
-				else if (!strncmp(frm_ptr, "mi", 2))
+				// -- HANDLE INT DUMP --
+				else if (!strcmp(spec, "%mi"))
 				{
-					++frm_ptr;
 					ull data = va_arg(va, int);
 					for (ull i = 0; i < 8 * sizeof(int); ++i)
 					{
 						char bit = (data & (1 << (8 * sizeof(int) - i - 1))) ? '1' : '0';
-						sprintf(dest + dest_len, "%c", bit);
 						dest[dest_len++] = bit;
 						if (i > 0 && i % 8 == 0)
 						{
@@ -568,10 +583,9 @@ int oversprintf(char* dest, const char* format, ...)
 						}
 					}
 				}
-				// --- HANDLE UINT DUMP ---
-				else if (!strncmp(frm_ptr, "mu", 2))
+				// -- HANDLE UINT DUMP --
+				else if (!strcmp(spec, "%mu"))
 				{
-					++frm_ptr;
 					ull data = va_arg(va, unsigned);
 					for (ull i = 0; i < 8 * sizeof(unsigned); ++i)
 					{
@@ -583,10 +597,9 @@ int oversprintf(char* dest, const char* format, ...)
 						}
 					}
 				}
-				// --- HANDLE DOUBLE DUMP ---
-				else if (!strncmp(frm_ptr, "md", 2))
+				// -- HANDLE DOUBLE DUMP --
+				else if (!strcmp(spec, "%md"))
 				{
-					++frm_ptr;
 					ull data = va_arg(va, double);
 					for (ull i = 0; i < 8 * sizeof(double); ++i)
 					{
@@ -598,10 +611,9 @@ int oversprintf(char* dest, const char* format, ...)
 						}
 					}
 				}
-				// --- HANDLE FLOAT DUMP ---
-				else if (!strncmp(frm_ptr, "mf", 2))
+				// -- HANDLE FLOAT DUMP --
+				else if (!strcmp(spec, "%mf"))
 				{
-					++frm_ptr;
 					ull data = va_arg(va, double);
 					for (ull i = 0; i < 8 * sizeof(float); ++i)
 					{
@@ -622,7 +634,13 @@ int oversprintf(char* dest, const char* format, ...)
 				spec_len = 1;
 				spec_flag = 0;
 			}
-			++frm_ptr;
+			// --- HANDLE INVALID SPECIFIERS ---
+			else if (isalpha(last_ch) && last_ch != 'l' && last_ch != 'h')
+			{
+				va_end(va);
+				free(spec);
+				return -1;
+			}
 		}
 	}
 	dest[dest_len] = '\0';
@@ -639,7 +657,8 @@ int main(int argc, char** argv)
 {
 	int x = 0;
 	char dest[512];
-	x = overfprintf(stdout, "|%Ro| %Ro %Ro %Ro\n", 0, 4, 99, 3888);
+	x = overfprintf(stdout, "%lld %c %s %E\n", 5, 'q', "str", 123.456);
+	x = overfprintf(stdout, "\"%Ro\" %Ro %Ro %Ro\n", 0, 4, 99, 3888);
 	x = overfprintf(stdout, "%Zr %Zr %Zr %Zr %Zr %Zr\n", 0, 1, 2, 3, 4, UINT_MAX);
 	x = overfprintf(stdout, "%Cv %CV %Cv\n", INT_MAX, 2,  INT_MIN, 2,  INT_MIN+1, 2);
 	x = overfprintf(stdout, "%Cv %CV %Cv\n", 255, 16,  107, 36,  15, 4);
@@ -650,7 +669,9 @@ int main(int argc, char** argv)
 	x = overfprintf(stdout, "%mf\n");
 	printf("%d\n\n", x);
 	
-	x = oversprintf(dest, "|%Ro| %Ro %Ro %Ro\n", 0, 4, 99, 3888);
+	x = oversprintf(dest, "%lld %c %s %E\n", 5, 'q', "str", 123.456);
+	printf("%s", dest);
+	x = oversprintf(dest, "\"%Ro\" %Ro %Ro %Ro\n", 0, 4, 99, 3888);
 	printf("%s", dest);
 	x = oversprintf(dest, "%Zr %Zr %Zr %Zr %Zr %Zr\n", 0, 1, 2, 3, 4, UINT_MAX);
 	printf("%s", dest);
