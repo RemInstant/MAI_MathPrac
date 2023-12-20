@@ -74,43 +74,45 @@ int sign(double x)
 	return x == 0 ? 0 : (x > 0 ? 1 : -1);
 }
 
-status_codes check_rect(int* is_rect, ull dot_cnt, ...)
+status_codes check_rect(int* is_rect, ull point_cnt, ...)
 {
 	if (is_rect == NULL)
 	{
 		return NULL_POINTER_ERROR;
 	}
-	if (dot_cnt < 3)
+	if (point_cnt < 3)
 	{
 		return INVALID_INPUT;
 	}
 	
 	*is_rect = 1;
 	va_list arg;
-	va_start(arg, dot_cnt);
+	va_start(arg, point_cnt);
 	
-	vec2d first_dot = va_arg(arg, vec2d);
-	vec2d second_dot = va_arg(arg, vec2d);
+	vec2d first_point = va_arg(arg, vec2d);
+	vec2d second_point = va_arg(arg, vec2d);
 	
+	int is_line = 1;
 	int prev_sign = 0;
-	vec2d dot1 = first_dot;
-	vec2d dot2 = second_dot;
-	for (int i = 0; i < dot_cnt; ++i)
+	vec2d point1 = first_point;
+	vec2d point2 = second_point;
+	for (int i = 0; i < point_cnt; ++i)
 	{
-		vec2d dot3;
-		if (i + 2 < dot_cnt)
+		vec2d point3;
+		if (i + 2 < point_cnt)
 		{
-			dot3 = va_arg(arg, vec2d);
+			point3 = va_arg(arg, vec2d);
 		}
 		else
 		{
-			dot3 = (i + 2 == dot_cnt) ? first_dot : second_dot;
+			point3 = (i + 2 == point_cnt) ? first_point : second_point;
 		}
-		vec2d segment1 = vec_diff(dot2, dot1);
-		vec2d segment2 = vec_diff(dot3, dot2);
+		vec2d segment1 = vec_diff(point2, point1);
+		vec2d segment2 = vec_diff(point3, point2);
 		int cur_sign = sign(cross_prod(segment1, segment2));
 		if (cur_sign != 0) 
 		{
+			is_line = 0;
 			if (prev_sign == 0 || prev_sign == cur_sign)
 			{
 				prev_sign = cur_sign;
@@ -121,8 +123,12 @@ status_codes check_rect(int* is_rect, ull dot_cnt, ...)
 				return OK;
 			}
 		}
-		dot1 = dot2;
-		dot2 = dot3;
+		point1 = point2;
+		point2 = point3;
+	}
+	if (is_line)
+	{
+		*is_rect = 0;
 	}
 	return OK;
 }
@@ -140,9 +146,8 @@ status_codes calc_polynomial(double x, double* res, ull n, ...)
 	*res = 0;
 	for (int i = 0; i <= n; ++i)
 	{
-		double coef = va_arg(arg, double);
 		*res *= x;
-		*res += coef;
+		*res += va_arg(arg, double);
 	}
 	return OK;
 }
