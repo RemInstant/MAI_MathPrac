@@ -419,7 +419,7 @@ status_codes sread_zr(const char* src_ptr, ll field_width, unsigned int* res, co
 			if (prev_coef == 1)
 			{
 				*res = num;
-				*res_ptr = src_ptr;
+				*res_ptr = ++src_ptr;
 				return OK;
 			}
 			num += cur_fib;
@@ -429,6 +429,10 @@ status_codes sread_zr(const char* src_ptr, ll field_width, unsigned int* res, co
 		prev_coef = coef;
 		error_flag = 0;
 		++src_ptr;
+	}
+	if (prev_coef != 1)
+	{
+		error_flag = 1;
 	}
 	if (error_flag)
 	{
@@ -475,7 +479,7 @@ int oversscanf(const char* src, const char* format, ...)
 		else
 		{
 			++frm_ptr;
-			// HANDLING DOUBLE PERCENT
+			// HANDLE DOUBLE PERCENT
 			if (*frm_ptr == '%')
 			{
 				if (*frm_ptr != *src_ptr)
@@ -491,7 +495,7 @@ int oversscanf(const char* src, const char* format, ...)
 				// PART 1: GET AND VALIDATE CONV SPEC
 				int suppress = 0;
 				ll field_width = -1;
-				char* length_modifier = (char*) calloc(3, sizeof(char));
+				char length_modifier[3] = "\0\0";
 				specifiers spec = NONE;
 				
 				int set_inv = 0;
@@ -571,7 +575,6 @@ int oversscanf(const char* src, const char* format, ...)
 					{
 						if (*frm_ptr == '\0')
 						{
-							free(length_modifier);
 							va_end(arg);
 							return read_cnt;
 						}
@@ -609,7 +612,6 @@ int oversscanf(const char* src, const char* format, ...)
 				// VALIDATE CONVERSION SPECIFICATION IN GENERAL
 				if (spec == NONE || !is_spec_combination_valid(length_modifier, spec) || field_width == 0)
 				{
-					free(length_modifier);
 					va_end(arg);
 					return read_cnt ? read_cnt : -1;
 				}
@@ -621,7 +623,6 @@ int oversscanf(const char* src, const char* format, ...)
 					write_ptr = va_arg(arg, void*);
 					if (write_ptr == NULL)
 					{
-						free(length_modifier);
 						va_end(arg);
 						return read_cnt ? read_cnt : -1;
 					}
@@ -634,7 +635,6 @@ int oversscanf(const char* src, const char* format, ...)
 				// HANDLE END OF STRING
 				if (*src_ptr == '\0' && spec != CHAR_N)
 				{
-					free(length_modifier);
 					va_end(arg);
 					return read_cnt;
 				}
@@ -938,7 +938,6 @@ int oversscanf(const char* src, const char* format, ...)
 						break;
 				}
 				
-				free(length_modifier);
 				if (error_flag)
 				{
 					va_end(arg);
@@ -993,25 +992,25 @@ int main(int argc, char** argv)
 	cnt = oversscanf(".123 5.5 1.2e3", "%lf %lf %lf", &a, &b, &c);
 	printf("8: cnt=%d\n%lf %lf %lf\n", cnt, a, b, c);
 	cnt = oversscanf("1e45 1e45", "%f %lf", &fa, &a);
-	printf("cnt=%d\n%lf %lf\n", cnt, fa, a);
+	printf("9 cnt=%d\n%lf %lf\n", cnt, fa, a);
 	
 	cnt = oversscanf("1%2README", "1%%2%s", str);
-	printf("9: cnt=%d\n%s\n", cnt, str);
+	printf("10: cnt=%d\n%s\n", cnt, str);
 	
 	// SPECIFIC SPECIFIERS
 	int ro1, ro2;
 	cnt = oversscanf("  XIV MMDCCCXLV ", "%2Ro%*Ro%Ro", &ro1, &ro2);
-	printf("10: cnt=%d\n%d %d\n", cnt, ro1, ro2);
+	printf("11: cnt=%d\n%d %d\n", cnt, ro1, ro2);
 	
 	unsigned int zr1, zr2;
 	cnt = oversscanf("  101011   1000000000000011 ", "%Zr%5Zr", &zr1, &zr2);
-	printf("11: cnt=%d\n%d %d\n", cnt, zr1, zr2);
+	printf("12: cnt=%d\n%d %d\n", cnt, zr1, zr2);
 	
 	int cvl1, cvl2;
 	cnt = oversscanf("  -222   a1AAA ", "%Cv%Cv", &cvl1, 3, &cvl2, 16);
-	printf("12: cnt=%d\n%d %d\n", cnt, cvl1, cvl2);
+	printf("13: cnt=%d\n%d %d\n", cnt, cvl1, cvl2);
 	
 	int cvu1, cvu2;
 	cnt = oversscanf("  333   -A1aaa ", "%CV%CV", &cvu1, 4, &cvu2, 32);
-	printf("13: cnt=%d\n%d %d\n", cnt, cvu1, cvu2);
+	printf("14: cnt=%d\n%d %d\n", cnt, cvu1, cvu2);
 }

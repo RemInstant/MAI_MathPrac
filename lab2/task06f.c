@@ -438,7 +438,7 @@ status_codes fread_zr(FILE* src_file, ll field_width, unsigned int* res, ull* ch
 			{
 				*res = num;
 				*char_cnt = counter;
-				*last_ch = ch;
+				*last_ch = getc(src_file);
 				return OK;
 			}
 			num += cur_fib;
@@ -449,6 +449,10 @@ status_codes fread_zr(FILE* src_file, ll field_width, unsigned int* res, ull* ch
 		error_flag = 0;
 		ch = getc(src_file);
 		++counter;
+	}
+	if (prev_coef != 1)
+	{
+		error_flag = 1;
 	}
 	if (error_flag)
 	{
@@ -503,7 +507,7 @@ int overfscanf(FILE* src_file, const char* format, ...)
 		else
 		{
 			++frm_ptr;
-			// HANDLING DOUBLE PERCENT
+			// HANDLE DOUBLE PERCENT
 			if (*frm_ptr == '%')
 			{
 				if (*frm_ptr != ch)
@@ -521,7 +525,7 @@ int overfscanf(FILE* src_file, const char* format, ...)
 				// PART 1: GET AND VALIDATE CONV SPEC
 				int suppress = 0;
 				ll field_width = -1;
-				char* length_modifier = (char*) calloc(3, sizeof(char));
+				char length_modifier[3] = "\0\0";
 				specifiers spec = NONE;
 				
 				int set_inv = 0;
@@ -601,7 +605,6 @@ int overfscanf(FILE* src_file, const char* format, ...)
 					{
 						if (*frm_ptr == '\0')
 						{
-							free(length_modifier);
 							ungetc(ch, src_file);
 							va_end(arg);
 							return read_cnt;
@@ -640,7 +643,6 @@ int overfscanf(FILE* src_file, const char* format, ...)
 				// VALIDATE CONVERSION SPECIFICATION IN GENERAL
 				if (spec == NONE || !is_spec_combination_valid(length_modifier, spec) || field_width == 0)
 				{
-					free(length_modifier);
 					va_end(arg);
 					ungetc(ch, src_file);
 					return read_cnt;
@@ -653,7 +655,6 @@ int overfscanf(FILE* src_file, const char* format, ...)
 					write_ptr = va_arg(arg, void*);
 					if (write_ptr == NULL)
 					{
-						free(length_modifier);
 						ungetc(ch, src_file);
 						va_end(arg);
 						return read_cnt ? read_cnt : -1;
@@ -668,7 +669,6 @@ int overfscanf(FILE* src_file, const char* format, ...)
 				// HANDLE END OF FILE
 				if (ch == EOF && spec != CHAR_N)
 				{
-					free(length_modifier);
 					va_end(arg);
 					return read_cnt;
 				}
@@ -999,7 +999,6 @@ int overfscanf(FILE* src_file, const char* format, ...)
 						break;
 				}
 				
-				free(length_modifier);
 				if (error_flag)
 				{
 					ungetc(ch, src_file);
@@ -1063,27 +1062,27 @@ int main(int argc, char** argv)
 	cnt = overfscanf(input, "%lf %lf %lf\n", &a, &b, &c);
 	printf("8: cnt=%d\n%lf %lf %lf\n", cnt, a, b, c);
 	cnt = overfscanf(input, "%f %lf\n", &fa, &a);
-	printf("cnt=%d\n%lf %lf\n", cnt, fa, a);
+	printf("9 cnt=%d\n%lf %lf\n", cnt, fa, a);
 	
 	cnt = overfscanf(input, "1%%2%s\n", str);
-	printf("9: cnt=%d\n%s\n", cnt, str);
+	printf("10: cnt=%d\n%s\n", cnt, str);
 	
 	// SPECIFIC SPECIFIERS
 	int ro1, ro2;
 	cnt = overfscanf(input, "%2Ro%*Ro%Ro\n", &ro1, &ro2);
-	printf("10: cnt=%d\n%d %d\n", cnt, ro1, ro2);
+	printf("11: cnt=%d\n%d %d\n", cnt, ro1, ro2);
 	
 	unsigned int zr1, zr2;
 	cnt = overfscanf(input, "%Zr%5Zr %*[^\n]\n", &zr1, &zr2);
-	printf("11: cnt=%d\n%d %d\n", cnt, zr1, zr2);
+	printf("12: cnt=%d\n%d %d\n", cnt, zr1, zr2);
 	
 	int cvl1, cvl2;
 	cnt = overfscanf(input, "%Cv%Cv %*[^\n]\n", &cvl1, 3, &cvl2, 16);
-	printf("12: cnt=%d\n%d %d\n", cnt, cvl1, cvl2);
+	printf("13: cnt=%d\n%d %d\n", cnt, cvl1, cvl2);
 	
 	int cvu1, cvu2;
 	cnt = overfscanf(input, "%CV%CV %*[^\n]\n", &cvu1, 4, &cvu2, 32);
-	printf("13: cnt=%d\n%d %d\n", cnt, cvu1, cvu2);
+	printf("14: cnt=%d\n%d %d\n", cnt, cvu1, cvu2);
 	
 	fclose(input);
 }
