@@ -80,26 +80,29 @@ status_codes solve_eq_dichotomy(double left, double right, double eps, double (*
 	{
 		return INVALID_INPUT;
 	}
-	
-	int right_sign = sign(func(right));
-	int left_sign = sign(func(left));
-	if (fabs(left_sign) < eps)
+	if (right - left <= eps)
+	{
+		return INVALID_INPUT;
+	}
+	double left_value = func(left);
+	double right_value = func(right);
+	if (fabs(left_value) < eps)
 	{
 		*ans = left;
 		return OK;
 	}
-	if (fabs(right_sign) < eps)
+	if (fabs(right_value) < eps)
 	{
 		*ans = right;
 		return OK;
 	}
+	int left_sign = sign(left_value);
+	int right_sign = sign(right_value);
 	if (right_sign == left_sign)
 	{
 		return INVALID_INPUT;
 	}
-	
 	int increasing = right_sign > left_sign;
-
 	double mid, val;
 	do
 	{
