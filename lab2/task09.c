@@ -130,7 +130,7 @@ status_codes check_finite_repres(int base, double frac, int* has_finite_repr)
 	{
 		return NULL_POINTER_ERROR;
 	}
-	if (base < 2 || base > 36)
+	if (base < 2)
 	{
 		return INVALID_INPUT;
 	}
