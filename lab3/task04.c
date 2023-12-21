@@ -74,7 +74,7 @@ status_codes destruct_string(String* str);
 int compare_string(const String left, const String right);
 int equal_string(const String left, const String right);
 status_codes copy_string(String* dest, const String src);
-status_codes construct_copy_string(String* dest, const String src);
+status_codes dynamic_copy_string(String** dest, const String src);
 status_codes concat_string(String* dest, const String src);
 
 // STRINGS EXTRA FUNCTIONS
@@ -143,24 +143,25 @@ int main(int argc, char** argv)
 	// STRINGS TEST
 	if (0)
 	{
-		String str1, str2, str3;
+		String str1, str2;
+		String* str3;
 		construct_string(&str1, "aboba");
 		construct_string(&str2, "ab");
-		construct_copy_string(&str3, str2);
+		dynamic_copy_string(&str3, str2);
 		copy_string(&str2, str1);
 		
 		printf("%d %s\n", str1.len, str1.data);
 		printf("%d %s\n", str2.len, str2.data);
-		printf("%d %s\n", str3.len, str3.data);
+		printf("%d %s\n", str3->len, str3->data);
 		printf("%d\n", equal_string(str1, str2));
-		printf("%d\n", compare_string(str3, str1));
+		printf("%d\n", compare_string(*str3, str1));
 		
-		concat_string(&str3, str2);
-		printf("%d %s\n", str3.len, str3.data);
+		concat_string(str3, str2);
+		printf("%d %s\n", str3->len, str3->data);
 		
 		destruct_string(&str1);
 		destruct_string(&str2);
-		destruct_string(&str3);
+		destruct_string(str3);
 		return 0;
 	}
 	
@@ -451,20 +452,18 @@ status_codes copy_string(String* dest, const String src)
 	return OK;
 }
 
-status_codes construct_copy_string(String* dest, const String src)
+status_codes dynamic_copy_string(String** dest, const String src)
 {
 	if (dest == NULL)
 	{
 		return INVALID_INPUT;
 	}
-	dest->len = src.len;
-	dest->data = (char*) malloc(sizeof(char) * (src.len + 1));
-	if (dest->data == NULL)
+	*dest = (String*) malloc(sizeof(String));
+	if (*dest == NULL)
 	{
 		return BAD_ALLOC;
 	}
-	strcpy(dest->data, src.data);
-	return OK;
+	return copy_string(*dest, src);
 }
 
 status_codes concat_string(String* dest, const String src)
