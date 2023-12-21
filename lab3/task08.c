@@ -586,6 +586,10 @@ status_codes polynomial_construct(const char* src, List* poly)
 				if (iter.cur->pow == pow && !iter_equal(iter, iter_end))
 				{
 					iter.cur->coef += coef;
+					if (iter.cur->coef == 0)
+					{
+						err_code = list_remove(poly, iter);
+					}
 				}
 				else
 				{
@@ -1198,16 +1202,13 @@ status_codes parse_cmd(const char* src, polynomial_command* cmd, ull* arg_cnt, c
 	}
 	if (!err_code && *ptr == ',')
 	{
-		++ptr;
-		err_code =  sread_until(ptr, ")", &ptr, &arg2_tmp);
+		err_code =  sread_until(++ptr, ")", &ptr, &arg2_tmp);
 		++arg_cnt_tmp;
 	}
 	
-	err_code = err_code ? err_code : (*ptr == ')' ? OK : INVALID_INPUT);
-	++ptr;
-	err_code = err_code ? err_code : (*ptr == ';' ? OK : INVALID_INPUT);
-	++ptr;
-	err_code = err_code ? err_code : (*ptr == '\0' ? OK : INVALID_INPUT);
+	err_code = err_code ? err_code : (*(ptr++) == ')' ? OK : INVALID_INPUT);
+	err_code = err_code ? err_code : (*(ptr++)  == ';' ? OK : INVALID_INPUT);
+	err_code = err_code ? err_code : (*(ptr++)  == '\0' ? OK : INVALID_INPUT);
 	
 	if (!err_code && arg1_tmp != NULL)
 	{
