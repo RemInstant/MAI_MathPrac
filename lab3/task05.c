@@ -123,22 +123,22 @@ int main(int argc, char** argv)
 		return FILE_OPENING_ERROR;
 	}
 	
-	status_codes err_code;
+	status_codes code;
 	ull studs_cnt;
 	Student* studs;
 	
-	err_code = read_students(input, &studs_cnt, &studs);
+	code = read_students(input, &studs_cnt, &studs);
 	fclose(input);
-	if (err_code)
+	if (code)
 	{
 		fclose(output);
-		print_error(err_code);
-		return err_code;
+		print_error(code);
+		return code;
 	}
 	
 	int run_flag = 1;
 	printf("Cmds: exit sort_id sort_name sort_surname sort_group print_id print_name print_surname print_group fprint_stud fprint_best\n");
-	while (run_flag && !err_code)
+	while (run_flag && !code)
 	{
 		status_codes cmd_code = OK;
 		ull studs_print_cnt = 0;
@@ -146,9 +146,9 @@ int main(int argc, char** argv)
 		Student* stud_print = NULL;
 		char* cmd = NULL;
 		printf("Cmd: ");
-		err_code = read_line(&cmd);
+		code = read_line(&cmd);
 		
-		if (!err_code)
+		if (!code)
 		{
 			// --- COMMAND EXIT ---
 			if (!strcmp(cmd, "exit"))
@@ -284,11 +284,11 @@ int main(int argc, char** argv)
 		free(studs[i].marks);
 	}
 	free(studs);
-	if (err_code)
+	if (code)
 	{
 		printf("CRITICAL ERROR OCCURRED\n");
-		print_error(err_code);
-		return err_code;
+		print_error(code);
+		return code;
 	}
 }
 
@@ -391,30 +391,30 @@ status_codes read_students(FILE* file, ull* studs_cnt, Student** studs)
 		return BAD_ALLOC;
 	}
 	
-	status_codes err_code = OK;
-	while (!err_code && !feof(file))
+	status_codes code = OK;
+	while (!code && !feof(file))
 	{
 		Student stud;
 		stud.marks = (unsigned short*) malloc(sizeof(unsigned short) * 5);
 		if (stud.marks == NULL)
 		{
-			err_code = BAD_ALLOC;
+			code = BAD_ALLOC;
 		}
 		// READ
-		if (!err_code)
+		if (!code)
 		{
 			if (fscanf(file, "%llu %32[^ ] %32[^ ] %16[^ ] %hu %hu %hu %hu %hu\n",
 					&(stud.id), stud.name, stud.surname, stud.group, &(stud.marks[0]),
 					&(stud.marks[1]), &(stud.marks[2]), &(stud.marks[3]), &(stud.marks[4])) != 9)
 			{
-				err_code = FILE_CONTENT_ERROR;
+				code = FILE_CONTENT_ERROR;
 			}
-			err_code = err_code ? err_code : validate_string(stud.name, NON_VOID_ALPHA_STRING, -1);
-			err_code = err_code ? err_code : validate_string(stud.surname, NON_VOID_ALPHA_STRING, -1);
-			err_code = err_code ? err_code : validate_string(stud.group, NON_VOID_STRING, -1);
+			code = code ? code : validate_string(stud.name, NON_VOID_ALPHA_STRING, -1);
+			code = code ? code : validate_string(stud.surname, NON_VOID_ALPHA_STRING, -1);
+			code = code ? code : validate_string(stud.group, NON_VOID_STRING, -1);
 		}
 		// REALLOC
-		if (!err_code)
+		if (!code)
 		{
 			if (cnt == size)
 			{
@@ -422,7 +422,7 @@ status_codes read_students(FILE* file, ull* studs_cnt, Student** studs)
 				Student* tmp = (Student*) realloc(studs_tmp, sizeof(Student) * size);
 				if (tmp == NULL)
 				{
-					err_code = BAD_ALLOC;
+					code = BAD_ALLOC;
 				}
 				else
 				{
@@ -431,19 +431,19 @@ status_codes read_students(FILE* file, ull* studs_cnt, Student** studs)
 			}
 		}
 		// INSERT
-		if (!err_code)
+		if (!code)
 		{
 			studs_tmp[cnt++] = stud;
 		}
 	}
-	if (err_code)
+	if (code)
 	{
 		for (ull i = 0; i < cnt; ++i)
 		{
 			free(studs_tmp[i].marks);
 		}
 		free(studs_tmp);
-		return err_code;
+		return code;
 	}
 	*studs_cnt = cnt;
 	*studs = studs_tmp;
@@ -508,8 +508,8 @@ status_codes search_stud_by_str(ull s_cnt, Student* studs, search_type type, con
 
 int stud_id_comp(const void* l, const void* r)
 {
-	Student* stud_l = (Student*) l;
-	Student* stud_r = (Student*) r;
+	const Student* stud_l = (const Student*) l;
+	const Student* stud_r = (const Student*) r;
 	if (stud_l->id == stud_r->id)
 	{
 		return 0;
@@ -519,22 +519,22 @@ int stud_id_comp(const void* l, const void* r)
 
 int stud_surname_comp(const void* l, const void* r)
 {
-	Student* stud_l = (Student*) l;
-	Student* stud_r = (Student*) r;
+	const Student* stud_l = (const Student*) l;
+	const Student* stud_r = (const Student*) r;
 	return strcmp(stud_l->surname, stud_r->surname);
 }
 
 int stud_name_comp(const void* l, const void* r)
 {
-	Student* stud_l = (Student*) l;
-	Student* stud_r = (Student*) r;
+	const Student* stud_l = (const Student*) l;
+	const Student* stud_r = (const Student*) r;
 	return strcmp(stud_l->name, stud_r->name);
 }
 
 int stud_group_comp(const void* l, const void* r)
 {
-	Student* stud_l = (Student*) l;
-	Student* stud_r = (Student*) r;
+	const Student* stud_l = (const Student*) l;
+	const Student* stud_r = (const Student*) r;
 	return strcmp(stud_l->group, stud_r->group);
 }
 
