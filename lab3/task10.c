@@ -200,6 +200,7 @@ status_codes construct_tree(const char* str, Tree* tree)
 		return INVALID_ARG;
 	}
 	
+	char prev_ch = '\0';
 	const char* ptr = str;
 	tree->root = NULL;
 	if (*ptr == '\0')
@@ -211,13 +212,17 @@ status_codes construct_tree(const char* str, Tree* tree)
 	tree_node* cur_node = NULL;
 	tree_node* last_added_node = NULL;
 	int key_waiting_flag = 1;
+	while (*ptr == ' ')
+	{
+		++ptr;
+	}
 	while (*ptr != '\0' && !err_code)
 	{
-		while (*ptr == ' ')
+		if (prev_ch == ')' && *ptr == '(')
 		{
-			++ptr;
+			destruct_tree(tree);
+			return INVALID_INPUT;
 		}
-		
 		if (key_waiting_flag)
 		{
 			key_waiting_flag = 0;
@@ -266,7 +271,11 @@ status_codes construct_tree(const char* str, Tree* tree)
 				err_code = INVALID_INPUT;
 			}
 		}
-		++ptr;
+		prev_ch = *(ptr++);
+		while (*ptr == ' ')
+		{
+			++ptr;
+		}
 	}
 	
 	if (cur_node != NULL || key_waiting_flag)
@@ -336,7 +345,7 @@ int main(int argc, char** argv)
 	
 	ull iter = 1;
 	status_codes err_code = OK;
-	while (!feof(input))
+	while (!err_code && !feof(input))
 	{
 		Tree tree;
 		char* str = NULL;
