@@ -66,7 +66,7 @@ typedef struct
 	double** elems;
 } matrix_n;
 
-status_codes construct_vector(const unsigned n, vec_n *vec)
+status_codes construct_vector(unsigned n, vec_n *vec)
 {
 	if (vec == NULL)
 	{
@@ -135,7 +135,7 @@ int is_matrix_valid(const matrix_n matrix)
 	return 1;
 }
 
-status_codes construct_matrix(const unsigned n, matrix_n *matrix)
+status_codes construct_matrix(unsigned n, matrix_n *matrix)
 {
 	if (matrix == NULL)
 	{
@@ -216,7 +216,7 @@ status_codes sum_matrix(const matrix_n matrix_l, const matrix_n matrix_r, matrix
 	return OK;
 }
 
-status_codes multiply_matrix(const matrix_n matrix, const double mult, matrix_n res_matrix)
+status_codes multiply_matrix(const matrix_n matrix, double mult, matrix_n res_matrix)
 {
 	if (!is_matrix_valid(matrix) || !is_matrix_valid(res_matrix) || matrix.n != res_matrix.n)
 	{
@@ -278,7 +278,7 @@ status_codes ll_swap(ll* a, ll* b)
 	return OK;
 }
 
-status_codes get_permutations(const unsigned cnt, const ll* input_arr, ull* res_cnt, ll*** res)
+status_codes get_permutations(unsigned cnt, const ll* input_arr, ull* res_cnt, ll*** res)
 {
 	if (res_cnt == NULL || res == NULL)
 	{
@@ -365,7 +365,7 @@ status_codes get_permutations(const unsigned cnt, const ll* input_arr, ull* res_
 	return OK;
 }
 
-status_codes calc_matrix_det(const unsigned n, const matrix_n matrix, double* det)
+status_codes calc_matrix_det(unsigned n, const matrix_n matrix, double* det)
 {
 	if (!is_matrix_valid(matrix) || det == NULL || n > matrix.n)
 	{
@@ -458,7 +458,7 @@ status_codes calc_norm_inf(const vec_n vec, double* norm)
 	return OK;
 }
 
-status_codes calc_norm_p(const vec_n vec, const ll p, double* norm)
+status_codes calc_norm_p(const vec_n vec, ll p, double* norm)
 {
 	if (norm == NULL || vec.elems == NULL)
 	{
@@ -547,14 +547,14 @@ status_codes calc_norm_matrix(const vec_n vec, const matrix_n matrix, double eps
 
 status_codes solve
 (
-	const unsigned n, const double eps,
+	unsigned n, double eps,
 	status_codes (*calc_norm1)(const vec_n, double*),
-	status_codes (*calc_norm2)(const vec_n, const ll, double*), const ll p,
+	status_codes (*calc_norm2)(const vec_n, ll, double*), ll p,
 	status_codes (*calc_norm3)(const vec_n, const matrix_n, double, double*), const matrix_n matrix,
 	ull* res1_cnt, vec_n** res1_vecs,
 	ull* res2_cnt, vec_n** res2_vecs,
 	ull* res3_cnt, vec_n** res3_vecs,
-	const unsigned input_cnt, ...
+	unsigned input_cnt, ...
 )
 {
 	ull size[3] = { 2, 2, 2};
