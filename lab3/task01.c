@@ -109,7 +109,7 @@ ll minus(ll a, ll b)
 	return plus(a, negative(b));
 }
 
-ll product(ll a, ll b)
+ll mult(ll a, ll b)
 {
 	ll res = 0;
 	while(b)
@@ -154,32 +154,29 @@ char itoc(int integer)
 	return negative(1);
 }
 
-status_codes convert_to_base_2r(ll num, int r, char* res)
+status_codes convert_to_base_2r(ll num, int r, char res[])
 {
 	if (res == NULL || r < 1 || r > 5)
 	{
 		return INVALID_INPUT;
 	}
-	
-	res[64] = '\0';
-	for (ll i = 0; i < 64; increment(&i))
+	if (num == LLONG_MIN)
 	{
-		res[i] = '0';
+		sprintf(res, "-1000000000000000000000000000000000000000000000000000000000000000");
+		return OK;
 	}
-	
+	sprintf(res, "0000000000000000000000000000000000000000000000000000000000000000");
 	int neg_flag = 0;
 	if (num < 0)
 	{
 		num = negative(num);
 		neg_flag = 1;
 	}
-	
 	int mask = minus(1 << r, 1);
-	for (ll i = 0; product(r, i) < 64; increment(&i))
+	for (ll i = 0; mult(r, i) < 64; increment(&i))
 	{
-		res[minus(63, i)] = itoc((num >> product(r, i)) & mask);
+		res[minus(63, i)] = itoc((num >> mult(r, i)) & mask);
 	}
-	
 	ll zero_cnt = 0;
 	while (res[zero_cnt] == '0' && zero_cnt < 63)
 	{
@@ -206,7 +203,7 @@ status_codes convert_to_base_2r(ll num, int r, char* res)
 
 int main(int argc, char** argv)
 {
-	char res[65];
+	char res[66];
 	status_codes code = convert_to_base_2r(-284, 5, res);
 	if (code != OK)
 	{
