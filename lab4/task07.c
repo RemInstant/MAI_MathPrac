@@ -119,6 +119,7 @@ int main(int argc, char** argv)
 	}
 	if (argc != 2)
 	{
+		print_error(INVALID_INPUT);
 		return INVALID_INPUT;
 	}
 	FILE* input = fopen(argv[1], "r");
@@ -214,8 +215,8 @@ int main(int argc, char** argv)
 	if (err_code)
 	{
 		print_error(err_code);
-		return err_code;
 	}
+	return err_code;
 }
 
 int is_word(const char* str)
