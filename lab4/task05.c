@@ -43,56 +43,38 @@ typedef enum
 	R_BRACKET
 } node_content;
 
-typedef struct deque_node
+typedef struct node
 {
 	node_content content;
 	void* data;
-	struct deque_node* prev;
-	struct deque_node* next;
-} deque_node;
+	struct node* next;
+} node;
 
 typedef struct
 {
-	deque_node* node;
-} Deque_iter;
-
-void iter_prev(Deque_iter* iter);
-void iter_next(Deque_iter* iter);
-int iter_equal(Deque_iter iter_l, Deque_iter iter_r);
-
-typedef struct
-{
-	deque_node* begin;
-	deque_node* end;
+	node* top;
 	ull size;
-} Deque;
+} Stack;
 
-status_code deque_set_null(Deque* deque);
-status_code deque_construct(Deque* deque);
-status_code deque_destruct(Deque* deque);
-status_code deque_empty(Deque* deque, int* empty);
-status_code deque_first(Deque deque, node_content* content, void** data);
-status_code deque_last(Deque deque, node_content* content, void** data);
-status_code deque_push_front(Deque* deque, node_content content, void* data);
-status_code deque_push_back(Deque* deque, node_content content, void* data);
-status_code deque_pop_front(Deque* deque, node_content* content, void** data);
-status_code deque_pop_back(Deque* deque, node_content* content, void** data);
-status_code deque_print(Deque deque);
-Deque_iter deque_begin(Deque deque);
-Deque_iter deque_end(Deque deque);
+status_code stack_set_null(Stack* stack);
+status_code stack_destruct(Stack* stack);
+status_code stack_top(Stack stack, node_content* content, void** data);
+status_code stack_push(Stack* stack, node_content content, void* data);
+status_code stack_pop(Stack* stack, node_content* content, void** data);
+status_code stack_print(Stack stack);
 
 status_code sread_until(const char* src, const char* delims, const char** end_ptr, char** str);
 status_code get_expr_const(const char* src, const char** end_ptr, void** data);
 status_code get_expr_oper(const char* src, const char** end_ptr, node_content* content, void** data);
-status_code to_postfix_notation(const char* infix, Deque* postfix);
+status_code to_postfix_notation(const char* infix, Stack* postfix);
 status_code calc_operation(char operation, ll arg1, ll arg2, ll* res);
-status_code postfix_calc(Deque postfix, ll* res);
+status_code postfix_calc(Stack postfix, ll* res);
 
 typedef struct
 {
 	status_code valid_code;
 	char* infix;
-	Deque postfix;
+	Stack postfix;
 	ll res;
 } expr_data;
 
@@ -172,7 +154,7 @@ int main(int argc, char** argv)
 				else
 				{
 					printf("%llu: %s -> ", i, data[i].infix);
-					file_code = deque_print(data[i].postfix);
+					file_code = stack_print(data[i].postfix);
 					printf("-> %lld\n", data[i].res);
 				}
 			}
@@ -188,7 +170,7 @@ int main(int argc, char** argv)
 			for (ull i = 0; i < cnt; ++i)
 			{
 				free(data[i].infix);
-				deque_destruct(&data[i].postfix);
+				stack_destruct(&data[i].postfix);
 			}
 			if (file != NULL)
 			{
@@ -224,257 +206,120 @@ int main(int argc, char** argv)
 	return err_code;
 }
 
-void iter_prev(Deque_iter* iter)
+status_code stack_set_null(Stack* stack)
 {
-	iter->node = iter->node->prev;
-}
-
-void iter_next(Deque_iter* iter)
-{
-	iter->node = iter->node->next;
-}
-
-int iter_equal(Deque_iter iter_l, Deque_iter iter_r)
-{
-	return iter_l.node == iter_r.node;
-}
-
-status_code deque_set_null(Deque* deque)
-{
-	if (deque == NULL)
+	if (stack == NULL)
 	{
 		return INVALID_ARG;
 	}
-	deque->begin = deque->end = NULL;
-	deque->size = 0;
+	stack->top = NULL;
+	stack->size = 0;
 	return OK;
 }
 
-status_code deque_construct(Deque* deque)
+status_code stack_destruct(Stack* stack)
 {
-	if (deque == NULL)
+	if (stack == NULL)
 	{
 		return INVALID_ARG;
 	}
-	deque_node* terminator = (deque_node*) malloc(sizeof(deque_node));
-	if (terminator == NULL)
+	node* cur = stack->top;
+	while (cur != NULL)
 	{
-		return BAD_ALLOC;
-	}
-	terminator->content = NONE;
-	terminator->data = NULL;
-	terminator->prev = terminator->next = terminator;
-	deque->begin = deque->end = terminator;
-	deque->size = 0;
-	return OK;
-}
-
-status_code deque_destruct(Deque* deque)
-{
-	if (deque == NULL)
-	{
-		return INVALID_ARG;
-	}
-	deque_node* cur = deque->begin;
-	while (cur != deque->end)
-	{
-		deque_node* tmp = cur;
+		node* tmp = cur;
 		cur = cur->next;
 		free(tmp->data);
 		free(tmp);
 	}
-	free(cur);
-	deque->begin = deque->end = NULL;
-	deque->size = 0;
+	stack->top = NULL;
+	stack->size = 0;
 	return OK;
 }
 
-status_code deque_empty(Deque* deque, int* empty)
+status_code stack_top(Stack stack, node_content* content, void** data)
 {
-	if (deque == NULL || empty == NULL)
+	node_content tmp_content = NONE;
+	void* tmp_data = NULL;
+	if (stack.top != NULL)
 	{
-		return INVALID_ARG;
-	}
-	*empty = deque->begin == deque->end;
-	return OK;
-}
-
-status_code deque_first(Deque deque, node_content* content, void** data)
-{
-	if (data== NULL)
-	{
-		return INVALID_ARG;
+		tmp_content = stack.top->content;
+		tmp_data = stack.top->data;
 	}
 	if (content != NULL)
 	{
-		*content = deque.begin->content;
+		*content = tmp_content;
 	}
 	if (data != NULL)
 	{
-		*data = deque.begin->data;
+		*data = tmp_data;
 	}
 	return OK;
 }
 
-status_code deque_last(Deque deque, node_content* content, void** data)
+status_code stack_push(Stack* stack, node_content content, void* data)
 {
-	if (data== NULL)
+	if (stack == NULL)
 	{
 		return INVALID_ARG;
 	}
-	if (content != NULL)
-	{
-		*content = deque.end->prev->content;
-	}
-	if (data != NULL)
-	{
-		*data = deque.end->prev->data;
-	}
-	return OK;
-}
-
-status_code deque_push_front(Deque* deque, node_content content, void* data)
-{
-	if (deque == NULL)
-	{
-		return INVALID_ARG;
-	}
-	deque_node* node = (deque_node*) malloc(sizeof(deque_node));
-	if (node == NULL)
+	node* new_node = (node*) malloc(sizeof(node));
+	if (new_node == NULL)
 	{
 		return BAD_ALLOC;
 	}
-	node->content = content;
-	node->data = data;
-	node->prev = deque->end;
-	node->next = deque->begin;
-	deque->begin = node;
-	deque->size++;
+	new_node->content = content;
+	new_node->data = data;
+	new_node->next = stack->top;
+	stack->top = new_node;
+	stack->size++;
 	return OK;
 }
 
-status_code deque_push_back(Deque* deque, node_content content, void* data)
+status_code stack_pop(Stack* stack, node_content* content, void** data)
 {
-	if (deque == NULL)
+	if (stack == NULL)
 	{
 		return INVALID_ARG;
 	}
-	deque_node* node = (deque_node*) malloc(sizeof(deque_node));
-	if (node == NULL)
-	{
-		return BAD_ALLOC;
-	}
-	node->content = content;
-	node->data = data;
-	node->prev = deque->end->prev;
-	node->next = deque->end;
-	if (deque->size == 0)
-	{
-		deque->begin = node;
-	}
-	else
-	{
-		deque->end->prev->next = node;
-	}
-	deque->end->prev = node;
-	deque->size++;
-	return OK;
-}
-
-status_code deque_pop_front(Deque* deque, node_content* content, void** data)
-{
-	if (deque == NULL)
-	{
-		return INVALID_ARG;
-	}
-	if (deque->begin == deque->end)
+	if (stack->top == NULL)
 	{
 		return INVALID_INPUT;
 	}
 	if (content != NULL)
 	{
-		*content = deque->begin->content;
+		*content = stack->top->content;
 	}
 	if (data != NULL)
 	{
-		*data = deque->begin->data;
+		*data = stack->top->data;
 	}
-	deque_node* tmp = deque->begin;
-	deque->begin = deque->begin->next;
-	deque->size--;
+	node* tmp = stack->top;
+	stack->top = stack->top->next;
+	stack->size--;
 	free(tmp);
 	return OK;
 }
 
-status_code deque_pop_back(Deque* deque, node_content* content, void** data)
+status_code stack_print(Stack stack)
 {
-	if (deque == NULL)
+	node* cur = stack.top;
+	while (cur != NULL)
 	{
-		return INVALID_ARG;
-	}
-	if (deque->begin == deque->end)
-	{
-		return INVALID_INPUT;
-	}
-	if (content != NULL)
-	{
-		*content = deque->end->prev->content;
-	}
-	if (data != NULL)
-	{
-		*data = deque->end->prev->data;
-	}
-	deque_node* tmp = deque->end->prev;
-	if (tmp == deque->begin)
-	{
-		deque->begin = deque->end;
-		deque->end->prev = deque->end;
-	}
-	else
-	{
-		deque->end->prev->prev->next = deque->end;
-		deque->end->prev = deque->end->prev->prev;
-	}
-	deque->size--;
-	free(tmp);
-	return OK;
-}
-
-status_code deque_print(Deque deque)
-{
-	if (deque.begin == NULL)
-	{
-		return INVALID_ARG;
-	}
-	Deque_iter iter = deque_begin(deque);
-	Deque_iter iter_end = deque_end(deque);
-	while (!iter_equal(iter, iter_end))
-	{
-		if (iter.node->content == CONST)
+		if (cur->content == CONST)
 		{
-			printf("%lld ", *((ll*) iter.node->data));
+			printf("%lld ", *((ll*) cur->data));
 		}
-		else if (iter.node->content == OPERATION)
+		else if (cur->content == OPERATION)
 		{
-			printf("%c ", *((char*) iter.node->data));
+			printf("%c ", *((char*) cur->data));
 		}
 		else
 		{
 			return INVALID_INPUT;
 		}
-		iter_next(&iter);
+		cur = cur->next;
 	}
 	return OK;
-}
-
-Deque_iter deque_begin(Deque deque)
-{
-	return (Deque_iter) { deque.begin };
-}
-
-Deque_iter deque_end(Deque deque)
-{
-	return (Deque_iter) { deque.end };
 }
 
 int is_operation(char operation)
@@ -493,7 +338,7 @@ int is_operation(char operation)
 	}
 }
 
-int get_operation_priority(char operation)
+int get_op_prior(char operation)
 {
 	switch (operation)
 	{
@@ -677,7 +522,7 @@ status_code validate_token_combination(node_content prev, node_content cur)
 	return OK;
 }
 
-status_code to_postfix_notation(const char* infix, Deque* postfix)
+status_code to_postfix_notation(const char* infix, Stack* postfix)
 {
 	if (infix == NULL || postfix == NULL)
 	{
@@ -685,11 +530,10 @@ status_code to_postfix_notation(const char* infix, Deque* postfix)
 	}
 	
 	status_code err_code = OK;
-	Deque postfix_tmp, opers;
-	deque_set_null(&postfix_tmp);
-	deque_set_null(&opers);
-	err_code = err_code ? err_code : deque_construct(&postfix_tmp);
-	err_code = err_code ? err_code : deque_construct(&opers);
+	Stack postfix_tmp, opers;
+	stack_set_null(&postfix_tmp);
+	stack_set_null(&opers);
+	stack_set_null(postfix);
 	
 	node_content prev_content = NONE;
 	const char* ptr = infix;
@@ -710,45 +554,45 @@ status_code to_postfix_notation(const char* infix, Deque* postfix)
 		// --- HANDLE NUMBER ---
 		if (!err_code && content == CONST)
 		{
-			err_code = deque_push_back(&postfix_tmp, CONST, data);
+			err_code = stack_push(&postfix_tmp, CONST, data);
 		}
 		// --- HANDLE OPERATION ---
 		else if (!err_code && content == OPERATION)
 		{
 			void* other_data = NULL;
-			deque_last(opers, NULL, &other_data);
-			int cur_prior = get_operation_priority(*((char*) data));
-			int other_prior = other_data != NULL ? get_operation_priority(*((char*) other_data)) : -1;
+			stack_top(opers, NULL, &other_data);
+			int cur_prior = get_op_prior(*((char*) data));
+			int other_prior = other_data != NULL ? get_op_prior(*((char*) other_data)) : -1;
 			while (!err_code && other_prior >= cur_prior)
 			{
-				err_code = deque_push_back(&postfix_tmp, OPERATION, other_data);
-				err_code = err_code ? err_code : deque_pop_back(&opers, NULL, NULL);
-				deque_last(opers, NULL, &other_data);
-				other_prior = other_data != NULL ? get_operation_priority(*((char*) other_data)) : -1;
+				err_code = stack_push(&postfix_tmp, OPERATION, other_data);
+				err_code = err_code ? err_code : stack_pop(&opers, NULL, NULL);
+				stack_top(opers, NULL, &other_data);
+				other_prior = other_data != NULL ? get_op_prior(*((char*) other_data)) : -1;
 			}
-			err_code = err_code ? err_code : deque_push_back(&opers, OPERATION, data);
+			err_code = err_code ? err_code : stack_push(&opers, OPERATION, data);
 		}
 		// --- HANDLE LEFT BRACKET ---
 		else if (!err_code && content == L_BRACKET)
 		{
-			err_code = deque_push_back(&opers, L_BRACKET, NULL);
+			err_code = stack_push(&opers, L_BRACKET, NULL);
 		}
 		// --- HANDLE RIGHT BRACKET ---
 		else if (!err_code && content == R_BRACKET)
 		{
 			node_content other_content = NONE;
 			void* other_data = NULL;
-			deque_last(opers, &other_content, &other_data);
+			stack_top(opers, &other_content, &other_data);
 			err_code = other_content != NONE ? OK : INVALID_BRACKET_ORDER;
 			while (!err_code && other_content != L_BRACKET)
 			{
-				err_code = deque_push_back(&postfix_tmp, OPERATION, other_data);
-				err_code = err_code ? err_code : deque_pop_back(&opers, NULL, NULL);
-				deque_last(opers, &other_content, &other_data);
+				err_code = stack_push(&postfix_tmp, OPERATION, other_data);
+				err_code = err_code ? err_code : stack_pop(&opers, NULL, NULL);
+				stack_top(opers, &other_content, &other_data);
 				err_code = err_code ? err_code : (other_content != NONE ? OK : INVALID_BRACKET_ORDER);
 			}
 			other_data = NULL;
-			err_code = err_code ? err_code : deque_pop_back(&opers, NULL, &other_data);
+			err_code = err_code ? err_code : stack_pop(&opers, NULL, &other_data);
 			free(other_data);
 		}
 		prev_content = content;
@@ -757,17 +601,24 @@ status_code to_postfix_notation(const char* infix, Deque* postfix)
 	{
 		node_content content = NONE;
 		void* data = NULL;
-		err_code = deque_pop_back(&opers, &content, &data);
+		err_code = stack_pop(&opers, &content, &data);
 		err_code = err_code ? err_code : (content != L_BRACKET ? OK : INVALID_BRACKET_ORDER);
-		err_code = err_code ? err_code : deque_push_back(&postfix_tmp, OPERATION, data);
+		err_code = err_code ? err_code : stack_push(&postfix_tmp, OPERATION, data);
 	}
-	deque_destruct(&opers);
+	stack_destruct(&opers);
+	while (!err_code && postfix_tmp.size > 0)
+	{
+		node_content tmp_content;
+		void* tmp_data;
+		err_code = stack_pop(&postfix_tmp, &tmp_content, &tmp_data);
+		err_code = err_code ? err_code : stack_push(postfix, tmp_content, tmp_data);
+	}
+	stack_destruct(&postfix_tmp);
 	if (err_code)
 	{
-		deque_destruct(&postfix_tmp);
+		stack_destruct(postfix);
 		return err_code;
 	}
-	*postfix = postfix_tmp;
 	return OK;
 }
 
@@ -871,43 +722,41 @@ status_code calc_operation(char operation, ll arg1, ll arg2, ll* res)
 	}
 }
 
-status_code postfix_calc(Deque postfix, ll* res)
+status_code postfix_calc(Stack postfix, ll* res)
 {
-	if (postfix.begin == NULL || res == NULL)
+	if (res == NULL)
 	{
 		return INVALID_ARG;
 	}
 	
-	Deque args;
-	deque_set_null(&args);
-	status_code err_code = deque_construct(&args);
+	Stack args;
+	stack_set_null(&args);
 	
-	Deque_iter iter = deque_begin(postfix);
-	Deque_iter iter_end = deque_end(postfix);
-	
-	while (!err_code && !iter_equal(iter, iter_end))
+	status_code err_code = OK;
+	node* cur = postfix.top;
+	while (!err_code && cur != NULL)
 	{
-		if (iter.node->content == CONST)
+		if (cur->content == CONST)
 		{
 			ll* data = (ll*) malloc(sizeof(ll));
 			err_code = data != NULL ? OK : BAD_ALLOC;
 			if (!err_code)
 			{
-				*data = *((ll*) iter.node->data);
-				err_code = deque_push_back(&args, CONST, data);
+				*data = *((ll*) cur->data);
+				err_code = stack_push(&args, CONST, data);
 			}
 		}
-		else if (iter.node->content == OPERATION)
+		else if (cur->content == OPERATION)
 		{
-			char* operation = (char*) iter.node->data;
+			char* operation = (char*) cur->data;
 			void* arg1 = NULL;
 			void* arg2 = NULL;
 			ll* local_res = (ll*) malloc(sizeof(ll));
 			err_code = res != NULL ? OK : BAD_ALLOC;
-			err_code = err_code ? err_code : deque_pop_back(&args, NULL, &arg2);
-			err_code = err_code ? err_code : deque_pop_back(&args, NULL, &arg1);
+			err_code = err_code ? err_code : stack_pop(&args, NULL, &arg2);
+			err_code = err_code ? err_code : stack_pop(&args, NULL, &arg1);
 			err_code = err_code ? err_code : calc_operation(*operation, *((ll*) arg1), *((ll*) arg2), local_res);
-			err_code = err_code ? err_code : deque_push_back(&args, CONST, local_res);
+			err_code = err_code ? err_code : stack_push(&args, CONST, local_res);
 			if (err_code)
 			{
 				free(local_res);
@@ -919,16 +768,16 @@ status_code postfix_calc(Deque postfix, ll* res)
 		{
 			err_code = INVALID_INPUT;
 		}
-		iter_next(&iter);
+		cur = cur->next;
 	}
 	
 	void *res_tmp = NULL;
 	if (!err_code)
 	{
 		err_code = args.size == 1 ? OK : INVALID_INPUT;
-		err_code = err_code ? err_code : deque_pop_back(&args, NULL, &res_tmp);
+		err_code = err_code ? err_code : stack_pop(&args, NULL, &res_tmp);
 	}
-	deque_destruct(&args);
+	stack_destruct(&args);
 	if (err_code)
 	{
 		return err_code;
@@ -960,14 +809,14 @@ status_code handle_file(FILE* file, ull* expr_cnt, expr_data** data_arr)
 	}
 	while (!err_code)
 	{
-		Deque postfix;
+		Stack postfix;
 		ll res = 0;
-		deque_set_null(&postfix);
+		stack_set_null(&postfix);
 		status_code expr_code = to_postfix_notation(infix, &postfix);
 		expr_code = expr_code ? expr_code : postfix_calc(postfix, &res);
 		if (expr_code)
 		{
-			deque_destruct(&postfix);
+			stack_destruct(&postfix);
 		}
 		expr_data data;
 		data.valid_code = expr_code;
@@ -982,7 +831,7 @@ status_code handle_file(FILE* file, ull* expr_cnt, expr_data** data_arr)
 			{
 				err_code = BAD_ALLOC;
 				free(infix);
-				deque_destruct(&postfix);
+				stack_destruct(&postfix);
 			}
 			else
 			{
@@ -1016,7 +865,7 @@ status_code handle_file(FILE* file, ull* expr_cnt, expr_data** data_arr)
 		for (ull i = 0; i < cnt; ++i)
 		{
 			free(data_arr_tmp[0].infix);
-			deque_destruct(&data_arr_tmp[0].postfix);
+			stack_destruct(&data_arr_tmp[0].postfix);
 		}
 		free(data_arr_tmp);
 		return err_code;
