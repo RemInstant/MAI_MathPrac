@@ -152,6 +152,7 @@ status_code trie_search_node(Trie trie, const char* str, trie_node** node)
 	{
 		if (cur == NULL)
 		{
+			*node = NULL;
 			return OK;
 		}
 		int ind = char_to_ind(str[i]);
@@ -329,17 +330,9 @@ status_code trie_node_equal(trie_node* node_1, trie_node* node_2, int* is_equal)
 		*is_equal = 1;
 		return OK;
 	}
-	if (node_1 == NULL && node_2 != NULL && node_2->val != 0)
-	{
-		*is_equal = 0;
-		return OK;
-	}
-	if (node_1 != NULL && node_2 == NULL && node_1->val != 0)
-	{
-		*is_equal = 0;
-		return OK;
-	}
-	if (node_1 != NULL && node_2 != NULL && node_1->val != node_2->val)
+	ll value_1 = node_1 == NULL ? 0 : node_1->val;
+	ll value_2 = node_2 == NULL ? 0 : node_2->val;
+	if (value_1 != value_2)
 	{
 		*is_equal = 0;
 		return OK;

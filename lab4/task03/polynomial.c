@@ -349,37 +349,6 @@ status_code polynomial_insert_monome(Polynomial* poly, Monome* monome)
 	return err_code;
 }
 
-// --- DELETE ME? ---
-status_code polynomial_delete_monome(Polynomial* poly, Monome* monome)
-{
-	if (poly == NULL || monome == NULL)
-	{
-		return INVALID_ARG;
-	}
-	if (poly->size == 1)
-	{
-		poly->begin = poly->end = NULL;
-	}
-	else if (poly->begin == monome)
-	{
-		poly->begin = monome->next;
-		poly->begin->prev = NULL;
-	}
-	else if (poly->end == monome)
-	{
-		poly->end = monome->prev;
-		poly->end->next = NULL;
-	}
-	else
-	{
-		monome->prev->next = monome->next;
-		monome->next->prev = monome->prev;
-	}
-	poly->size--;
-	monome_destruct(monome);
-	return OK;
-}
-
 // MODIFIEES ARG (SAFELY)
 status_code polynomial_remove_zero(Polynomial* poly, double eps)
 {
