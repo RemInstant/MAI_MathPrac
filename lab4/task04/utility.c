@@ -198,16 +198,16 @@ status_code skip_multi_line_comment(FILE* file)
 	{
 		return NULL_ARG;
 	}
-	char ch = '[';
+	char ch = '{';
 	int comment_nesting = 1;
 	while (comment_nesting > 0 && !feof(file))
 	{
 		ch = getc(file);
-		if (ch == '[')
+		if (ch == '{')
 		{
 			++comment_nesting;
 		}
-		else if (ch == ']')
+		else if (ch == '}')
 		{
 			--comment_nesting;
 		}
@@ -250,7 +250,7 @@ status_code fread_cmd(FILE* file, char** str)
 			ch = getc(file);
 			skip_flag = 1;
 		}
-		else if (ch == '[')
+		else if (ch == '{')
 		{
 			status_code err_code = skip_multi_line_comment(file);
 			if (err_code)
@@ -282,7 +282,7 @@ status_code fread_cmd(FILE* file, char** str)
 		}
 		str_tmp[iter++] = ch;
 		ch = getc(file);
-		if (ch == '[')
+		if (ch == '{')
 		{
 			status_code err_code = skip_multi_line_comment(file);
 			if (err_code)
@@ -433,11 +433,11 @@ int ctoi(char ch)
 
 char itoc(int number)
 {
-	if (number >= 0 && number <= 9)
+	if (number >= 0 && number < 10)
 	{
 		return '0' + number;
 	}
-	else if (number >= 10 && number <= 36)
+	else if (number >= 10 && number < 36)
 	{
 		return 'A' + number - 10;
 	}

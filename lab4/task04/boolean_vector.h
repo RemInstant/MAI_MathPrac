@@ -17,7 +17,6 @@ typedef enum boolean_operation
 	WEBB_FUNCTION // a.k.a. Peirce arrow
 } boolean_operation, b_op;
 
-status_code bool_vector_construct(char bvec[65], const char* src);
 status_code bool_vector_read(char bvec[65], int base);
 status_code bool_vector_write(const char bvec[65], int base, int nl_cnt);
 status_code bool_vector_inverse(char bvec[65], char bvec_res[65]);

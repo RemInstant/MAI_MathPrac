@@ -13,6 +13,7 @@ int main(int argc, char** argv)
 	if (argc == 1)
 	{
 		printf("Usage: cmd_path <input>\n");
+		printf("OR: cmd_path <input> /trace <output>\n");
 		return OK;
 	}
 	
@@ -25,7 +26,6 @@ int main(int argc, char** argv)
 	}
 	
 	FILE* input = fopen(argv[1], "r");
-	//FILE* input = fopen("input", "r");
 	if (input == NULL)
 	{
 		print_error(FILE_OPENING_ERROR, 1);
@@ -33,8 +33,6 @@ int main(int argc, char** argv)
 	}
 	
 	FILE* output = argc == 4 ? fopen(argv[3], "w") : stdout;
-	//FILE* output = fopen("output", "w");
-	//FILE* output = stdout;
 	if (output == NULL)
 	{
 		fclose(input);
@@ -75,13 +73,13 @@ int main(int argc, char** argv)
 				case SHEFFER_STROKE:
 				case WEBB_FUNCTION:
 				{
-					file_code = ((init_flags[ind_2] && init_flags[ind_3]) ? OK : UNINITIALIZED_USAGE);
+					file_code = (init_flags[ind_2] && init_flags[ind_3]) ? OK : UNINITIALIZED_USAGE;
 					file_code = file_code ? file_code : bool_vector_calc_binary_op(vars[ind_2], vars[ind_3], op_code, tmp);
 					break;
 				}
 				case INVERSION:
 				{
-					file_code = (init_flags[ind_2] ? OK : UNINITIALIZED_USAGE);
+					file_code = init_flags[ind_2] ? OK : UNINITIALIZED_USAGE;
 					file_code = file_code ? file_code : bool_vector_inverse(vars[ind_2], tmp);
 					break;
 				}

@@ -1,19 +1,6 @@
 #include "boolean_vector.h"
 #include <stdlib.h>
 #include <string.h>
-#include <memory.h>
-
-status_code bool_vector_construct(char bvec[65], const char* src)
-{
-	if (bvec == NULL)
-	{
-		return NULL_ARG;
-	}
-	ull sz = strlen(src);
-	memset(bvec, '0', sizeof(char) * (64 - sz));
-	strcpy(bvec + (64 - sz), src);
-	return OK;
-}
 
 status_code bool_vector_read(char bvec[65], int base)
 {
