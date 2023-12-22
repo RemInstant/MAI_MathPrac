@@ -511,7 +511,11 @@ status_code validate_token_combination(node_content prev, node_content cur)
 	{
 		return INVALID_INPUT;
 	}
-	if ((is_operation(prev) && cur == R_BRACKET) || (prev == L_BRACKET && is_operation(cur)))
+	if ((is_operation(prev) && cur == R_BRACKET) || (prev == R_BRACKET && cur == INVERSION))
+	{
+		return INVALID_INPUT;
+	}
+	if (prev == L_BRACKET && is_operation(cur) && cur != INVERSION)
 	{
 		return INVALID_INPUT;
 	}
@@ -943,7 +947,7 @@ status_code construct_output_path(const char* input, const char* output_name, ch
 	{
 		return INVALID_ARG;
 	}
-	ull last_delim_pos = 0;
+	ull last_delim_pos = -1;
 	for (ull i = 0; input[i]; ++i)
 	{
 		if (input[i] == '/' || input[i] == '\\')
