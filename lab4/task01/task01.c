@@ -119,6 +119,7 @@ int main(int argc, char** argv)
 		err_code = OK;
 	}
 	
+	htable_destruct(&macro);
 	fclose(input);
 	fclose(output);
 	if (err_code)
