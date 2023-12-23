@@ -198,7 +198,7 @@ status_codes permutations(double eps, unsigned int cnt, double* numbers, unsigne
 		{
 			for (int j = i-1; j >= 0; --j)
 			{
-				free((*res)[i]);
+				free((*res)[j]);
 			}
 			free(*res);
 			*res = NULL;
