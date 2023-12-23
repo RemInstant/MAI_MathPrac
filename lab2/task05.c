@@ -304,13 +304,33 @@ int overfprintf(FILE* file, const char* format, ...)
 				spec = tmp;
 			}
 			spec[spec_len++] = *frm_ptr++;
+			spec[spec_len] = '\0';
 			char last_ch = spec[spec_len - 1];
 			// --- HANDLE BASE SPECIFIERS ---
-			if (is_base_specifier(last_ch))
+			if (last_ch == 'n' && !strcmp(spec, "%n"))
 			{
-				spec[spec_len] = '\0';
-				int cnt = vfprintf(file, spec, va);
-				va_arg(va, void*);
+				print_cnt += fprintf(file, "%lld", print_cnt);
+				spec_len = 1;
+				spec_flag = 0;
+			}
+			else if (is_base_specifier(last_ch) && last_ch != 'n')
+			{
+				int cnt = 0;
+				if (last_ch == 'c' || last_ch == 'd' || last_ch == 'o' || last_ch == 'i' ||
+						last_ch == 'x' || last_ch == 'X' || last_ch == 'u')
+				{
+					cnt += fprintf(file, spec, va_arg(va, long long));
+				}
+				else if (last_ch == 'f' || last_ch == 'F' || last_ch == 'e' ||
+						last_ch == 'a' || last_ch == 'A' || last_ch == 'E' ||
+						last_ch == 'g' || last_ch == 'G')
+				{
+					cnt += fprintf(file, spec, va_arg(va, double));
+				}
+				else if (last_ch == 'p' || last_ch == 's')
+				{
+					cnt += fprintf(file, spec, va_arg(va, void*));
+				}
 				if (cnt == -1)
 				{
 					va_end(va);
@@ -510,11 +530,31 @@ int oversprintf(char* dest, const char* format, ...)
 			spec[spec_len++] = *frm_ptr++;
 			char last_ch = spec[spec_len - 1];
 			// --- HANDLE BASE SPECIFIERS ---
-			if (is_base_specifier(last_ch))
+			if (last_ch == 'n' && !strcmp(spec, "%n"))
+			{
+				dest_len += sprintf(dest + dest_len, "%lld", dest_len);
+				spec_len = 1;
+				spec_flag = 0;
+			}
+			else if (is_base_specifier(last_ch))
 			{
 				spec[spec_len] = '\0';
-				int cnt = vsprintf(dest + dest_len, spec, va);
-				va_arg(va, void*);
+				int cnt = 0;
+				if (last_ch == 'c' || last_ch == 'd' || last_ch == 'o' || last_ch == 'i' ||
+						last_ch == 'x' || last_ch == 'X' || last_ch == 'u')
+				{
+					cnt += sprintf(dest + dest_len, spec, va_arg(va, long long));
+				}
+				else if (last_ch == 'f' || last_ch == 'F' || last_ch == 'e' ||
+						last_ch == 'a' || last_ch == 'A' || last_ch == 'E' ||
+						last_ch == 'g' || last_ch == 'G')
+				{
+					cnt += sprintf(dest + dest_len, spec, va_arg(va, double));
+				}
+				else if (last_ch == 'p' || last_ch == 's')
+				{
+					cnt += sprintf(dest + dest_len, spec, va_arg(va, void*));
+				}
 				if (cnt == -1)
 				{
 					va_end(va);
@@ -657,7 +697,7 @@ int main(int argc, char** argv)
 {
 	int x = 0;
 	char dest[512];
-	x = overfprintf(stdout, "%lld %c %s %E\n", 5, 'q', "str", 123.456);
+	x = overfprintf(stdout, "%lld %c %s %n %E\n", 5, 'q', "str", 123.456);
 	x = overfprintf(stdout, "\"%Ro\" %Ro %Ro %Ro\n", 0, 4, 99, 3888);
 	x = overfprintf(stdout, "%Zr %Zr %Zr %Zr %Zr %Zr\n", 0, 1, 2, 3, 4, UINT_MAX);
 	x = overfprintf(stdout, "%Cv %CV %Cv\n", INT_MAX, 2,  INT_MIN, 2,  INT_MIN+1, 2);
@@ -669,7 +709,7 @@ int main(int argc, char** argv)
 	x = overfprintf(stdout, "%mf\n");
 	printf("%d\n\n", x);
 	
-	x = oversprintf(dest, "%lld %c %s %E\n", 5, 'q', "str", 123.456);
+	x = oversprintf(dest, "%lld %c %s %n %E\n", 5, 'q', "str", 123.456);
 	printf("%s", dest);
 	x = oversprintf(dest, "\"%Ro\" %Ro %Ro %Ro\n", 0, 4, 99, 3888);
 	printf("%s", dest);
