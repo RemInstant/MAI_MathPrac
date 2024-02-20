@@ -39,6 +39,12 @@ typedef struct pair_str_double
 	double val;
 } pair_str_double;
 
+typedef struct pair_prior_time
+{
+	unsigned prior;
+	char time[21];
+} pair_prior_time;
+
 int pair_str_double_comparator(const void* ptr_1, const void* ptr_2);
 
 status_code fread_line(FILE* file, char** str);

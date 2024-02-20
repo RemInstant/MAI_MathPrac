@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-status_code bmh_node_copy(bmh_node** node_dest, bmh_node* node_src)
+status_code bmh_node_copy(bmh_node** node_dest, const bmh_node* node_src)
 {
 	if (node_dest == NULL)
 	{
@@ -21,30 +21,33 @@ status_code bmh_node_copy(bmh_node** node_dest, bmh_node* node_src)
 		return BAD_ALLOC;
 	}
 	
-	tmp_node->value = (char*) malloc(sizeof(char) * strlen(node_src->value + 1));
+	tmp_node->value = (char*) malloc(sizeof(char) * (strlen(node_src->value) + 1));
 	if (tmp_node->value == NULL)
 	{
 		free(tmp_node);
 		return BAD_ALLOC;
 	}
 	
-	tmp_node->key = node_src->key;
-	tmp_node->son = node_src->son;
-	tmp_node->brother = node_src->brother;
+	strcpy(tmp_node->value, node_src->value);
+	strcpy(tmp_node->key.time, node_src->key.time);
+	tmp_node->key.prior = node_src->key.prior;
+	tmp_node->son = NULL;
+	tmp_node->brother = NULL;
 	tmp_node->rank = node_src->rank;
-	*node_dest = tmp_node;
 	
-	status_code son_code = bmh_node_copy(&(*node_dest)->son, node_src->son);
+	status_code son_code = bmh_node_copy(&tmp_node->son, node_src->son);
 	if (son_code)
 	{
 		return son_code;
 	}
 	
-	status_code brother_code = bmh_node_copy(&(*node_dest)->brother, node_src->brother);
+	status_code brother_code = bmh_node_copy(&tmp_node->brother, node_src->brother);
 	if (brother_code)
 	{
 		return brother_code;
 	}
+	
+	*node_dest = tmp_node;
 	
 	return OK;
 }
@@ -73,7 +76,7 @@ status_code bm_heap_set_null(bm_heap* bmh)
 	return OK;
 }
 
-status_code bm_heap_construct(bm_heap* bmh, int (*compare)(const unsigned, const unsigned))
+status_code bm_heap_construct(bm_heap* bmh, int (*compare)(const pair_prior_time*, const pair_prior_time*))
 {
 	if (bmh == NULL)
 	{
@@ -84,14 +87,15 @@ status_code bm_heap_construct(bm_heap* bmh, int (*compare)(const unsigned, const
 	return OK;
 }
 
-status_code bm_heap_copy(bm_heap* bmh_dest, bm_heap bmh_src)
+status_code bm_heap_copy(bm_heap* bmh_dest, const bm_heap* bmh_src)
 {
 	if (bmh_dest == NULL)
 	{
 		return NULL_ARG;
 	}
 	
-	status_code code = bmh_node_copy(&bmh_dest->head, bmh_src.head);
+	bmh_dest->compare = bmh_src->compare;
+	status_code code = bmh_node_copy(&bmh_dest->head, bmh_src->head);
 	if (code)
 	{
 		bm_heap_destruct(bmh_dest);
@@ -104,7 +108,7 @@ status_code bm_heap_destruct(bm_heap* bmh)
 {
 	if (bmh == NULL)
 	{
-		return NULL_ARG;
+		return OK; // or NULL_ARG???
 	}
 	status_code code = bmh_node_destruct(bmh->head);
 	bmh->head = NULL;
@@ -148,7 +152,7 @@ status_code bm_heap_meld(bm_heap* bmh_res, bm_heap* bmh_l, bm_heap* bmh_r)
 	bmh_node* iter_res = bmh_tmp.head;
 	while (iter_l != NULL && iter_r != NULL)
 	{
-		if (iter_l->rank >= iter_r->rank)
+		if (iter_l->rank < iter_r->rank)
 		{
 			iter_res->brother = iter_l;
 			iter_l = iter_l->brother;
@@ -176,21 +180,25 @@ status_code bm_heap_meld(bm_heap* bmh_res, bm_heap* bmh_l, bm_heap* bmh_r)
 	}
 	
 	// STEP 2: COMBINING
+	
+	bmh_node* prev_node = NULL;
 	bmh_node* cur_node = bmh_tmp.head;
 	bmh_node* nxt_node = bmh_tmp.head->brother;
 	
 	while (nxt_node != NULL)
 	{
 		bmh_node* tmp_node = nxt_node->brother;
-		if (cur_node->rank == nxt_node->rank)
+		if (cur_node->rank == nxt_node->rank && (tmp_node == NULL || tmp_node->rank != nxt_node->rank))
 		{
-			if (bmh_l->compare(cur_node->key, nxt_node->key))
+			if (bmh_l->compare(&cur_node->key, &nxt_node->key) != 1)
 			{
+				// cur > nxt -> "no swap"
 				nxt_node->brother = cur_node->son;
 				cur_node->son = nxt_node;
 			}
 			else
 			{
+				// nxt > cur -> "swap"
 				cur_node->brother = nxt_node->son;
 				nxt_node->son = cur_node;
 				
@@ -200,12 +208,17 @@ status_code bm_heap_meld(bm_heap* bmh_res, bm_heap* bmh_l, bm_heap* bmh_r)
 				}
 				cur_node = nxt_node;
 			}
+			if (prev_node != NULL)
+			{
+				prev_node->brother = cur_node;
+			}
 			cur_node->rank++;
 			cur_node->brother = tmp_node;
 			nxt_node = tmp_node;
 		}
 		else
 		{
+			prev_node = cur_node;
 			cur_node = nxt_node;
 			nxt_node = nxt_node->brother;
 		}
@@ -224,7 +237,7 @@ status_code bm_heap_meld(bm_heap* bmh_res, bm_heap* bmh_l, bm_heap* bmh_r)
 	return OK;
 }
 
-status_code bm_heap_copy_meld(bm_heap* bmh_res, bm_heap bmh_l, bm_heap bmh_r)
+status_code bm_heap_copy_meld(bm_heap* bmh_res, const bm_heap* bmh_l, const bm_heap* bmh_r)
 {
 	if (bmh_res == NULL)
 	{
@@ -251,28 +264,28 @@ status_code bm_heap_copy_meld(bm_heap* bmh_res, bm_heap bmh_l, bm_heap bmh_r)
 	return OK;
 }
 
-status_code bm_heap_find(bm_heap bmh, bmh_node** prev, bmh_node** node)
+status_code bm_heap_find(const bm_heap* bmh, bmh_node** prev, bmh_node** node)
 {
 	// bad O(logn) alg 
 	if (node == NULL)
 	{
 		return NULL_ARG;
 	}
-	if (bmh.head == NULL)
+	if (bmh->head == NULL)
 	{
 		*node = NULL;
 		return OK;
 	}
 	
 	bmh_node* prev_node = NULL;
-	bmh_node* min_node = bmh.head;
-	bmh_node* cur_node = bmh.head;
+	bmh_node* target_node = bmh->head;
+	bmh_node* cur_node = bmh->head;
 	while (cur_node->brother != NULL)
 	{
-		if (bmh.compare(cur_node->brother->key, min_node->key))
+		if (bmh->compare(&cur_node->brother->key, &target_node->key) == -1)
 		{
 			prev_node = cur_node;
-			min_node = cur_node->brother;
+			target_node = cur_node->brother;
 		}
 		cur_node = cur_node->brother;
 	}
@@ -281,11 +294,11 @@ status_code bm_heap_find(bm_heap bmh, bmh_node** prev, bmh_node** node)
 	{
 		*prev = prev_node;
 	}
-	*node = min_node;
+	*node = target_node;
 	return OK;
 }
 
-status_code bm_heap_top(bm_heap bmh, char** value)
+status_code bm_heap_top(const bm_heap* bmh, char** value)
 {
 	if (value == NULL)
 	{
@@ -316,9 +329,9 @@ status_code bm_heap_pop(bm_heap* bmh, char** value)
 		return NULL_ARG;
 	}
 	
-	bmh_node* node = NULL;
 	bmh_node* prev = NULL;
-	bm_heap_find(*bmh, &prev, &node);
+	bmh_node* node = NULL;
+	bm_heap_find(bmh, &prev, &node);
 	if (node == NULL)
 	{
 		if (value != NULL)
@@ -332,7 +345,6 @@ status_code bm_heap_pop(bm_heap* bmh, char** value)
 	{
 		*value = node->value;
 	}
-	node->value = NULL;
 	
 	if (prev != NULL)
 	{
@@ -346,13 +358,26 @@ status_code bm_heap_pop(bm_heap* bmh, char** value)
 	bm_heap tmp_bmh, add_bmh;
 	add_bmh.head = node->son;
 	add_bmh.compare = bmh->compare;
+	free(node);
+	
+	// reverse add bmh
+	prev = NULL;
+	node = add_bmh.head;
+	while (node != NULL)
+	{
+		bmh_node* nxt = node->brother;
+		node->brother = prev;
+		prev = node;
+		node = nxt;
+	}
+	add_bmh.head = prev;
 	
 	bm_heap_meld(&tmp_bmh, bmh, &add_bmh);
 	bmh->head = tmp_bmh.head;
 	return OK;
 }
 
-status_code bm_heap_insert(bm_heap* bmh, unsigned key, char* value)
+status_code bm_heap_insert(bm_heap* bmh, pair_prior_time key, char* value)
 {
 	if (bmh == NULL || value == NULL)
 	{

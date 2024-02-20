@@ -11,21 +11,26 @@ typedef enum priority_queue_base
 	PQB_BINOM,
 	PQB_FIB,
 	PQB_TREAP,
-} priority_queue_base, p_queue_base;
+} priority_queue_base, pq_base;
 
 typedef struct priority_queue
 {
 	void* heap;
-	status_code (*construct)(struct priority_queue* pq, int (*compare)(unsigned, unsigned));
-	status_code (*copy)(struct priority_queue* pq_dest, struct priority_queue pq_src);
-	status_code (*destruct)(struct priority_queue* pq);
-	status_code (*meld)(struct priority_queue* pq_res, struct priority_queue* pq_l, struct priority_queue* pq_r);
-	status_code (*copy_meld)(struct priority_queue* pq_res, struct priority_queue pq_l, struct priority_queue pq_r);
-	status_code (*top)(struct priority_queue pq, char** value);
-	status_code (*pop)(struct priority_queue* pq, char** value);
-	status_code (*insert)(struct priority_queue* pq, unsigned key, char* value);
+	status_code (*set_null)(void* pq);
+	status_code (*construct)(void* pq, int (*compare)(const pair_prior_time*, const pair_prior_time*));
+	status_code (*copy)(void* pq_dest, const void* pq_src);
+	status_code (*destruct)(void* pq);
+	status_code (*meld)(void* pq_res, void* pq_l, void* pq_r);
+	status_code (*copy_meld)(void* pq_res, const void* pq_l, const void* pq_r);
+	status_code (*top)(void* pq, char** value);
+	status_code (*pop)(void* pq, char** value);
+	status_code (*insert)(void* pq, pair_prior_time key, char* value);
 } priority_queue, p_queue;
 
-status_code p_queue_init(p_queue* pq, p_queue_base base);
+status_code p_queue_set_null(p_queue* pq);
+status_code p_queue_init(p_queue* pq, pq_base base);
+status_code p_queue_destruct(p_queue* pq);
+
+int compare_pq_key(const pair_prior_time* lhs, const pair_prior_time* rhs);
 
 #endif // _PRIORITY_QUEUE_H_
