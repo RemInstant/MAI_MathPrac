@@ -1,11 +1,14 @@
 CC = gcc
 CFLAGS = -g -Wall -Wpedantic -Wshadow -Wformat=2 -Wcast-align -Wnull-dereference -fdiagnostics-color=always -std=c17 -lm
 
-main: task09.o binomial_heap.o utility.o
-	$(CC) $(CFLAGS) -o main task09.o binomial_heap.o utility.o
+main: task09.o priority_queue.o binomial_heap.o utility.o
+	$(CC) $(CFLAGS) -o main task09.o priority_queue.o binomial_heap.o utility.o
 
-task09.o: task09.c binomial_heap.h utility.h
+task09.o: task09.c priority_queue.h binomial_heap.h utility.h
 	$(CC) $(CFLAGS) -c task09.c
+
+priority_queue.o: priority_queue.c priority_queue.h utility.h
+	$(CC) $(CFLAGS) -c priority_queue.c
 
 binomial_heap.o: binomial_heap.c binomial_heap.h utility.h
 	$(CC) $(CFLAGS) -c binomial_heap.c
