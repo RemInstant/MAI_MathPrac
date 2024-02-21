@@ -1,6 +1,7 @@
-#include "binomial_heap.h"
 #include <stdlib.h>
 #include <string.h>
+
+#include "binomial_heap.h"
 
 status_code bmh_node_copy(bmh_node** node_dest, const bmh_node* node_src)
 {
@@ -72,6 +73,7 @@ status_code bm_heap_set_null(bm_heap* bmh)
 		return NULL_ARG;
 	}
 	bmh->head = NULL;
+	bmh->size = 0;
 	bmh->compare = NULL;
 	return OK;
 }
@@ -83,6 +85,7 @@ status_code bm_heap_construct(bm_heap* bmh, int (*compare)(const pair_prior_time
 		return NULL_ARG;
 	}
 	bmh->head = NULL;
+	bmh->size = 0;
 	bmh->compare = compare;
 	return OK;
 }
@@ -94,6 +97,7 @@ status_code bm_heap_copy(bm_heap* bmh_dest, const bm_heap* bmh_src)
 		return NULL_ARG;
 	}
 	
+	bmh_dest->size = bmh_src->size;
 	bmh_dest->compare = bmh_src->compare;
 	status_code code = bmh_node_copy(&bmh_dest->head, bmh_src->head);
 	if (code)
@@ -112,6 +116,8 @@ status_code bm_heap_destruct(bm_heap* bmh)
 	}
 	status_code code = bmh_node_destruct(bmh->head);
 	bmh->head = NULL;
+	bmh->size = 0;
+	bmh->compare = NULL;
 	return code;
 }
 
@@ -225,14 +231,15 @@ status_code bm_heap_meld(bm_heap* bmh_res, bm_heap* bmh_l, bm_heap* bmh_r)
 	}
 	
 	bmh_res->head = bmh_tmp.head;
+	bmh_res->size = bmh_l->size + bmh_r->size;
 	bmh_res->compare = bmh_l->compare;
 	if (bmh_l != bmh_res)
 	{
-		bmh_l->head = NULL;
+		bm_heap_set_null(bmh_l);
 	}
 	if (bmh_r != bmh_res)
 	{
-		bmh_r->head = NULL;
+		bm_heap_set_null(bmh_r);
 	}
 	return OK;
 }
@@ -261,6 +268,16 @@ status_code bm_heap_copy_meld(bm_heap* bmh_res, const bm_heap* bmh_l, const bm_h
 		bm_heap_destruct(&bmh_rc);
 		return code;
 	}
+	return OK;
+}
+
+status_code bm_heap_size(const bm_heap* bmh, size_t* size)
+{
+	if (bmh == NULL)
+	{
+		return NULL_ARG;
+	}
+	*size = bmh->size;
 	return OK;
 }
 
@@ -341,11 +358,18 @@ status_code bm_heap_pop(bm_heap* bmh, char** value)
 		return OK;
 	}
 	
+	ll tmp_size = 0;
+	status_code code = bpow_safely(2, node->rank, &tmp_size);
+	size_t node_size = (size_t) tmp_size;
+	if (code)
+	{
+		return code;
+	}
+	
 	if (value != NULL)
 	{
 		*value = node->value;
 	}
-	
 	if (prev != NULL)
 	{
 		prev->brother = node->brother;
@@ -355,14 +379,14 @@ status_code bm_heap_pop(bm_heap* bmh, char** value)
 		bmh->head = node->brother;
 	}
 	
-	bm_heap tmp_bmh, add_bmh;
-	add_bmh.head = node->son;
-	add_bmh.compare = bmh->compare;
+	bm_heap bmh_add;
+	bmh_add.head = node->son;
+	bmh_add.compare = bmh->compare;
 	free(node);
 	
 	// reverse add bmh
 	prev = NULL;
-	node = add_bmh.head;
+	node = bmh_add.head;
 	while (node != NULL)
 	{
 		bmh_node* nxt = node->brother;
@@ -370,10 +394,11 @@ status_code bm_heap_pop(bm_heap* bmh, char** value)
 		prev = node;
 		node = nxt;
 	}
-	add_bmh.head = prev;
+	bmh_add.head = prev;
 	
-	bm_heap_meld(&tmp_bmh, bmh, &add_bmh);
-	bmh->head = tmp_bmh.head;
+	bmh->size -= node_size;
+	bmh_add.size = node_size - 1;
+	bm_heap_meld(bmh, bmh, &bmh_add);
 	return OK;
 }
 
@@ -403,9 +428,10 @@ status_code bm_heap_insert(bm_heap* bmh, pair_prior_time key, char* value)
 	node->brother = NULL;
 	node->rank = 0;
 	
-	bm_heap bmh_tmp;
-	bmh_tmp.head = node;
-	bmh_tmp.compare = bmh->compare;
-	bm_heap_meld(bmh, bmh, &bmh_tmp);
+	bm_heap bmh_add;
+	bmh_add.head = node;
+	bmh_add.size = 1;
+	bmh_add.compare = bmh->compare;
+	bm_heap_meld(bmh, bmh, &bmh_add);
 	return OK;
 }

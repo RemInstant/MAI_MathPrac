@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <assert.h>
 
-#include "utility.h"
+#include "../utility.h"
 #include "priority_queue.h"
 
 #include "binomial_heap.h"
@@ -13,6 +13,7 @@ int main()
 		base = PQB_BINOM; // the only finished heap
 		
 		p_queue pq, pq1, pq2, pq3, pq4;
+		size_t size;
 		char* val;
 		
 		p_queue_set_null(&pq);
@@ -27,21 +28,21 @@ int main()
 		assert(p_queue_init(&pq3, base) == OK);
 		assert(p_queue_init(&pq4, base) == OK);
 		
-		assert(pq.set_null(pq.heap) == OK);
-		assert(pq1.set_null(pq1.heap) == OK);
-		assert(pq2.set_null(pq2.heap) == OK);
-		assert(pq3.set_null(pq3.heap) == OK);
-		assert(pq4.set_null(pq4.heap) == OK);
+		assert(pq.set_null(pq.ds) == OK);
+		assert(pq1.set_null(pq1.ds) == OK);
+		assert(pq2.set_null(pq2.ds) == OK);
+		assert(pq3.set_null(pq3.ds) == OK);
+		assert(pq4.set_null(pq4.ds) == OK);
 		
 		// Empty pq
-		assert(pq.destruct(pq.heap) == OK);
-		assert(pq.construct(pq.heap, compare_pq_key) == OK);
-		assert(pq.destruct(pq.heap) == OK);
+		assert(pq.destruct(pq.ds) == OK);
+		assert(pq.construct(pq.ds, compare_pq_key) == OK);
+		assert(pq.destruct(pq.ds) == OK);
 		
-		assert(pq.construct(pq1.heap, compare_pq_key) == OK);
-		assert(pq.copy(pq2.heap, pq2.heap) == OK);
-		assert(pq.meld(pq.heap, pq1.heap, pq2.heap) == OK);
-		assert(pq.destruct(pq.heap) == OK);
+		assert(pq.construct(pq1.ds, compare_pq_key) == OK);
+		assert(pq.copy(pq2.ds, pq2.ds) == OK);
+		assert(pq.meld(pq.ds, pq1.ds, pq2.ds) == OK);
+		assert(pq.destruct(pq.ds) == OK);
 		
 		// One pq
 		{
@@ -58,31 +59,37 @@ int main()
 			
 			unsigned vals[] = { 5, 5, 6, 6, 7, 7, 8, 8 };
 			
-			assert(pq.construct(pq.heap, compare_pq_key) == OK);	
+			assert(pq.construct(pq.ds, compare_pq_key) == OK);
+			assert(pq.size(pq.ds, &size) == OK);
+			assert(size == 0);
 			
 			for (size_t i = 0; i < 8; ++i)
 			{
 				val = (char*) calloc(2, sizeof(char));
 				assert(val != NULL);
 				val[0] = '0' + pq_key_arr[i].prior;
-				assert(pq.insert(pq.heap, pq_key_arr[i], val) == OK);
+				assert(pq.insert(pq.ds, pq_key_arr[i], val) == OK);
 				free(val);
-				assert(pq.top(pq.heap, &val) == OK);
+				assert(pq.size(pq.ds, &size) == OK);
+				assert(size == i+1);
+				assert(pq.top(pq.ds, &val) == OK);
 				assert(atoi(val) == vals[i]);
+				free(val);
 			}
 			
 			for (size_t i = 8; i > 0; --i)
 			{
-				//bm_heap bmh = *((bm_heap*)(pq.heap));
-				assert(pq.top(pq.heap, &val) == OK);
+				assert(pq.top(pq.ds, &val) == OK);
 				assert(atoi(val) == i);
 				free(val);
-				assert(pq.pop(pq.heap, &val) == OK);
+				assert(pq.pop(pq.ds, &val) == OK);
 				assert(atoi(val) == i);
 				free(val);
+				assert(pq.size(pq.ds, &size) == OK);
+				assert(size == i-1);
 			}
 			
-			assert(pq.destruct(pq.heap) == OK);
+			assert(pq.destruct(pq.ds) == OK);
 		}
 		// Copy
 		{
@@ -135,7 +142,7 @@ int main()
 				93, 93, 93, 93, 93, 91, 91, 91, 91,
 			};
 			
-			assert(pq.construct(pq.heap, compare_pq_key) == OK);
+			assert(pq.construct(pq.ds, compare_pq_key) == OK);
 			
 			for (size_t i = 0; i < 36; ++i)
 			{
@@ -143,30 +150,30 @@ int main()
 				assert(val != NULL);
 				val[0] = '0' + pq_key_arr[i].prior;
 				val[1] = pq_key_arr[i].time[0];
-				assert(pq.insert(pq.heap, pq_key_arr[i], val) == OK);
+				assert(pq.insert(pq.ds, pq_key_arr[i], val) == OK);
 				free(val);
-				assert(pq.top(pq.heap, &val) == OK);
+				assert(pq.top(pq.ds, &val) == OK);
 				assert(atoi(val) == vals[i]);
 			}
 			
-			assert(pq1.copy(pq1.heap, pq.heap) == OK);
+			assert(pq1.copy(pq1.ds, pq.ds) == OK);
 			
 			for (size_t i = 36; i > 0; --i)
 			{
 				int num_val = (i+3) / 4 * 10 + (4 - ((i+3) % 4));
-				assert(pq.top(pq.heap, &val) == OK);
+				assert(pq.top(pq.ds, &val) == OK);
 				assert(atoi(val) == num_val);
 				free(val);
-				assert(pq.pop(pq.heap, &val) == OK);
+				assert(pq.pop(pq.ds, &val) == OK);
 				assert(atoi(val) == num_val);
 				free(val);
-				assert(pq1.pop(pq1.heap, &val) == OK);
+				assert(pq1.pop(pq1.ds, &val) == OK);
 				assert(atoi(val) == num_val);
 				free(val);
 			}
 			
-			assert(pq.destruct(pq.heap) == OK);
-			assert(pq1.destruct(pq.heap) == OK);
+			assert(pq.destruct(pq.ds) == OK);
+			assert(pq1.destruct(pq.ds) == OK);
 		}
 		// meld
 		{
@@ -224,8 +231,8 @@ int main()
 				83, 83, 81, 81, 81, 81, 81, 81,
 			};
 			
-			assert(pq1.construct(pq1.heap, compare_pq_key) == OK);
-			assert(pq2.construct(pq2.heap, compare_pq_key) == OK);	
+			assert(pq1.construct(pq1.ds, compare_pq_key) == OK);
+			assert(pq2.construct(pq2.ds, compare_pq_key) == OK);
 			
 			for (size_t i = 0; i < 20; ++i)
 			{
@@ -233,9 +240,9 @@ int main()
 				assert(val != NULL);
 				val[0] = '0' + pq1_key_arr[i].prior;
 				val[1] = pq1_key_arr[i].time[0];
-				assert(pq1.insert(pq1.heap, pq1_key_arr[i], val) == OK);
+				assert(pq1.insert(pq1.ds, pq1_key_arr[i], val) == OK);
 				free(val);
-				assert(pq1.top(pq1.heap, &val) == OK);
+				assert(pq1.top(pq1.ds, &val) == OK);
 				assert(atoi(val) == vals1[i]);
 			}
 			
@@ -245,38 +252,45 @@ int main()
 				assert(val != NULL);
 				val[0] = '0' + pq2_key_arr[i].prior;
 				val[1] = pq2_key_arr[i].time[0];
-				assert(pq2.insert(pq2.heap, pq2_key_arr[i], val) == OK);
+				assert(pq2.insert(pq2.ds, pq2_key_arr[i], val) == OK);
 				free(val);
-				assert(pq2.top(pq2.heap, &val) == OK);
+				assert(pq2.top(pq2.ds, &val) == OK);
 				assert(atoi(val) == vals2[i]);
 			}
 			
-			assert(pq3.copy_meld(pq3.heap, pq1.heap, pq2.heap) == OK);
-			assert(pq4.copy_meld(pq4.heap, pq1.heap, pq2.heap) == OK);
-			assert(pq.meld(pq.heap, pq1.heap, pq2.heap) == OK);
+			assert(pq1.size(pq1.ds, &size) == OK);
+			assert(size == 20);
+			assert(pq2.size(pq2.ds, &size) == OK);
+			assert(size == 16);
+			
+			assert(pq3.copy_meld(pq3.ds, pq1.ds, pq2.ds) == OK);
+			assert(pq4.copy_meld(pq4.ds, pq1.ds, pq2.ds) == OK);
+			assert(pq.meld(pq.ds, pq1.ds, pq2.ds) == OK);
+			
+			assert(pq.size(pq.ds, &size) == OK);
+			assert(size == 36);
+			assert(pq4.size(pq4.ds, &size) == OK);
+			assert(size == 36);
 			
 			for (size_t i = 36; i > 0; --i)
 			{
 				int num_val = (i+3) / 4 * 10 + (4 - ((i+3) % 4));
-				
-				bm_heap bmh = *((bm_heap*)(pq.heap));
-				
-				assert(pq.top(pq.heap, &val) == OK);
+				assert(pq.top(pq.ds, &val) == OK);
 				assert(atoi(val) == num_val);
 				free(val);
-				assert(pq.pop(pq.heap, &val) == OK);
+				assert(pq.pop(pq.ds, &val) == OK);
 				assert(atoi(val) == num_val);
 				free(val);
-				assert(pq3.pop(pq3.heap, &val) == OK);
+				assert(pq3.pop(pq3.ds, &val) == OK);
 				assert(atoi(val) == num_val);
 				free(val);
 			}
 			
-			assert(pq.destruct(pq.heap) == OK);
-			assert(pq.destruct(pq1.heap) == OK);
-			assert(pq.destruct(pq2.heap) == OK);
-			assert(pq.destruct(pq3.heap) == OK);
-			assert(pq.destruct(pq4.heap) == OK);
+			assert(pq.destruct(pq.ds) == OK);
+			assert(pq.destruct(pq1.ds) == OK);
+			assert(pq.destruct(pq2.ds) == OK);
+			assert(pq.destruct(pq3.ds) == OK);
+			assert(pq.destruct(pq4.ds) == OK);
 		}
 		
 		assert(p_queue_destruct(&pq) == OK);
