@@ -3,6 +3,8 @@
 
 #include <stdio.h>
 
+#define DEFAULT_HASH_PARAM 37
+
 typedef unsigned char uchar;
 typedef long long ll;
 typedef unsigned long long ull;
@@ -76,5 +78,7 @@ status_code mult_safely(ll arg_1, ll arg_2, ll* res);
 status_code div_safely(ll arg_1, ll arg_2, ll* res);
 status_code bpow_safely(ll base, ll pow, ll* res);
 status_code fbpow_safely(double base, ll pow, double* res);
+
+size_t calc_default_str_hash(const char* str);
 
 #endif // _UTILITY_H_

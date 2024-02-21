@@ -66,15 +66,12 @@ status_code trie_node_destruct(trie_node** node)
 	{
 		return OK;
 	}
-	status_code code = department_destruct((*node)->dep);
-	if (code)
-	{
-		return code;
-	}
+	
 	for (ull i = 0; i < TRIE_ALPABET_LEN; ++i)
 	{
 		trie_node_destruct(&(*node)->children[i]);
 	}
+	department_destruct((*node)->dep);
 	free(*node);
 	*node = NULL;
 	return OK;
@@ -108,7 +105,7 @@ status_code trie_destruct(Trie* trie)
 {
 	if (trie == NULL)
 	{
-		return NULL_ARG;
+		return OK;
 	}
 	status_code err_code = OK;
 	if (trie->root != NULL)
@@ -219,8 +216,9 @@ status_code trie_clean_branch(const Trie* trie, trie_node* node, trie_node* clea
 		return OK;
 	}
 	trie_node* parent = node->parent;
+	trie_node* tmp = node;
 	trie_node_destruct(&node);
-	return trie_clean_branch(trie, parent, node);
+	return trie_clean_branch(trie, parent, tmp);
 }
 
 

@@ -10,7 +10,11 @@ int main()
 {
 	for (priority_queue_base base = PQB_BINARY; base <= PQB_TREAP; ++base)
 	{
-		base = PQB_BINOM; // the only finished heap
+		if (base == PQB_BINARY) continue;
+		if (base == PQB_LEFTIST) continue;
+		if (base == PQB_SKEW) continue;
+		if (base == PQB_FIB) continue;
+		if (base == PQB_TREAP) continue;
 		
 		p_queue pq, pq1, pq2, pq3, pq4;
 		size_t size;
@@ -298,8 +302,12 @@ int main()
 		assert(p_queue_destruct(&pq2) == OK);
 		assert(p_queue_destruct(&pq3) == OK);
 		
-		break;
+		if (base == PQB_BINARY) 	printf("Binary heap passed the tests\n");
+		if (base == PQB_LEFTIST) 	printf("Leftist heap passed the tests\n");
+		if (base == PQB_SKEW) 		printf("Skew heap passed the tests\n");
+		if (base == PQB_BINOM) 		printf("Binomial heap passed the tests\n");
+		if (base == PQB_FIB) 		printf("Fibonacci heap passed the tests\n");
+		if (base == PQB_TREAP) 		printf("Treap passed the tests\n");
 	}
-	
-	printf("TESTS HAVE BEEN PASSED\n");
+	printf("All tests have been passed\n");
 }

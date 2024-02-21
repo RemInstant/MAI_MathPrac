@@ -5,7 +5,6 @@
 #include "../department.h"
 
 #define TRIE_ALPABET_LEN 36
-#define TRIE_DEFAULT_HASH_PARAM 37
 
 typedef struct trie_node
 {

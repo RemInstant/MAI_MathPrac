@@ -770,3 +770,18 @@ status_code fbpow_safely(double base, ll pow, double* res)
 	*res = pow_sign == 1 ? res_tmp : 1.0 / res_tmp;
 	return OK;
 }
+
+size_t calc_default_str_hash(const char* str)
+{
+	if (str == NULL)
+	{
+		return 0;
+	}
+	size_t res = 0;
+	for (ull i = 0; str[i]; ++i)
+	{
+		res *= DEFAULT_HASH_PARAM;
+		res += ctoi(str[i]);
+	}
+	return res;
+}

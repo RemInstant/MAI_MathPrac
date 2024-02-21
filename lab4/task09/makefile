@@ -9,7 +9,14 @@ MAP_H = map/map.h map/trie.h
 MAP_O = gcc_obj/map.o gcc_obj/trie.o
 MAP_O_TRG = map.o trie.o
 
-all: main pq_test
+all: main pq_test map_test
+
+# MAP TESTS
+map_test: map_test.o $(MAP_O_TRG) $(PQ_O_TRG) department.o utility.o
+	$(CC) $(CFLAGS) -o map_test gcc_obj/map_test.o $(MAP_O) $(PQ_O) gcc_obj/department.o gcc_obj/utility.o
+
+map_test.o: map/map_test.c map/map.h department.h utility.h
+	$(CC) $(CFLAGS) -c map/map_test.c -o gcc_obj/map_test.o
 
 # PRIORITY QUEUE TESTS
 pq_test: pq_test.o $(PQ_O_TRG) utility.o
@@ -42,7 +49,7 @@ binomial_heap.o: priority_queue/binomial_heap.c priority_queue/binomial_heap.h u
 
 
 # OTHER
-department.o: department.c department.h
+department.o: department.c department.h priority_queue/priority_queue.h
 	$(CC) $(CFLAGS) -c department.c -o gcc_obj/department.o
 
 utility.o: utility.c utility.h
@@ -51,4 +58,7 @@ utility.o: utility.c utility.h
 .PHONY: clean
 
 clean:
-	rm -f *.o main
+	rm -force gcc_obj/*.o
+	rm -force main
+	rm -force pq_test
+	rm -force map_test
