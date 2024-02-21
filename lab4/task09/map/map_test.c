@@ -162,6 +162,37 @@ int main()
 			free(key);
 			assert(map.destruct(map.ds) == OK);
 		}
+		// test 3
+		{
+			assert(map.construct(map.ds, calc_default_str_hash) == OK);
+			
+			key = (char*) malloc(sizeof(char) * 2);
+			assert(key != NULL);
+			strcpy(key, "A");
+			
+			dep = (department*) malloc(sizeof(department));
+			assert(dep != NULL);
+			assert(department_construct(dep, 2, PQB_BINOM, compare_pq_key) == OK);
+			assert(map.insert(map.ds, key, dep) == OK);
+			
+			dep = (department*) malloc(sizeof(department));
+			assert(dep != NULL);
+			assert(department_construct(dep, 2, PQB_BINOM, compare_pq_key) == OK);
+			assert(map.insert(map.ds, key, dep) != OK);
+			assert(department_destruct(dep) == OK);
+			
+			for (size_t i = 1; i < 20; ++i)
+			{
+				key[0] = 'A' + i;
+				dep = (department*) malloc(sizeof(department));
+				assert(dep != NULL);
+				assert(department_construct(dep, 2, PQB_BINOM, compare_pq_key) == OK);
+				assert(map.insert(map.ds, key, dep) == OK);
+			}
+			
+			free(key);
+			assert(map.destruct(map.ds) == OK);
+		}
 		
 		assert(map_destruct(&map) == OK);
 		

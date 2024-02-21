@@ -250,7 +250,11 @@ status_code trie_get(const Trie* trie, const char* str, department** dep)
 	{
 		return err_code;
 	}
-	*dep = node == NULL ? 0 : node->dep;
+	if (node == NULL)
+	{
+		return BAD_ACCESS;
+	}
+	*dep = node->dep;
 	return OK;
 }
 
@@ -265,6 +269,10 @@ status_code trie_set(Trie* trie, const char* str, department* dep)
 	if (err_code)
 	{
 		return err_code;
+	}
+	if (node->dep != NULL)
+	{
+		return BAD_ACCESS;
 	}
 	node->dep = dep;
 	if (node->dep == NULL)
@@ -288,7 +296,7 @@ status_code trie_erase(Trie* trie, const char* str)
 	}
 	if (node == NULL)
 	{
-		return OK;
+		return BAD_ACCESS;
 	}
 	node->dep = NULL;
 	return trie_clean_branch(trie, node, NULL);
