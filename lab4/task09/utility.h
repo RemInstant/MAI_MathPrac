@@ -49,6 +49,14 @@ typedef struct pair_prior_time
 	char time[21];
 } pair_prior_time;
 
+typedef struct request
+{
+	ull id;
+	unsigned prior;
+	char time[21];
+	char* txt;
+} request;
+
 status_code fread_line(FILE* file, char** str);
 status_code read_line(char** str);
 status_code sread_until(const char* src, const char* delims, int inclusive_flag, const char** end_ptr, char** str);

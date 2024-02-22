@@ -1,10 +1,17 @@
 #include <stdlib.h>
+#include <string.h>
 #include <assert.h>
 
 #include "../utility.h"
 #include "priority_queue.h"
 
 #include "binomial_heap.h"
+
+void free_req(request* req)
+{
+	free(req->txt);
+	free(req);
+}
 
 int main()
 {
@@ -18,7 +25,7 @@ int main()
 		
 		p_queue pq, pq1, pq2, pq3, pq4;
 		size_t size;
-		char* val;
+		request* req;
 		
 		p_queue_set_null(&pq);
 		p_queue_set_null(&pq1);
@@ -40,55 +47,51 @@ int main()
 		
 		// Empty pq
 		assert(pq.destruct(pq.ds) == OK);
-		assert(pq.construct(pq.ds, compare_pq_key) == OK);
+		assert(pq.construct(pq.ds, compare_request) == OK);
 		assert(pq.destruct(pq.ds) == OK);
 		
-		assert(pq.construct(pq1.ds, compare_pq_key) == OK);
+		assert(pq.construct(pq1.ds, compare_request) == OK);
 		assert(pq.copy(pq2.ds, pq2.ds) == OK);
 		assert(pq.meld(pq.ds, pq1.ds, pq2.ds) == OK);
 		assert(pq.destruct(pq.ds) == OK);
 		
 		// One pq
 		{
-			pair_prior_time pq_key_arr[8] = {
-				(pair_prior_time) {5, "123"},
-				(pair_prior_time) {3, "123"},
-				(pair_prior_time) {6, "123"},
-				(pair_prior_time) {1, "123"},
-				(pair_prior_time) {7, "123"},
-				(pair_prior_time) {2, "123"},
-				(pair_prior_time) {8, "123"},
-				(pair_prior_time) {4, "123"},
-			};
+			unsigned prior[8] = { 5, 3, 6, 1, 7, 2, 8, 4 };
+			unsigned vals[8] = { 5, 5, 6, 6, 7, 7, 8, 8 };
 			
-			unsigned vals[] = { 5, 5, 6, 6, 7, 7, 8, 8 };
-			
-			assert(pq.construct(pq.ds, compare_pq_key) == OK);
+			assert(pq.construct(pq.ds, compare_request) == OK);
 			assert(pq.size(pq.ds, &size) == OK);
 			assert(size == 0);
 			
 			for (size_t i = 0; i < 8; ++i)
 			{
-				val = (char*) calloc(2, sizeof(char));
-				assert(val != NULL);
-				val[0] = '0' + pq_key_arr[i].prior;
-				assert(pq.insert(pq.ds, pq_key_arr[i], val) == OK);
-				free(val);
+				req = (request*) malloc(sizeof(request));
+				assert(req != NULL);
+				req->txt = (char*) calloc(2, sizeof(char));
+				assert(req->txt != NULL);
+				
+				req->prior = prior[i];
+				strcpy(req->time, "123");
+				req->txt[0] = '0' + prior[i];
+				
+				assert(pq.insert(pq.ds, req) == OK);
+				free_req(req);
 				assert(pq.size(pq.ds, &size) == OK);
 				assert(size == i+1);
-				assert(pq.top(pq.ds, &val) == OK);
-				assert(atoi(val) == vals[i]);
-				free(val);
+				assert(pq.top(pq.ds, &req) == OK);
+				assert(atoi(req->txt) == vals[i]);
+				free_req(req);
 			}
 			
 			for (size_t i = 8; i > 0; --i)
 			{
-				assert(pq.top(pq.ds, &val) == OK);
-				assert(atoi(val) == i);
-				free(val);
-				assert(pq.pop(pq.ds, &val) == OK);
-				assert(atoi(val) == i);
-				free(val);
+				assert(pq.top(pq.ds, &req) == OK);
+				assert(atoi(req->txt) == i);
+				free_req(req);
+				assert(pq.pop(pq.ds, &req) == OK);
+				assert(atoi(req->txt) == i);
+				free_req(req);
 				assert(pq.size(pq.ds, &size) == OK);
 				assert(size == i-1);
 			}
@@ -146,18 +149,25 @@ int main()
 				93, 93, 93, 93, 93, 91, 91, 91, 91,
 			};
 			
-			assert(pq.construct(pq.ds, compare_pq_key) == OK);
+			assert(pq.construct(pq.ds, compare_request) == OK);
 			
 			for (size_t i = 0; i < 36; ++i)
 			{
-				val = (char*) calloc(3, sizeof(char));
-				assert(val != NULL);
-				val[0] = '0' + pq_key_arr[i].prior;
-				val[1] = pq_key_arr[i].time[0];
-				assert(pq.insert(pq.ds, pq_key_arr[i], val) == OK);
-				free(val);
-				assert(pq.top(pq.ds, &val) == OK);
-				assert(atoi(val) == vals[i]);
+				req = (request*) malloc(sizeof(request));
+				assert(req != NULL);
+				req->txt = (char*) calloc(3, sizeof(char));
+				assert(req->txt != NULL);
+				
+				req->prior = pq_key_arr[i].prior;
+				strcpy(req->time, pq_key_arr[i].time);
+				req->txt[0] = '0' + pq_key_arr[i].prior;
+				req->txt[1] = pq_key_arr[i].time[0];
+				
+				assert(pq.insert(pq.ds, req) == OK);
+				free_req(req);
+				assert(pq.top(pq.ds, &req) == OK);
+				assert(atoi(req->txt) == vals[i]);
+				free_req(req);
 			}
 			
 			assert(pq1.copy(pq1.ds, pq.ds) == OK);
@@ -165,15 +175,15 @@ int main()
 			for (size_t i = 36; i > 0; --i)
 			{
 				int num_val = (i+3) / 4 * 10 + (4 - ((i+3) % 4));
-				assert(pq.top(pq.ds, &val) == OK);
-				assert(atoi(val) == num_val);
-				free(val);
-				assert(pq.pop(pq.ds, &val) == OK);
-				assert(atoi(val) == num_val);
-				free(val);
-				assert(pq1.pop(pq1.ds, &val) == OK);
-				assert(atoi(val) == num_val);
-				free(val);
+				assert(pq.top(pq.ds, &req) == OK);
+				assert(atoi(req->txt) == num_val);
+				free_req(req);
+				assert(pq.pop(pq.ds, &req) == OK);
+				assert(atoi(req->txt) == num_val);
+				free(req);
+				assert(pq1.pop(pq1.ds, &req) == OK);
+				assert(atoi(req->txt) == num_val);
+				free(req);
 			}
 			
 			assert(pq.destruct(pq.ds) == OK);
@@ -235,31 +245,45 @@ int main()
 				83, 83, 81, 81, 81, 81, 81, 81,
 			};
 			
-			assert(pq1.construct(pq1.ds, compare_pq_key) == OK);
-			assert(pq2.construct(pq2.ds, compare_pq_key) == OK);
+			assert(pq1.construct(pq1.ds, compare_request) == OK);
+			assert(pq2.construct(pq2.ds, compare_request) == OK);
 			
 			for (size_t i = 0; i < 20; ++i)
 			{
-				val = (char*) calloc(3, sizeof(char));
-				assert(val != NULL);
-				val[0] = '0' + pq1_key_arr[i].prior;
-				val[1] = pq1_key_arr[i].time[0];
-				assert(pq1.insert(pq1.ds, pq1_key_arr[i], val) == OK);
-				free(val);
-				assert(pq1.top(pq1.ds, &val) == OK);
-				assert(atoi(val) == vals1[i]);
+				req = (request*) malloc(sizeof(request));
+				assert(req != NULL);
+				req->txt = (char*) calloc(3, sizeof(char));
+				assert(req->txt != NULL);
+				
+				req->prior = pq1_key_arr[i].prior;
+				strcpy(req->time, pq1_key_arr[i].time);
+				req->txt[0] = '0' + pq1_key_arr[i].prior;
+				req->txt[1] = pq1_key_arr[i].time[0];
+				
+				assert(pq1.insert(pq1.ds, req) == OK);
+				free_req(req);
+				assert(pq1.top(pq1.ds, &req) == OK);
+				assert(atoi(req->txt) == vals1[i]);
+				free_req(req);
 			}
 			
 			for (size_t i = 0; i < 16; ++i)
 			{
-				val = (char*) calloc(3, sizeof(char));
-				assert(val != NULL);
-				val[0] = '0' + pq2_key_arr[i].prior;
-				val[1] = pq2_key_arr[i].time[0];
-				assert(pq2.insert(pq2.ds, pq2_key_arr[i], val) == OK);
-				free(val);
-				assert(pq2.top(pq2.ds, &val) == OK);
-				assert(atoi(val) == vals2[i]);
+				req = (request*) malloc(sizeof(request));
+				assert(req != NULL);
+				req->txt = (char*) calloc(3, sizeof(char));
+				assert(req->txt != NULL);
+				
+				req->prior = pq2_key_arr[i].prior;
+				strcpy(req->time, pq2_key_arr[i].time);
+				req->txt[0] = '0' + pq2_key_arr[i].prior;
+				req->txt[1] = pq2_key_arr[i].time[0];
+				
+				assert(pq2.insert(pq2.ds, req) == OK);
+				free_req(req);
+				assert(pq2.top(pq2.ds, &req) == OK);
+				assert(atoi(req->txt) == vals2[i]);
+				free_req(req);
 			}
 			
 			assert(pq1.size(pq1.ds, &size) == OK);
@@ -279,15 +303,15 @@ int main()
 			for (size_t i = 36; i > 0; --i)
 			{
 				int num_val = (i+3) / 4 * 10 + (4 - ((i+3) % 4));
-				assert(pq.top(pq.ds, &val) == OK);
-				assert(atoi(val) == num_val);
-				free(val);
-				assert(pq.pop(pq.ds, &val) == OK);
-				assert(atoi(val) == num_val);
-				free(val);
-				assert(pq3.pop(pq3.ds, &val) == OK);
-				assert(atoi(val) == num_val);
-				free(val);
+				assert(pq.top(pq.ds, &req) == OK);
+				assert(atoi(req->txt) == num_val);
+				free_req(req);
+				assert(pq.pop(pq.ds, &req) == OK);
+				assert(atoi(req->txt) == num_val);
+				free_req(req);
+				assert(pq3.pop(pq3.ds, &req) == OK);
+				assert(atoi(req->txt) == num_val);
+				free_req(req);
 			}
 			
 			assert(pq.destruct(pq.ds) == OK);

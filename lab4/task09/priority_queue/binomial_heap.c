@@ -22,16 +22,25 @@ status_code bmh_node_copy(bmh_node** node_dest, const bmh_node* node_src)
 		return BAD_ALLOC;
 	}
 	
-	tmp_node->value = (char*) malloc(sizeof(char) * (strlen(node_src->value) + 1));
-	if (tmp_node->value == NULL)
+	tmp_node->req = (request*) malloc(sizeof(request));
+	if (tmp_node->req == NULL)
 	{
 		free(tmp_node);
 		return BAD_ALLOC;
 	}
 	
-	strcpy(tmp_node->value, node_src->value);
-	strcpy(tmp_node->key.time, node_src->key.time);
-	tmp_node->key.prior = node_src->key.prior;
+	tmp_node->req->txt = (char*) malloc(sizeof(char) * (strlen(node_src->req->txt) + 1));
+	if (tmp_node->req->txt == NULL)
+	{
+		free(tmp_node->req);
+		free(tmp_node);
+		return BAD_ALLOC;
+	}
+	
+	tmp_node->req->id = node_src->req->id;
+	tmp_node->req->prior = node_src->req->prior;
+	strcpy(tmp_node->req->time, node_src->req->time);
+	strcpy(tmp_node->req->txt, node_src->req->txt);
 	tmp_node->son = NULL;
 	tmp_node->brother = NULL;
 	tmp_node->rank = node_src->rank;
@@ -61,7 +70,7 @@ status_code bmh_node_destruct(bmh_node* node)
 	}
 	bmh_node_destruct(node->son);
 	bmh_node_destruct(node->brother);
-	free(node->value);
+	free(node->req->txt);
 	free(node);
 	return OK;
 }
@@ -78,7 +87,7 @@ status_code bm_heap_set_null(bm_heap* bmh)
 	return OK;
 }
 
-status_code bm_heap_construct(bm_heap* bmh, int (*compare)(const pair_prior_time*, const pair_prior_time*))
+status_code bm_heap_construct(bm_heap* bmh, int (*compare)(const request*, const request*))
 {
 	if (bmh == NULL)
 	{
@@ -196,7 +205,7 @@ status_code bm_heap_meld(bm_heap* bmh_res, bm_heap* bmh_l, bm_heap* bmh_r)
 		bmh_node* tmp_node = nxt_node->brother;
 		if (cur_node->rank == nxt_node->rank && (tmp_node == NULL || tmp_node->rank != nxt_node->rank))
 		{
-			if (bmh_l->compare(&cur_node->key, &nxt_node->key) != 1)
+			if (bmh_l->compare(cur_node->req, nxt_node->req) != 1)
 			{
 				// cur > nxt -> "no swap"
 				nxt_node->brother = cur_node->son;
@@ -299,7 +308,7 @@ status_code bm_heap_find(const bm_heap* bmh, bmh_node** prev, bmh_node** node)
 	bmh_node* cur_node = bmh->head;
 	while (cur_node->brother != NULL)
 	{
-		if (bmh->compare(&cur_node->brother->key, &target_node->key) == -1)
+		if (bmh->compare(cur_node->brother->req, target_node->req) == -1)
 		{
 			prev_node = cur_node;
 			target_node = cur_node->brother;
@@ -315,9 +324,9 @@ status_code bm_heap_find(const bm_heap* bmh, bmh_node** prev, bmh_node** node)
 	return OK;
 }
 
-status_code bm_heap_top(const bm_heap* bmh, char** value)
+status_code bm_heap_top(const bm_heap* bmh, request** req)
 {
-	if (value == NULL)
+	if (req == NULL || req == NULL)
 	{
 		return NULL_ARG;
 	}
@@ -326,22 +335,33 @@ status_code bm_heap_top(const bm_heap* bmh, char** value)
 	bm_heap_find(bmh, NULL, &node);
 	if (node == NULL)
 	{
-		*value = NULL;
+		*req = NULL;
 		return OK;
 	}
 	
-	*value = (char*) malloc(sizeof(char) * (strlen(node->value) + 1));
-	if (*value == NULL)
+	request* req_tmp = (request*) malloc(sizeof(request));
+	if (req_tmp == NULL)
 	{
 		return BAD_ALLOC;
 	}
-	strcpy(*value, node->value);
+	
+	req_tmp->txt = (char*) malloc(sizeof(char) * (strlen(node->req->txt) + 1));
+	if (req_tmp->txt == NULL)
+	{
+		free(req_tmp);
+		return BAD_ALLOC;
+	}
+	req_tmp->id = node->req->id;
+	req_tmp->prior = node->req->prior;
+	strcpy(req_tmp->time, node->req->time);
+	strcpy(req_tmp->txt, node->req->txt);
+	*req = req_tmp;
 	return OK;
 }
 
-status_code bm_heap_pop(bm_heap* bmh, char** value)
+status_code bm_heap_pop(bm_heap* bmh, request** req)
 {
-	if (bmh == NULL)
+	if (bmh == NULL || req == NULL)
 	{
 		return NULL_ARG;
 	}
@@ -351,9 +371,9 @@ status_code bm_heap_pop(bm_heap* bmh, char** value)
 	bm_heap_find(bmh, &prev, &node);
 	if (node == NULL)
 	{
-		if (value != NULL)
+		if (req != NULL)
 		{
-			*value = NULL;
+			*req = NULL;
 		}
 		return OK;
 	}
@@ -361,14 +381,14 @@ status_code bm_heap_pop(bm_heap* bmh, char** value)
 	ll tmp_size = 0;
 	status_code code = bpow_safely(2, node->rank, &tmp_size);
 	size_t node_size = (size_t) tmp_size;
-	if (code)
+	if (code) 
 	{
 		return code;
 	}
 	
-	if (value != NULL)
+	if (req != NULL)
 	{
-		*value = node->value;
+		*req = node->req;
 	}
 	if (prev != NULL)
 	{
@@ -402,9 +422,9 @@ status_code bm_heap_pop(bm_heap* bmh, char** value)
 	return OK;
 }
 
-status_code bm_heap_insert(bm_heap* bmh, pair_prior_time key, char* value)
+status_code bm_heap_insert(bm_heap* bmh, const request* req)
 {
-	if (bmh == NULL || value == NULL)
+	if (bmh == NULL || req == NULL)
 	{
 		return NULL_ARG;
 	}
@@ -415,15 +435,25 @@ status_code bm_heap_insert(bm_heap* bmh, pair_prior_time key, char* value)
 		return BAD_ALLOC;
 	}
 	
-	node->value = (char*) malloc(sizeof(char) * (strlen(value) + 1));
-	if (node->value == NULL)
+	node->req = (request*) malloc(sizeof(request));
+	if (node->req == NULL)
 	{
 		free(node);
 		return BAD_ALLOC;
 	}
 	
-	strcpy(node->value, value);
-	node->key = key;
+	node->req->txt = (char*) malloc(sizeof(char) * (strlen(req->txt) + 1));
+	if (node->req == NULL)
+	{
+		free(node);
+		free(node->req);
+		return BAD_ALLOC;
+	}
+	
+	node->req->id = req->id;
+	node->req->prior = req->prior;
+	strcpy(node->req->time, req->time);
+	strcpy(node->req->txt, req->txt);
 	node->son = NULL;
 	node->brother = NULL;
 	node->rank = 0;

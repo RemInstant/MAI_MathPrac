@@ -77,11 +77,12 @@ status_code p_queue_destruct(p_queue* pq)
 	return OK;
 }
 
-int compare_pq_key(const pair_prior_time* lhs, const pair_prior_time* rhs)
+int compare_request(const request* lhs, const request* rhs)
 {
 	if (lhs->prior == rhs->prior)
 	{
 		return strcmp(lhs->time, rhs->time);
 	}
+	// OR MAYBE rhs->prior - lhs->prior;
 	return lhs->prior > rhs->prior ? -1 : 1;
 }

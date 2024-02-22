@@ -49,7 +49,7 @@ int main()
 				dep = (department*) malloc(sizeof(department));
 				dep1 = NULL;
 				assert(dep != NULL);
-				assert(department_construct(dep, i, PQB_BINOM, compare_pq_key) == OK);
+				assert(department_construct(dep, i, PQB_BINOM, compare_request) == OK);
 				
 				key[0] = '0' + (i % 10);
 				key[1] = '0' + ((i*5 + 3) % 10);
@@ -117,7 +117,7 @@ int main()
 				dep = (department*) malloc(sizeof(department));
 				dep1 = NULL;
 				assert(dep != NULL);
-				assert(department_construct(dep, i+5, PQB_BINOM, compare_pq_key) == OK);
+				assert(department_construct(dep, i+5, PQB_BINOM, compare_request) == OK);
 				
 				key[0] = '0' + ((3*i + 17) % 10);
 				key[1] = '0' + ((5*i + 13) % 10);
@@ -172,12 +172,12 @@ int main()
 			
 			dep = (department*) malloc(sizeof(department));
 			assert(dep != NULL);
-			assert(department_construct(dep, 2, PQB_BINOM, compare_pq_key) == OK);
+			assert(department_construct(dep, 2, PQB_BINOM, compare_request) == OK);
 			assert(map.insert(map.ds, key, dep) == OK);
 			
 			dep = (department*) malloc(sizeof(department));
 			assert(dep != NULL);
-			assert(department_construct(dep, 2, PQB_BINOM, compare_pq_key) == OK);
+			assert(department_construct(dep, 2, PQB_BINOM, compare_request) == OK);
 			assert(map.insert(map.ds, key, dep) != OK);
 			assert(department_destruct(dep) == OK);
 			
@@ -186,7 +186,7 @@ int main()
 				key[0] = 'A' + i;
 				dep = (department*) malloc(sizeof(department));
 				assert(dep != NULL);
-				assert(department_construct(dep, 2, PQB_BINOM, compare_pq_key) == OK);
+				assert(department_construct(dep, 2, PQB_BINOM, compare_request) == OK);
 				assert(map.insert(map.ds, key, dep) == OK);
 			}
 			
