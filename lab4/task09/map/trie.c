@@ -238,7 +238,7 @@ status_code trie_contains(const Trie* trie, const char* str, int* is_contained)
 	return OK;
 }
 
-status_code trie_get(const Trie* trie, const char* str, department** dep)
+status_code trie_get(const Trie* trie, const char* str, Department** dep)
 {
 	if (trie == NULL || str == NULL || dep == NULL)
 	{
@@ -258,7 +258,7 @@ status_code trie_get(const Trie* trie, const char* str, department** dep)
 	return OK;
 }
 
-status_code trie_set(Trie* trie, const char* str, department* dep)
+status_code trie_set(Trie* trie, const char* str, Department* dep)
 {
 	if (trie == NULL || str == NULL)
 	{
@@ -392,7 +392,7 @@ status_code trie_get_key_vals(const Trie* trie, size_t* cnt, trie_key_val** key_
 				if (!err_code)
 				{
 					key_vals_tmp[kv_cnt].str = str_copy;
-					key_vals_tmp[kv_cnt++].dep = (const department*) cur_node->dep;
+					key_vals_tmp[kv_cnt++].dep = (const Department*) cur_node->dep;
 				}
 				else
 				{

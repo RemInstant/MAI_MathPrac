@@ -32,12 +32,12 @@ typedef struct Map
 	// Returns NULL_ARG (1) if one of the arguments is NULL
 	// Otherwise, returns OK (0)
 	
-	status_code (*get)(void* ds, const char* key, department** dep);
+	status_code (*get)(void* ds, const char* key, Department** dep);
 	// Returns NULL_ARG (1) if one of the arguments is NULL
 	// Returns BAD_ACCESS (18) if key is not contained in the map
 	// Otherwise, returns OK (0)
 	
-	status_code (*insert)(void* ds, const char* key, const department* dep);
+	status_code (*insert)(void* ds, const char* key, const Department* dep);
 	// Returns NULL_ARG (1) if one of the arguments is NULL
 	// Returns BAD_ALLOC (17) if memory allocation error occurred
 	// Returns BAD_ACCESS (18) if key is already contained in the map
