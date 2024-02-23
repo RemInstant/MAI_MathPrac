@@ -6,6 +6,7 @@
 #include <string.h>
 #include <errno.h>
 #include <math.h>
+#include <time.h>
 
 typedef long long ll;
 typedef unsigned long long ull;
@@ -784,4 +785,54 @@ size_t calc_default_str_hash(const char* str)
 		res += ctoi(str[i]);
 	}
 	return res;
+}
+
+status_code iso_time_add(const char time[21], ull add_s, char res[21])
+{
+	if (time == NULL || res == NULL)
+	{
+		return NULL_ARG;
+	}
+	
+	char time_tmp[21];
+	strcpy(time_tmp, time);
+	time_tmp[4] = time_tmp[7] = time_tmp[10] = time_tmp[13] = time_tmp[16] = time_tmp[19] = '\0';
+	struct tm t;
+	t.tm_sec = atoi(time_tmp + 17);
+	t.tm_min = atoi(time_tmp + 14);
+	t.tm_hour = atoi(time_tmp + 11);
+	t.tm_mday = atoi(time_tmp + 8);
+	t.tm_mon = atoi(time_tmp + 5) - 1;
+	t.tm_year = atoi(time_tmp) - 1900;
+	
+	t.tm_sec += add_s;
+	mktime(&t);
+	
+	res[0] = '0' + ((t.tm_year + 1900) / 1000);
+	res[1] = '0' + ((t.tm_year + 1900) / 100 % 10);
+	res[2] = '0' + ((t.tm_year + 1900) / 10 % 100);
+	res[3] = '0' + ((t.tm_year + 1900) / 1 % 1000);
+	
+	res[5] = '0' + ((t.tm_mon + 1) / 10);
+	res[6] = '0' + ((t.tm_mon + 1) % 10);
+	
+	res[8] = '0' + (t.tm_mday / 10);
+	res[9] = '0' + (t.tm_mday % 10);
+	
+	res[11] = '0' + (t.tm_hour / 10);
+	res[12] = '0' + (t.tm_hour % 10);
+	
+	res[14] = '0' + (t.tm_min / 10);
+	res[15] = '0' + (t.tm_min % 10);
+	
+	res[17] = '0' + (t.tm_sec / 10);
+	res[18] = '0' + (t.tm_sec % 10);
+	
+	res[4] = res[7] = '-';
+	res[10] = 'T';
+	res[13] = res[16] = ':';
+	res[19] = 'Z';
+	res[20] = '\0';
+	
+	return OK;
 }
