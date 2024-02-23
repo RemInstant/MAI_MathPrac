@@ -124,9 +124,7 @@ status_code bm_heap_destruct(bm_heap* bmh)
 		return OK; // or NULL_ARG???
 	}
 	status_code code = bmh_node_destruct(bmh->head);
-	bmh->head = NULL;
-	bmh->size = 0;
-	bmh->compare = NULL;
+	bm_heap_set_null(bmh);
 	return code;
 }
 
@@ -136,6 +134,7 @@ status_code bm_heap_meld(bm_heap* bmh_res, bm_heap* bmh_l, bm_heap* bmh_r)
 	{
 		return NULL_ARG;
 	}
+	
 	if (bmh_l == bmh_r)
 	{
 		return INVALID_INPUT;
@@ -260,8 +259,14 @@ status_code bm_heap_copy_meld(bm_heap* bmh_res, const bm_heap* bmh_l, const bm_h
 		return NULL_ARG;
 	}
 	
+	if (bmh_res == bmh_l || bmh_res == bmh_l)
+	{
+		return INVALID_INPUT;
+	}
+	
 	status_code code = OK;
 	bm_heap bmh_lc, bmh_rc;
+		
 	bm_heap_set_null(&bmh_lc);
 	bm_heap_set_null(&bmh_rc);
 	bm_heap_set_null(bmh_res);

@@ -16,6 +16,7 @@ typedef enum priority_queue_base
 // Priority queue contains POINTERS to requests
 typedef struct Priority_queue
 {
+	pq_base base;
 	void* ds;
 	status_code (*set_null)(void* ds);
 	status_code (*construct)(void* ds, int (*compare)(const request*, const request*));
@@ -30,8 +31,17 @@ typedef struct Priority_queue
 } Priority_queue, p_queue;
 
 status_code p_queue_set_null(p_queue* pq);
-status_code p_queue_init(p_queue* pq, pq_base base);
+status_code p_queue_construct(p_queue* pq, pq_base base, int (*compare)(const request*, const request*));
+status_code p_queue_copy(p_queue* pq_dest, const p_queue* pq_src);
 status_code p_queue_destruct(p_queue* pq);
+
+status_code p_queue_meld(p_queue* pq_res, p_queue* pq_l, p_queue* pq_r);
+status_code p_queue_copy_meld(p_queue* pq_res, const p_queue* pq_l, const p_queue* pq_r);
+
+status_code p_queue_size(p_queue* pq, size_t* size);
+status_code p_queue_top(p_queue* pq, request** req); // mallocs result
+status_code p_queue_pop(p_queue* pq, request** req);
+status_code p_queue_insert(p_queue* pq, const request* req); // mallocs copy of input
 
 int compare_request(const request* lhs, const request* rhs);
 
