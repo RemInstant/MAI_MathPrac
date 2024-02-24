@@ -71,6 +71,7 @@ status_code bmh_node_destruct(bmh_node* node)
 	bmh_node_destruct(node->son);
 	bmh_node_destruct(node->brother);
 	free(node->req->txt);
+	free(node->req);
 	free(node);
 	return OK;
 }
@@ -204,7 +205,7 @@ status_code bm_heap_meld(bm_heap* bmh_res, bm_heap* bmh_l, bm_heap* bmh_r)
 		bmh_node* tmp_node = nxt_node->brother;
 		if (cur_node->rank == nxt_node->rank && (tmp_node == NULL || tmp_node->rank != nxt_node->rank))
 		{
-			if (bmh_l->compare(cur_node->req, nxt_node->req) != 1)
+			if (bmh_l->compare(cur_node->req, nxt_node->req) <= 0)
 			{
 				// cur > nxt -> "no swap"
 				nxt_node->brother = cur_node->son;
@@ -313,7 +314,7 @@ status_code bm_heap_find(const bm_heap* bmh, bmh_node** prev, bmh_node** node)
 	bmh_node* cur_node = bmh->head;
 	while (cur_node->brother != NULL)
 	{
-		if (bmh->compare(cur_node->brother->req, target_node->req) == -1)
+		if (bmh->compare(cur_node->brother->req, target_node->req) < 0)
 		{
 			prev_node = cur_node;
 			target_node = cur_node->brother;
@@ -344,6 +345,7 @@ status_code bm_heap_top(const bm_heap* bmh, request** req)
 		return OK;
 	}
 	
+	/*
 	request* req_tmp = (request*) malloc(sizeof(request));
 	if (req_tmp == NULL)
 	{
@@ -361,6 +363,10 @@ status_code bm_heap_top(const bm_heap* bmh, request** req)
 	strcpy(req_tmp->time, node->req->time);
 	strcpy(req_tmp->txt, node->req->txt);
 	*req = req_tmp;
+	*/
+	
+	*req = node->req;
+	
 	return OK;
 }
 
@@ -427,7 +433,7 @@ status_code bm_heap_pop(bm_heap* bmh, request** req)
 	return OK;
 }
 
-status_code bm_heap_insert(bm_heap* bmh, const request* req)
+status_code bm_heap_insert(bm_heap* bmh, request* req)
 {
 	if (bmh == NULL || req == NULL)
 	{
@@ -440,6 +446,7 @@ status_code bm_heap_insert(bm_heap* bmh, const request* req)
 		return BAD_ALLOC;
 	}
 	
+	/*
 	node->req = (request*) malloc(sizeof(request));
 	if (node->req == NULL)
 	{
@@ -459,6 +466,9 @@ status_code bm_heap_insert(bm_heap* bmh, const request* req)
 	node->req->prior = req->prior;
 	strcpy(node->req->time, req->time);
 	strcpy(node->req->txt, req->txt);
+	*/
+	
+	node->req = req;
 	node->son = NULL;
 	node->brother = NULL;
 	node->rank = 0;

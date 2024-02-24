@@ -30,6 +30,6 @@ status_code bm_heap_copy_meld(bm_heap* bmh_res, const bm_heap* bmh_l, const bm_h
 status_code bm_heap_size(const bm_heap* bmh, size_t* size);
 status_code bm_heap_top(const bm_heap* bmh, request** req);
 status_code bm_heap_pop(bm_heap* bmh, request** req);
-status_code bm_heap_insert(bm_heap* bmh, const request* req);
+status_code bm_heap_insert(bm_heap* bmh, request* req);
 
 #endif // _BINOMIAL_HEAP_H_
