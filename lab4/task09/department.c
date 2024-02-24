@@ -204,7 +204,7 @@ status_code department_handle_finishing(Department* dep, const char time[21], si
 	return OK;
 }
 
-status_code department_add_request(Department* dep, const request* req, size_t* msg_cnt, dep_msg** msgs)
+status_code department_add_request(Department* dep, request* req, size_t* msg_cnt, dep_msg** msgs)
 {
 	if (dep == NULL || req == NULL || msg_cnt == NULL || msgs == NULL)
 	{
@@ -267,7 +267,7 @@ status_code department_handle_starting(Department* dep, const char time[21], siz
 		return NULL_ARG;
 	}
 	
-	ull task_cnt = 0;
+	size_t task_cnt = 0;
 	status_code code = p_queue_size(dep->queue, &task_cnt);
 	if (code)
 	{
