@@ -2,6 +2,7 @@
 #include <string.h>
 
 #include "priority_queue.h"
+#include "binary_heap.h"
 #include "binomial_heap.h"
 
 status_code p_queue_set_null(p_queue* pq)
@@ -10,12 +11,15 @@ status_code p_queue_set_null(p_queue* pq)
 	{
 		return NULL_ARG;
 	}
+	pq->ds_size = 0;
 	pq->ds = NULL;
+	pq->set_null = NULL;
 	pq->construct = NULL;
 	pq->copy = NULL;
 	pq->destruct = NULL;
 	pq->meld = NULL;
 	pq->copy_meld = NULL;
+	pq->size = NULL;
 	pq->top = NULL;
 	pq->pop = NULL;
 	pq->insert = NULL;
@@ -35,23 +39,53 @@ status_code p_queue_construct(p_queue* pq, pq_base base, int (*compare)(const re
 	switch (base)
 	{
 		case PQB_BINARY:
+		{
+			pq->ds_size = sizeof(bin_heap);
+			pq->ds = malloc(sizeof(bin_heap));
+			
+			pq->set_null 	= (status_code (*)(void*)) 											bh_set_null;
+			pq->construct 	= (status_code (*)(void*, int (*)(const request*, const request*))) bh_construct_heap;
+			pq->copy 		= (status_code (*)(void*, const void*)) 							bh_heap_copy;
+			pq->destruct 	= (status_code (*)(void*)) 											bh_destruct_heap;
+			pq->meld 		= (status_code (*)(void*, void*, void*)) 							bh_destructive_merge;
+			pq->copy_meld 	= (status_code (*)(void*, const void*, const void*))                bh_merge;
+			pq->size 		= (status_code (*)(void*, size_t*))                                 bh_size;
+			pq->top 		= (status_code (*)(void*, request**))                               bh_top;
+			pq->pop 		= (status_code (*)(void*, request**))                               bh_pop;
+			pq->insert 		= (status_code (*)(void*, const request*))                          bh_insert;
+			break;
+		}
 		case PQB_LEFTIST:
+		{
+			pq->set_null 	= (status_code (*)(void*))                                          bh_set_null;
+			pq->construct 	= (status_code (*)(void*, int (*)(const request*, const request*))) bh_construct_heap;
+			pq->copy 		= (status_code (*)(void*, const void*))                             bh_heap_copy;
+			pq->destruct 	= (status_code (*)(void*))                                          bh_destruct_heap;
+			pq->meld 		= (status_code (*)(void*, void*, void*))                            bh_destructive_merge;
+			pq->copy_meld 	= (status_code (*)(void*, const void*, const void*))                bh_merge;
+			pq->size 		= (status_code (*)(void*, size_t*))                                 bh_size;
+			pq->top 		= (status_code (*)(void*, request**))                               bh_top;
+			pq->pop 		= (status_code (*)(void*, request**))                               bh_pop;
+			pq->insert 		= (status_code (*)(void*, const request*))                          bh_insert;
+		}
 		case PQB_SKEW:
 		case PQB_BINOM:
 		case PQB_FIB:
 		case PQB_TREAP:
 		{
+			pq->ds_size = sizeof(bm_heap);
 			pq->ds = malloc(sizeof(bm_heap));
-			pq->set_null = bm_heap_set_null;
-			pq->construct = bm_heap_construct;
-			pq->copy = bm_heap_copy;
-			pq->destruct = bm_heap_destruct;
-			pq->meld = bm_heap_meld;
-			pq->copy_meld = bm_heap_copy_meld;
-			pq->size = bm_heap_size;
-			pq->top = bm_heap_top;
-			pq->pop = bm_heap_pop;
-			pq->insert = bm_heap_insert;
+			
+			pq->set_null    = (status_code (*)(void*))                                          bm_heap_set_null;
+			pq->construct   = (status_code (*)(void*, int (*)(const request*, const request*))) bm_heap_construct;
+			pq->copy        = (status_code (*)(void*, const void*))                             bm_heap_copy;
+			pq->destruct    = (status_code (*)(void*))                                          bm_heap_destruct;
+			pq->meld        = (status_code (*)(void*, void*, void*))                            bm_heap_meld;
+			pq->copy_meld   = (status_code (*)(void*, const void*, const void*))                bm_heap_copy_meld;
+			pq->size        = (status_code (*)(void*, size_t*))                                 bm_heap_size;
+			pq->top         = (status_code (*)(void*, request**))                               bm_heap_top;
+			pq->pop         = (status_code (*)(void*, request**))                               bm_heap_pop;
+			pq->insert      = (status_code (*)(void*, const request*))                          bm_heap_insert;
 			break;
 		}
 	}
@@ -81,11 +115,22 @@ status_code p_queue_copy(p_queue* pq_dest, const p_queue* pq_src)
 		return NULL_ARG;
 	}
 	
-	status_code code = p_queue_init(pq_dest, pq_src->base);
+	status_code code = OK;
+	
+	*pq_dest = *pq_src;
+	
+	pq_dest->ds = malloc(pq_src->ds_size);
+	if (pq_dest-> ds == NULL)
+	{
+		code = BAD_ALLOC;
+	}
+	
 	code = code ? code : pq_src->copy(pq_dest->ds, pq_src->ds);
+	
 	if (code)
 	{
 		p_queue_destruct(pq_dest);
+		return code;
 	}
 	
 	return OK;
@@ -119,11 +164,16 @@ status_code p_queue_meld(p_queue* pq_res, p_queue* pq_l, p_queue* pq_r)
 	}
 	
 	status_code code = OK;
-	p_queue pq_tmp;
+	p_queue pq_tmp = *pq_l;
 	
-	p_queue_set_null(&pq_tmp);
-	code = code ? code : p_queue_init(&pq_tmp, pq_l->base);
+	pq_tmp.ds = malloc(pq_l->ds_size);
+	if (pq_tmp.ds == NULL)
+	{
+		code = BAD_ALLOC;
+	}
+	
 	code = code ? code : pq_l->meld(pq_tmp.ds, pq_l->ds, pq_r->ds);
+	
 	if (code)
 	{
 		p_queue_destruct(&pq_tmp);
@@ -132,10 +182,12 @@ status_code p_queue_meld(p_queue* pq_res, p_queue* pq_l, p_queue* pq_r)
 	
 	if (pq_res != pq_l)
 	{
+		free(pq_l->ds);
 		p_queue_set_null(pq_l);
 	}
 	if (pq_res != pq_r)
 	{
+		free(pq_r->ds);
 		p_queue_set_null(pq_r);
 	}
 	
@@ -155,10 +207,14 @@ status_code p_queue_copy_meld(p_queue* pq_res, const p_queue* pq_l, const p_queu
 	}
 	
 	status_code code = OK;
-	p_queue pq_tmp;
+	p_queue pq_tmp = *pq_l;
 	
-	p_queue_set_null(&pq_tmp);
-	code = code ? code : p_queue_init(&pq_tmp, pq_l->base);
+	pq_tmp.ds = malloc(pq_l->ds_size);
+	if (pq_tmp.ds == NULL)
+	{
+		code = BAD_ALLOC;
+	}	
+	
 	code = code ? code : pq_l->copy_meld(pq_tmp.ds, pq_l->ds, pq_r->ds);
 	if (code)
 	{
@@ -198,7 +254,7 @@ status_code p_queue_pop(p_queue* pq, request** req)
 	return pq->pop(pq->ds, req);
 }
 
-status_code p_queue_insert(p_queue* pq, const request* req) // mallocs copy of input
+status_code p_queue_insert(p_queue* pq, request* req) // mallocs copy of input
 {
 	if (pq == NULL || req == NULL)
 	{

@@ -17,10 +17,11 @@ int main()
 {
 	for (priority_queue_base base = PQB_BINARY; base <= PQB_TREAP; ++base)
 	{
-		if (base == PQB_BINARY) continue;
+		//if (base == PQB_BINARY) continue;
 		if (base == PQB_LEFTIST) continue;
 		if (base == PQB_SKEW) continue;
 		if (base == PQB_FIB) continue;
+		if (base == PQB_BINOM) continue;
 		if (base == PQB_TREAP) continue;
 		
 		p_queue pq, pq1, pq2, pq3, pq4;
@@ -64,19 +65,16 @@ int main()
 				req->txt[0] = '0' + prior[i];
 				
 				assert(p_queue_insert(&pq, req) == OK);
-				free_req(req);
 				assert(p_queue_size(&pq, &size) == OK);
 				assert(size == i+1);
 				assert(p_queue_top(&pq, &req) == OK);
 				assert(atoi(req->txt) == vals[i]);
-				free_req(req);
 			}
 			
 			for (size_t i = 8; i > 0; --i)
 			{
 				assert(p_queue_top(&pq, &req) == OK);
 				assert(atoi(req->txt) == i);
-				free_req(req);
 				assert(p_queue_pop(&pq, &req) == OK);
 				assert(atoi(req->txt) == i);
 				free_req(req);
@@ -152,10 +150,8 @@ int main()
 				req->txt[1] = pq_key_arr[i].time[0];
 				
 				assert(p_queue_insert(&pq, req) == OK);
-				free_req(req);
 				assert(p_queue_top(&pq, &req) == OK);
 				assert(atoi(req->txt) == vals[i]);
-				free_req(req);
 			}
 			
 			assert(p_queue_copy(&pq1, &pq) == OK);
@@ -165,13 +161,12 @@ int main()
 				int num_val = (i+3) / 4 * 10 + (4 - ((i+3) % 4));
 				assert(p_queue_top(&pq, &req) == OK);
 				assert(atoi(req->txt) == num_val);
-				free_req(req);
 				assert(p_queue_pop(&pq, &req) == OK);
 				assert(atoi(req->txt) == num_val);
-				free(req);
+				free_req(req);
 				assert(p_queue_pop(&pq1, &req) == OK);
 				assert(atoi(req->txt) == num_val);
-				free(req);
+				free_req(req);
 			}
 			
 			assert(p_queue_destruct(&pq) == OK);
@@ -249,10 +244,8 @@ int main()
 				req->txt[1] = pq1_key_arr[i].time[0];
 				
 				assert(p_queue_insert(&pq1, req) == OK);
-				free_req(req);
 				assert(p_queue_top(&pq1, &req) == OK);
 				assert(atoi(req->txt) == vals1[i]);
-				free_req(req);
 			}
 			
 			for (size_t i = 0; i < 16; ++i)
@@ -268,17 +261,14 @@ int main()
 				req->txt[1] = pq2_key_arr[i].time[0];
 				
 				assert(p_queue_insert(&pq2, req) == OK);
-				free_req(req);
 				assert(p_queue_top(&pq2, &req) == OK);
 				assert(atoi(req->txt) == vals2[i]);
-				free_req(req);
 			}
 			
 			assert(p_queue_size(&pq1, &size) == OK);
 			assert(size == 20);
 			assert(p_queue_size(&pq2, &size) == OK);
 			assert(size == 16);
-			
 			
 			
 			assert(p_queue_copy_meld(&pq3, &pq1, &pq2) == OK);
@@ -295,7 +285,6 @@ int main()
 				int num_val = (i+3) / 4 * 10 + (4 - ((i+3) % 4));
 				assert(p_queue_top(&pq, &req) == OK);
 				assert(atoi(req->txt) == num_val);
-				free_req(req);
 				assert(p_queue_pop(&pq, &req) == OK);
 				assert(atoi(req->txt) == num_val);
 				free_req(req);

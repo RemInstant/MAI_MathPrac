@@ -1,9 +1,9 @@
 CC = gcc
 CFLAGS = -g -Wall -Wpedantic -Wshadow -Wformat=2 -Wcast-align -Wnull-dereference -fdiagnostics-color=always -std=c17 -lm
 
-PQ_H = priority_queue/priority_queue.h priority_queue/binomial_heap.h
-PQ_O = gcc_obj/priority_queue.o gcc_obj/binomial_heap.o
-PQ_O_TRG = priority_queue.o binomial_heap.o
+PQ_H = priority_queue/priority_queue.h priority_queue/binary_heap.h priority_queue/binomial_heap.h
+PQ_O = gcc_obj/priority_queue.o gcc_obj/binary_heap.o gcc_obj/binomial_heap.o
+PQ_O_TRG = priority_queue.o binary_heap.o binomial_heap.o
 
 MAP_H = map/map.h map/trie.h
 MAP_O = gcc_obj/map.o gcc_obj/trie.o
@@ -43,6 +43,9 @@ trie.o: map/trie.c map/trie.h department.h utility.h
 # PRIORITY QUEUE
 priority_queue.o: priority_queue/priority_queue.c priority_queue/priority_queue.h utility.h
 	$(CC) $(CFLAGS) -c priority_queue/priority_queue.c -o gcc_obj/priority_queue.o
+
+binary_heap.o: priority_queue/binary_heap.c priority_queue/binary_heap.h utility.h
+	$(CC) $(CFLAGS) -c priority_queue/binary_heap.c -o gcc_obj/binary_heap.o
 
 binomial_heap.o: priority_queue/binomial_heap.c priority_queue/binomial_heap.h utility.h
 	$(CC) $(CFLAGS) -c priority_queue/binomial_heap.c -o gcc_obj/binomial_heap.o
