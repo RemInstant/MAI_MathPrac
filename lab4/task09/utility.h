@@ -11,25 +11,25 @@ typedef unsigned long long ull;
 
 typedef enum status_code
 {
-	OK,
-	NULL_ARG,
-	INVALID_INPUT,
-	INVALID_ARG,
-	INVALID_FLAG,
-	INVALID_NUMBER,
-	INVALID_BASE,
-	INVALID_EPSILON,
-	INVALID_CMD,
-	INVALID_BRACKET_ORDER,
-	FILE_OPENING_ERROR,
-	FILE_INVALID_CONTENT,
-	FILE_END,
-	OVERFLOW,
-	UNINITIALIZED_USAGE,
-	DIVISION_BY_ZERO,
-	ZERO_POWERED_ZERO,
-	BAD_ALLOC,
-	BAD_ACCESS,
+    OK,
+    NULL_ARG,
+    INVALID_INPUT,
+    INVALID_ARG,
+    INVALID_FLAG,
+    INVALID_NUMBER,
+    INVALID_BASE,
+    INVALID_EPSILON,
+    INVALID_CMD,
+    INVALID_BRACKET_ORDER,
+    FILE_OPENING_ERROR,
+    FILE_INVALID_CONTENT,
+    FILE_END,
+    OVERFLOW,
+    UNINITIALIZED_USAGE,
+    DIVISION_BY_ZERO,
+    ZERO_POWERED_ZERO,
+    BAD_ALLOC,
+    BAD_ACCESS,
 } status_code;
 
 void print_error(status_code code, int nl_cnt);
@@ -37,25 +37,25 @@ void fprint_error(FILE* file, status_code code, int nl_cnt);
 
 typedef struct pair_str_double
 {
-	char* str;
-	double val;
+    char* str;
+    double val;
 } pair_str_double;
 
 int pair_str_double_comparator(const void* ptr_1, const void* ptr_2);
 
 typedef struct pair_prior_time
 {
-	unsigned prior;
-	char time[21];
+    unsigned prior;
+    char time[21];
 } pair_prior_time;
 
 typedef struct request
 {
-	ull id;
-	char* dep_id;
-	unsigned prior;
-	char time[21]; // ISO8601: YYYY-MM-DDThh:mm:ssZ
-	char* txt;
+    ull id;
+    char* dep_id;
+    unsigned prior;
+    char time[21]; // ISO8601: YYYY-MM-DDThh:mm:ssZ
+    char* txt;
 } request;
 
 status_code request_set_null(request* req);

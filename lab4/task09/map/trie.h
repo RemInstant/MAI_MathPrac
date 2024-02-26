@@ -8,14 +8,14 @@
 
 typedef struct trie_node
 {
-	struct trie_node* parent;
-	struct trie_node* children[TRIE_ALPABET_LEN];
-	Department* dep;
+    struct trie_node* parent;
+    struct trie_node* children[TRIE_ALPABET_LEN];
+    Department* dep;
 } trie_node;
 
 typedef struct Trie
 {
-	trie_node* root;
+    trie_node* root;
 } Trie;
 
 typedef pair_str_department trie_key_val;

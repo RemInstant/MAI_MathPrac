@@ -5,30 +5,30 @@
 
 typedef enum priority_queue_base
 {
-	PQB_BINARY,
-	PQB_LEFTIST,
-	PQB_SKEW,
-	PQB_BINOM,
-	PQB_FIB,
-	PQB_TREAP,
+    PQB_BINARY,
+    PQB_LEFTIST,
+    PQB_SKEW,
+    PQB_BINOM,
+    PQB_FIB,
+    PQB_TREAP,
 } priority_queue_base, pq_base;
 
 // Priority queue contains POINTERS to requests (NOT A COPIES)
 typedef struct Priority_queue
 {
-	pq_base base;
-	size_t ds_size;
-	void* ds;
-	status_code (*set_null)(void* ds);
-	status_code (*construct)(void* ds, int (*compare)(const request*, const request*));
-	status_code (*copy)(void* ds_dest, const void* ds_src);
-	status_code (*destruct)(void* ds);
-	status_code (*meld)(void* ds_res, void* ds_l, void* ds_r);
-	status_code (*copy_meld)(void* ds_res, const void* ds_l, const void* ds_r);
-	status_code (*size)(void* ds, size_t* size);
-	status_code (*top)(void* ds, request** req);
-	status_code (*pop)(void* ds, request** req);
-	status_code (*insert)(void* ds, const request* req);
+    pq_base base;
+    size_t ds_size;
+    void* ds;
+    status_code (*set_null)(void* ds);
+    status_code (*construct)(void* ds, int (*compare)(const request*, const request*));
+    status_code (*copy)(void* ds_dest, const void* ds_src);
+    status_code (*destruct)(void* ds);
+    status_code (*meld)(void* ds_res, void* ds_l, void* ds_r);
+    status_code (*copy_meld)(void* ds_res, const void* ds_l, const void* ds_r);
+    status_code (*size)(void* ds, size_t* size);
+    status_code (*top)(void* ds, request** req);
+    status_code (*pop)(void* ds, request** req);
+    status_code (*insert)(void* ds, const request* req);
 } Priority_queue, p_queue;
 
 status_code p_queue_set_null(p_queue* pq);

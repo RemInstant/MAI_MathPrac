@@ -192,7 +192,7 @@ status_code bh_pop(bin_heap* heap, request** min)
     }
     if (!heap->size)
     {
-		*min = NULL;
+        *min = NULL;
         return OK;
     }
     request* tmp = heap->elements[0];

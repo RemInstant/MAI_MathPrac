@@ -5,17 +5,17 @@
 
 typedef struct bmh_node
 {
-	request* req;
-	unsigned rank;
-	struct bmh_node* son;
-	struct bmh_node* brother;
+    request* req;
+    unsigned rank;
+    struct bmh_node* son;
+    struct bmh_node* brother;
 } bmh_node;
 
 typedef struct Binomial_heap
 {
-	bmh_node* head;
-	size_t size;
-	int (*compare)(const request*, const request*);
+    bmh_node* head;
+    size_t size;
+    int (*compare)(const request*, const request*);
 } Binomial_heap, bm_heap;
 
 

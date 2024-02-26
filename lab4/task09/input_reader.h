@@ -6,7 +6,7 @@
 
 typedef struct Input_reader
 {
-	p_queue* data_queue;
+    p_queue* data_queue;
 } Input_reader;
 
 status_code ir_set_null(Input_reader* ir);
