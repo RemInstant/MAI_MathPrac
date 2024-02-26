@@ -94,6 +94,72 @@ int pair_str_double_comparator(const void* ptr_1, const void* ptr_2)
 	return strcmp(pair_1->str, pair_2->str);
 }
 
+status_code request_set_null(request* req)
+{
+	if (req == NULL)
+	{
+		return NULL_ARG;
+	}
+	
+	req->dep_id = NULL;
+	req->id = 0;
+	req->prior = 0;
+	req->time[0] = '\0';
+	req->txt = NULL;
+}
+
+status_code request_construct(request* req, ull id, const char* dep_id, unsigned prior, const char time[21], const char* txt)
+{
+	if (req == NULL || dep_id == NULL || time == NULL || txt == NULL)
+	{
+		return NULL_ARG;
+	}
+	
+	req->dep_id = (char*) malloc(sizeof(char) * (strlen(dep_id) + 1));
+	if (req->dep_id == NULL)
+	{
+		return BAD_ALLOC;
+	}
+	
+	req->txt = (char*) malloc(sizeof(char) * (strlen(txt) + 1));
+	if (req->txt == NULL)
+	{
+		free(req->dep_id);
+		req->dep_id = NULL;
+		return BAD_ALLOC;
+	}
+	
+	req->id = id;
+	req->prior = prior;
+	strcpy(req->dep_id, dep_id);
+	strcpy(req->time, time);
+	strcpy(req->txt, txt);
+	
+	return OK;
+}
+
+status_code request_copy(request* req_dest, const request* req_src)
+{
+	if (req_dest == NULL || req_src == NULL)
+	{
+		return NULL_ARG;
+	}
+	
+	return request_construct(req_dest, req_src->id, req_src->dep_id, req_src->prior, req_src->time, req_src->txt);
+}
+
+status_code request_destruct(request* req)
+{
+	if (req == NULL)
+	{
+		return OK;
+	}
+	
+	free(req->dep_id);
+	free(req->txt);
+	return request_set_null(req);
+}
+
 
 status_code fread_line(FILE* file, char** line)
 {

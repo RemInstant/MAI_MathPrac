@@ -29,18 +29,13 @@ status_code bmh_node_copy(bmh_node** node_dest, const bmh_node* node_src)
 		return BAD_ALLOC;
 	}
 	
-	tmp_node->req->txt = (char*) malloc(sizeof(char) * (strlen(node_src->req->txt) + 1));
-	if (tmp_node->req->txt == NULL)
+	status_code code = request_copy(tmp_node->req, node_src->req);
+	if (code)
 	{
-		free(tmp_node->req);
 		free(tmp_node);
-		return BAD_ALLOC;
+		return code;
 	}
 	
-	tmp_node->req->id = node_src->req->id;
-	tmp_node->req->prior = node_src->req->prior;
-	strcpy(tmp_node->req->time, node_src->req->time);
-	strcpy(tmp_node->req->txt, node_src->req->txt);
 	tmp_node->son = NULL;
 	tmp_node->brother = NULL;
 	tmp_node->rank = node_src->rank;
@@ -70,8 +65,7 @@ status_code bmh_node_destruct(bmh_node* node)
 	}
 	bmh_node_destruct(node->son);
 	bmh_node_destruct(node->brother);
-	free(node->req->txt);
-	free(node->req);
+	request_destruct(node->req);
 	free(node);
 	return OK;
 }
@@ -332,7 +326,7 @@ status_code bm_heap_find(const bm_heap* bmh, bmh_node** prev, bmh_node** node)
 
 status_code bm_heap_top(const bm_heap* bmh, request** req)
 {
-	if (req == NULL || req == NULL)
+	if (bmh == NULL || req == NULL)
 	{
 		return NULL_ARG;
 	}
@@ -344,26 +338,6 @@ status_code bm_heap_top(const bm_heap* bmh, request** req)
 		*req = NULL;
 		return OK;
 	}
-	
-	/*
-	request* req_tmp = (request*) malloc(sizeof(request));
-	if (req_tmp == NULL)
-	{
-		return BAD_ALLOC;
-	}
-	
-	req_tmp->txt = (char*) malloc(sizeof(char) * (strlen(node->req->txt) + 1));
-	if (req_tmp->txt == NULL)
-	{
-		free(req_tmp);
-		return BAD_ALLOC;
-	}
-	req_tmp->id = node->req->id;
-	req_tmp->prior = node->req->prior;
-	strcpy(req_tmp->time, node->req->time);
-	strcpy(req_tmp->txt, node->req->txt);
-	*req = req_tmp;
-	*/
 	
 	*req = node->req;
 	
@@ -445,28 +419,6 @@ status_code bm_heap_insert(bm_heap* bmh, request* req)
 	{
 		return BAD_ALLOC;
 	}
-	
-	/*
-	node->req = (request*) malloc(sizeof(request));
-	if (node->req == NULL)
-	{
-		free(node);
-		return BAD_ALLOC;
-	}
-	
-	node->req->txt = (char*) malloc(sizeof(char) * (strlen(req->txt) + 1));
-	if (node->req == NULL)
-	{
-		free(node);
-		free(node->req);
-		return BAD_ALLOC;
-	}
-	
-	node->req->id = req->id;
-	node->req->prior = req->prior;
-	strcpy(node->req->time, req->time);
-	strcpy(node->req->txt, req->txt);
-	*/
 	
 	node->req = req;
 	node->son = NULL;
