@@ -29,7 +29,7 @@ status_code ir_construct(Input_reader* ir)
 	}
 	
 	p_queue_set_null(ir->data_queue);
-	p_queue_init(ir->data_queue, PQB_BINOM);
+	return p_queue_construct(ir->data_queue, PQB_BINOM, compare_request);
 }
 
 status_code ir_destruct(Input_reader* ir)
