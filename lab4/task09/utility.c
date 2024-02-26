@@ -106,6 +106,8 @@ status_code request_set_null(request* req)
     req->prior = 0;
     req->time[0] = '\0';
     req->txt = NULL;
+    
+    return OK;
 }
 
 status_code request_construct(request* req, ull id, const char* dep_id, unsigned prior, const char time[21], const char* txt)

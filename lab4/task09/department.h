@@ -15,6 +15,7 @@ typedef struct Operator
 
 typedef struct Department
 {
+    char* id;
     p_queue* queue;
     size_t staff_size;
     Operator* staff;
@@ -40,10 +41,13 @@ typedef enum department_code
     DEPARTMENT_OVERLOADED,
 } department_code, dep_code;
 
+// no copies here
 typedef struct department_message
 {
     dep_code code;
     unsigned req_id;
+    const char* dep_id;
+    const char* transfer_dep_id;
     const char* oper_name;
     unsigned handling_time;
 } department_message, dep_msg;

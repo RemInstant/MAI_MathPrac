@@ -60,7 +60,7 @@ typedef struct request
 
 status_code request_set_null(request* req);
 status_code request_construct(request* req, ull id, const char* dep_id, unsigned prior, const char time[21], const char* txt);
-status_code request_copy(request* req_dest, request* req_src);
+status_code request_copy(request* req_dest, const request* req_src);
 status_code request_destruct(request* req);
 
 status_code fread_line(FILE* file, char** str);
