@@ -112,30 +112,42 @@ status_code request_set_null(request* req)
 
 status_code request_construct(request* req, ull id, const char* dep_id, unsigned prior, const char time[21], const char* txt)
 {
-    if (req == NULL || dep_id == NULL || time == NULL || txt == NULL)
+    if (req == NULL)
     {
         return NULL_ARG;
     }
     
-    req->dep_id = (char*) malloc(sizeof(char) * (strlen(dep_id) + 1));
-    if (req->dep_id == NULL)
+    request_set_null(req);
+    
+    if (dep_id != NULL)
     {
-        return BAD_ALLOC;
+        req->dep_id = (char*) malloc(sizeof(char) * (strlen(dep_id) + 1));
+        if (req->dep_id == NULL)
+        {
+            return BAD_ALLOC;
+        }
+        strcpy(req->dep_id, dep_id);
     }
     
-    req->txt = (char*) malloc(sizeof(char) * (strlen(txt) + 1));
-    if (req->txt == NULL)
+    if (txt != NULL)
     {
-        free(req->dep_id);
-        req->dep_id = NULL;
-        return BAD_ALLOC;
+        req->txt = (char*) malloc(sizeof(char) * (strlen(txt) + 1));
+        if (req->txt == NULL)
+        {
+            free(req->dep_id);
+            req->dep_id = NULL;
+            return BAD_ALLOC;
+        }
+        strcpy(req->txt, txt);
+    }
+    
+    if (time != NULL)
+    {
+        strcpy(req->time, time);
     }
     
     req->id = id;
     req->prior = prior;
-    strcpy(req->dep_id, dep_id);
-    strcpy(req->time, time);
-    strcpy(req->txt, txt);
     
     return OK;
 }

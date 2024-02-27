@@ -1,9 +1,5 @@
-//
-// Created by Никита Третьяков on 21.02.2024.
-//
-
-#ifndef LAB9_BIN_HEAP_H
-#define LAB9_BIN_HEAP_H
+#ifndef _BINARY_HEAP_H_
+#define _BINARY_HEAP_H_
 
 #include <stdlib.h>
 
@@ -11,26 +7,23 @@
 
 typedef struct Binary_heap
 {
-    unsigned int size;
-    unsigned int capacity;
-    request** elements;
-    int (*compare)(const request *, const request *);
+    size_t size;
+    size_t capacity;
+    request** elems;
+    int (*compare)(const request*, const request*);
 } Binary_heap, bin_heap;
 
-void bh_destruct_node(request* node);
-status_code bh_destruct_heap(bin_heap* heap);
+status_code bh_set_null(bin_heap* bh);
+status_code bh_construct(bin_heap* bh, int (*compare)(const request*, const request*));
+status_code bh_copy(bin_heap* bh_dest, const bin_heap* bh_src);
+status_code bh_destruct(bin_heap* bh);
 
-status_code bh_set_null(bin_heap* heap);
-status_code bh_construct_heap(bin_heap* heap, int (*compare)(const request *, const request *));
-status_code bh_top(const bin_heap* heap, request** result);
-status_code bh_size(const bin_heap* heap, size_t* res);
+status_code bh_meld(bin_heap* bh, bin_heap* bh_l, bin_heap* bh_r);
+status_code bh_copy_meld(bin_heap* bh, const bin_heap* bh_l, const bin_heap* bh_r); // can be upgraded
 
-status_code bh_insert(bin_heap* heap, request* new_el);
+status_code bh_size(const bin_heap* bh, size_t* size);
+status_code bh_top(const bin_heap* bh, request** req);
+status_code bh_pop(bin_heap* bh, request** req);
+status_code bh_insert(bin_heap* bh, request* req);
 
-status_code bh_heap_copy(bin_heap* dest, const bin_heap* src);
-
-status_code bh_pop(bin_heap* heap, request** min);
-status_code bh_destructive_merge(bin_heap* result, bin_heap* a, bin_heap* b);
-status_code bh_merge(bin_heap* result, const bin_heap* a, const bin_heap* b);
-
-#endif //LAB9_BIN_HEAP_H
+#endif //_BINARY_HEAP_H_
