@@ -96,7 +96,7 @@ status_code bm_heap_construct(bm_heap* bmh, int (*compare)(const request*, const
 
 status_code bm_heap_copy(bm_heap* bmh_dest, const bm_heap* bmh_src)
 {
-    if (bmh_dest == NULL)
+    if (bmh_dest == NULL || bmh_src == NULL)
     {
         return NULL_ARG;
     }
@@ -144,6 +144,8 @@ status_code bm_heap_meld(bm_heap* bmh_res, bm_heap* bmh_l, bm_heap* bmh_r)
     {
         bmh_res->head = NULL;
         bmh_res->compare = bmh_l->compare;
+        bm_heap_set_null(bmh_l);
+        bm_heap_set_null(bmh_r);
         return OK;
     }
     

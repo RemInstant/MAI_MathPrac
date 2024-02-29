@@ -221,6 +221,12 @@ status_code bh_top(const bin_heap* bh, request** req)
         return NULL_ARG;
     }
     
+    if (bh->size == 0)
+    {
+        *req = NULL;
+        return OK;
+    }
+    
     *req = bh->elems[0];
     
     return OK;
