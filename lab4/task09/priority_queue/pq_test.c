@@ -55,7 +55,7 @@ int main()
             
             for (size_t i = 0; i < 8; ++i)
             {
-                req = (request*) malloc(sizeof(request));
+                req = (request*) calloc(1, sizeof(request));
                 assert(req != NULL);
                 req->txt = (char*) calloc(2, sizeof(char));
                 assert(req->txt != NULL);
@@ -139,7 +139,7 @@ int main()
             
             for (size_t i = 0; i < 36; ++i)
             {
-                req = (request*) malloc(sizeof(request));
+                req = (request*) calloc(1, sizeof(request));
                 assert(req != NULL);
                 req->txt = (char*) calloc(3, sizeof(char));
                 assert(req->txt != NULL);
@@ -233,7 +233,7 @@ int main()
             
             for (size_t i = 0; i < 20; ++i)
             {
-                req = (request*) malloc(sizeof(request));
+                req = (request*) calloc(1, sizeof(request));
                 assert(req != NULL);
                 req->txt = (char*) calloc(3, sizeof(char));
                 assert(req->txt != NULL);
@@ -250,7 +250,7 @@ int main()
             
             for (size_t i = 0; i < 16; ++i)
             {
-                req = (request*) malloc(sizeof(request));
+                req = (request*) calloc(1, sizeof(request));
                 assert(req != NULL);
                 req->txt = (char*) calloc(3, sizeof(char));
                 assert(req->txt != NULL);

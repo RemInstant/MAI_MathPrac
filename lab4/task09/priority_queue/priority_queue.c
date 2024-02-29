@@ -44,11 +44,11 @@ status_code p_queue_construct(p_queue* pq, pq_base base, int (*compare)(const re
             pq->ds = malloc(sizeof(bin_heap));
             
             pq->set_null 	= (status_code (*)(void*)) 											bh_set_null;
-            pq->construct 	= (status_code (*)(void*, int (*)(const request*, const request*))) bh_construct_heap;
-            pq->copy 		= (status_code (*)(void*, const void*)) 							bh_heap_copy;
-            pq->destruct 	= (status_code (*)(void*)) 											bh_destruct_heap;
-            pq->meld 		= (status_code (*)(void*, void*, void*)) 							bh_destructive_merge;
-            pq->copy_meld 	= (status_code (*)(void*, const void*, const void*))                bh_merge;
+            pq->construct 	= (status_code (*)(void*, int (*)(const request*, const request*))) bh_construct;
+            pq->copy 		= (status_code (*)(void*, const void*)) 							bh_copy;
+            pq->destruct 	= (status_code (*)(void*)) 											bh_destruct;
+            pq->meld 		= (status_code (*)(void*, void*, void*)) 							bh_meld;
+            pq->copy_meld 	= (status_code (*)(void*, const void*, const void*))                bh_copy_meld;
             pq->size 		= (status_code (*)(void*, size_t*))                                 bh_size;
             pq->top 		= (status_code (*)(void*, request**))                               bh_top;
             pq->pop 		= (status_code (*)(void*, request**))                               bh_pop;
@@ -57,12 +57,13 @@ status_code p_queue_construct(p_queue* pq, pq_base base, int (*compare)(const re
         }
         case PQB_LEFTIST:
         {
-            pq->set_null 	= (status_code (*)(void*))                                          bh_set_null;
-            pq->construct 	= (status_code (*)(void*, int (*)(const request*, const request*))) bh_construct_heap;
-            pq->copy 		= (status_code (*)(void*, const void*))                             bh_heap_copy;
-            pq->destruct 	= (status_code (*)(void*))                                          bh_destruct_heap;
-            pq->meld 		= (status_code (*)(void*, void*, void*))                            bh_destructive_merge;
-            pq->copy_meld 	= (status_code (*)(void*, const void*, const void*))                bh_merge;
+            // pattern
+            pq->set_null 	= (status_code (*)(void*)) 											bh_set_null;
+            pq->construct 	= (status_code (*)(void*, int (*)(const request*, const request*))) bh_construct;
+            pq->copy 		= (status_code (*)(void*, const void*)) 							bh_copy;
+            pq->destruct 	= (status_code (*)(void*)) 											bh_destruct;
+            pq->meld 		= (status_code (*)(void*, void*, void*)) 							bh_meld;
+            pq->copy_meld 	= (status_code (*)(void*, const void*, const void*))                bh_copy_meld;
             pq->size 		= (status_code (*)(void*, size_t*))                                 bh_size;
             pq->top 		= (status_code (*)(void*, request**))                               bh_top;
             pq->pop 		= (status_code (*)(void*, request**))                               bh_pop;
