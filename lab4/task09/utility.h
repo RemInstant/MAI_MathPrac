@@ -23,6 +23,7 @@ typedef enum status_code
     INVALID_BRACKET_ORDER,
     FILE_OPENING_ERROR,
     FILE_INVALID_CONTENT,
+    FILE_KEY_DUPLICATE,
     FILE_END,
     OVERFLOW,
     UNINITIALIZED_USAGE,
@@ -63,8 +64,10 @@ status_code request_construct(request* req, ull id, const char* dep_id, unsigned
 status_code request_copy(request* req_dest, const request* req_src);
 status_code request_destruct(request* req);
 
-status_code fread_line(FILE* file, char** str);
-status_code read_line(char** str);
+status_code fread_char(FILE* file, char* ch, int skip_front_spaces);
+status_code fread_line(FILE* file, char** str, int skip_front_spaces);
+status_code fread_word(FILE* file, char** word, int skip_front_spaces);
+status_code read_line(char** str, int skip_front_spaces);
 status_code sread_until(const char* src, const char* delims, int inclusive_flag, const char** end_ptr, char** str);
 
 status_code fread_cmd(FILE* file, char** str);
@@ -95,6 +98,7 @@ status_code fbpow_safely(double base, ll pow, double* res);
 
 size_t calc_default_str_hash(const char* str);
 
+status_code iso_time_validate(const char time[21]);
 status_code iso_time_add(const char time[21], ull add_s, char res[21]);
 
 #endif // _UTILITY_H_

@@ -3,6 +3,7 @@
 
 #include "utility.h"
 #include "department.h"
+#include "input_reader.h"
 
 #include "priority_queue/binomial_heap.h"
 #include "priority_queue/priority_queue.h"
@@ -10,14 +11,25 @@
 #include "map/trie.h"
 #include "map/map.h"
 
+#include <unistd.h>
+
 int main()
 {
     Department dep;
+    Input_reader ir;
+    
     department_set_null(&dep);
+    ir_set_null(&ir);
     
     status_code code = OK;
     
     code = code ? code : department_construct(&dep, 1, PQB_BINOM, 5.0, 1e-9, 5, 5, compare_request);
+    code = code ? code : ir_read_file(&ir, "request_1");
+    
+    size_t req_cnt;
+    request** reqs = NULL;
+    code = code ? code : ir_get_up_to(&ir, "2025-01-01T12:00:00Z", &req_cnt, &reqs);
+    
     
     if (code)
     {

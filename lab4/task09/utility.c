@@ -162,8 +162,26 @@ status_code request_destruct(request* req)
     return request_set_null(req);
 }
 
+status_code fread_char(FILE* file, char* ch_res, int skip_front_spaces)
+{
+    if (file == NULL || ch_res == NULL)
+    {
+        return NULL_ARG;
+    }
+    char ch = getc(file);
+    while (skip_front_spaces && isspace(ch) && !feof(file))
+    {
+        ch = getc(file);
+    }
+    if (feof(file))
+    {
+        return FILE_END;
+    }
+    *ch_res = ch;
+    return OK;
+}
 
-status_code fread_line(FILE* file, char** line)
+status_code fread_line(FILE* file, char** line, int skip_front_spaces)
 {
     if (file == NULL || line == NULL)
     {
@@ -177,6 +195,10 @@ status_code fread_line(FILE* file, char** line)
         return BAD_ALLOC;
     }
     char ch = getc(file);
+    while (skip_front_spaces && isspace(ch) && !feof(file))
+    {
+        ch = getc(file);
+    }
     if (feof(file))
     {
         free(line_tmp);
@@ -203,9 +225,53 @@ status_code fread_line(FILE* file, char** line)
     return OK;
 }
 
-status_code read_line(char** str)
+status_code fread_word(FILE* file, char** word, int skip_front_spaces)
 {
-    return fread_line(stdin, str);
+    if (file == NULL || word == NULL)
+    {
+        return NULL_ARG;
+    }
+    ull iter = 0;
+    ull size = 4;
+    char* word_tmp = (char*) malloc(sizeof(char) * size);
+    if (word_tmp == NULL)
+    {
+        return BAD_ALLOC;
+    }
+    char ch = getc(file);
+    while (skip_front_spaces && isspace(ch) && !feof(file))
+    {
+        ch = getc(file);
+    }
+    if (feof(file))
+    {
+        free(word_tmp);
+        return FILE_END;
+    }
+    while (!feof(file) && !isspace(ch))
+    {
+        if (iter + 1 == size)
+        {
+            size *= 2;
+            char* tmp = realloc(word_tmp, size);
+            if (tmp == NULL)
+            {
+                free(word_tmp);
+                return BAD_ALLOC;
+            }
+            word_tmp = tmp;
+        }
+        word_tmp[iter++] = ch;
+        ch = getc(file);
+    }
+    word_tmp[iter] = '\0';
+    *word = word_tmp;
+    return OK;
+}
+
+status_code read_line(char** str, int skip_front_spaces)
+{
+    return fread_line(stdin, str, skip_front_spaces);
 }
 
 status_code sread_until(const char* src, const char* delims, int inclusive_flag, const char** end_ptr, char** str)
@@ -853,6 +919,57 @@ size_t calc_default_str_hash(const char* str)
         res += ctoi(str[i]);
     }
     return res;
+}
+
+int is_leap_year(int year)
+{
+	return year % 400 == 0 && year % 100 != 0 && year % 4 == 0;
+}
+
+
+// ISO8601: YYYY-MM-DDThh:mm:ssZ
+status_code iso_time_validate(const char time[21])
+{
+    if (time == NULL)
+    {
+        return NULL_ARG;
+    }
+    
+    status_code code = OK;
+    char copy[21];
+    strcpy(copy, time);
+    
+    if (strlen(time) != 20 || time[4] != '-' || time[7] != '-' || time[10] != 'T' ||
+            time[13] != ':' || time[16] != ':' || time[19] != 'Z' || time[20] != '\0')
+    {
+        return INVALID_INPUT;
+    }
+    
+    ull year, month, day, hour, min, sec;
+    code = code ? code : parse_ullong(strtok(copy, "-"), 10, &year);
+    code = code ? code : parse_ullong(strtok(NULL, "-"), 10, &month);
+    code = code ? code : parse_ullong(strtok(NULL, "T"), 10, &day);
+    code = code ? code : parse_ullong(strtok(NULL, ":"), 10, &hour);
+    code = code ? code : parse_ullong(strtok(NULL, ":"), 10, &min);
+    code = code ? code : parse_ullong(strtok(NULL, "Z"), 10, &sec);
+    
+    if (code)
+    {
+        return code;
+    }
+    
+    ull mday_cnt[12] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+    ull leap_mday_cnt[12] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+    
+    ull mx_day = is_leap_year(year) ? leap_mday_cnt[month-1] : mday_cnt[month-1];
+    
+    if (year < 1970 || year > 3000 || month < 1 || month > 12 || day < 1 || day > mx_day ||
+            hour > 23 || min > 59 || sec > 59)
+    {
+        return INVALID_INPUT;
+    }
+    
+    return OK;
 }
 
 status_code iso_time_add(const char time[21], ull add_s, char res[21])

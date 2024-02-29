@@ -27,8 +27,8 @@ pq_test.o: priority_queue/pq_test.c priority_queue/priority_queue.h utility.h
 
 
 # MAIN EXECUTABLE
-main: task09.o $(MAP_O_TRG) $(PQ_O_TRG) department.o utility.o
-	$(CC) $(CFLAGS) -o main gcc_obj/task09.o $(MAP_O) $(PQ_O) gcc_obj/department.o gcc_obj/utility.o
+main: task09.o $(MAP_O_TRG) $(PQ_O_TRG) input_reader.o department.o utility.o
+	$(CC) $(CFLAGS) -o main gcc_obj/task09.o $(MAP_O) $(PQ_O) gcc_obj/input_reader.o gcc_obj/department.o gcc_obj/utility.o
 
 task09.o: task09.c priority_queue/priority_queue.h priority_queue/binomial_heap.h utility.h
 	$(CC) $(CFLAGS) -c task09.c -o gcc_obj/task09.o
@@ -52,6 +52,9 @@ binomial_heap.o: priority_queue/binomial_heap.c priority_queue/binomial_heap.h u
 
 
 # OTHER
+input_reader.o: input_reader.c input_reader.h
+	$(CC) $(CFLAGS) -c input_reader.c -o gcc_obj/input_reader.o
+
 department.o: department.c department.h priority_queue/priority_queue.h
 	$(CC) $(CFLAGS) -c department.c -o gcc_obj/department.o
 
