@@ -4,6 +4,7 @@
 #include "priority_queue.h"
 #include "binary_heap.h"
 #include "binomial_heap.h"
+#include "fibonacci_heap.h"
 
 status_code p_queue_set_null(p_queue* pq)
 {
@@ -38,7 +39,7 @@ status_code p_queue_construct(p_queue* pq, pq_base base, int (*compare)(const re
     
     switch (base)
     {
-        case PQB_BINARY:
+        case PQB_BINARY: // omg rename functions
         {
             pq->ds_size = sizeof(bin_heap);
             pq->ds = malloc(sizeof(bin_heap));
@@ -71,11 +72,9 @@ status_code p_queue_construct(p_queue* pq, pq_base base, int (*compare)(const re
         }
         case PQB_SKEW:
         case PQB_BINOM:
-        case PQB_FIB:
-        case PQB_TREAP:
         {
-            pq->ds_size = sizeof(bm_heap);
-            pq->ds = malloc(sizeof(bm_heap));
+            pq->ds_size = sizeof(fib_heap);
+            pq->ds = malloc(sizeof(fib_heap));
             
             pq->set_null    = (status_code (*)(void*))                                          bm_heap_set_null;
             pq->construct   = (status_code (*)(void*, int (*)(const request*, const request*))) bm_heap_construct;
@@ -87,6 +86,24 @@ status_code p_queue_construct(p_queue* pq, pq_base base, int (*compare)(const re
             pq->top         = (status_code (*)(void*, request**))                               bm_heap_top;
             pq->pop         = (status_code (*)(void*, request**))                               bm_heap_pop;
             pq->insert      = (status_code (*)(void*, const request*))                          bm_heap_insert;
+            break;
+        }
+        case PQB_FIB:
+        case PQB_TREAP:
+        {
+            pq->ds_size = sizeof(bm_heap);
+            pq->ds = malloc(sizeof(bm_heap));
+            
+            pq->set_null    = (status_code (*)(void*))                                          fib_heap_set_null;
+            pq->construct   = (status_code (*)(void*, int (*)(const request*, const request*))) fib_heap_construct;
+            pq->copy        = (status_code (*)(void*, const void*))                             fib_heap_copy;
+            pq->destruct    = (status_code (*)(void*))                                          fib_heap_destruct;
+            pq->meld        = (status_code (*)(void*, void*, void*))                            fib_heap_meld;
+            pq->copy_meld   = (status_code (*)(void*, const void*, const void*))                fib_heap_copy_meld;
+            pq->size        = (status_code (*)(void*, size_t*))                                 fib_heap_size;
+            pq->top         = (status_code (*)(void*, request**))                               fib_heap_top;
+            pq->pop         = (status_code (*)(void*, request**))                               fib_heap_pop;
+            pq->insert      = (status_code (*)(void*, const request*))                          fib_heap_insert;
             break;
         }
     }

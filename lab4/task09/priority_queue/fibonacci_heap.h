@@ -12,13 +12,12 @@ typedef struct fib_node {
 	struct fib_node *right;
 } fib_node;
 
-typedef struct fib_heap
+typedef struct Fibonacci_heap
 {
 	fib_node* head;
 	size_t size;
 	int (*compare)(const request*, const request*);
-} fib_heap;
-
+} Fibonacci_heap, fib_heap;
 
 
 status_code fib_heap_set_null(fib_heap* heap);
