@@ -73,8 +73,8 @@ status_code p_queue_construct(p_queue* pq, pq_base base, int (*compare)(const re
         case PQB_SKEW:
         case PQB_BINOM:
         {
-            pq->ds_size = sizeof(fib_heap);
-            pq->ds = malloc(sizeof(fib_heap));
+            pq->ds_size = sizeof(bm_heap);
+            pq->ds = malloc(sizeof(bm_heap));
             
             pq->set_null    = (status_code (*)(void*))                                          bm_heap_set_null;
             pq->construct   = (status_code (*)(void*, int (*)(const request*, const request*))) bm_heap_construct;
@@ -91,8 +91,8 @@ status_code p_queue_construct(p_queue* pq, pq_base base, int (*compare)(const re
         case PQB_FIB:
         case PQB_TREAP:
         {
-            pq->ds_size = sizeof(bm_heap);
-            pq->ds = malloc(sizeof(bm_heap));
+            pq->ds_size = sizeof(fib_heap);
+            pq->ds = malloc(sizeof(fib_heap));
             
             pq->set_null    = (status_code (*)(void*))                                          fib_heap_set_null;
             pq->construct   = (status_code (*)(void*, int (*)(const request*, const request*))) fib_heap_construct;

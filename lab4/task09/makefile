@@ -13,55 +13,55 @@ all: main pq_test map_test
 
 # MAP TESTS
 map_test: map_test.o $(MAP_O_TRG) $(PQ_O_TRG) department.o utility.o
-	$(CC) $(CFLAGS) -o map_test gcc_obj/map_test.o $(MAP_O) $(PQ_O) gcc_obj/department.o gcc_obj/utility.o
+	$(CC) $(CFLAGS) -o map_test gcc_obj/map_test.o $(MAP_O) $(PQ_O) gcc_obj/department.o gcc_obj/utility.o -lm
 
 map_test.o: map/map_test.c map/map.h department.h utility.h
-	$(CC) $(CFLAGS) -c map/map_test.c -o gcc_obj/map_test.o
+	$(CC) $(CFLAGS) -c map/map_test.c -o gcc_obj/map_test.o -lm
 
 # PRIORITY QUEUE TESTS
 pq_test: pq_test.o $(PQ_O_TRG) utility.o
-	$(CC) $(CFLAGS) -o pq_test gcc_obj/pq_test.o $(PQ_O) gcc_obj/utility.o
+	$(CC) $(CFLAGS) -o pq_test gcc_obj/pq_test.o $(PQ_O) gcc_obj/utility.o -lm
 
 pq_test.o: priority_queue/pq_test.c priority_queue/priority_queue.h utility.h
-	$(CC) $(CFLAGS) -c priority_queue/pq_test.c -o gcc_obj/pq_test.o
+	$(CC) $(CFLAGS) -c priority_queue/pq_test.c -o gcc_obj/pq_test.o -lm
 
 
 # MAIN EXECUTABLE
 main: task09.o $(MAP_O_TRG) $(PQ_O_TRG) input_reader.o department.o utility.o
-	$(CC) $(CFLAGS) -o main gcc_obj/task09.o $(MAP_O) $(PQ_O) gcc_obj/input_reader.o gcc_obj/department.o gcc_obj/utility.o
+	$(CC) $(CFLAGS) -o main gcc_obj/task09.o $(MAP_O) $(PQ_O) gcc_obj/input_reader.o gcc_obj/department.o gcc_obj/utility.o -lm
 
 task09.o: task09.c priority_queue/priority_queue.h priority_queue/binomial_heap.h utility.h
-	$(CC) $(CFLAGS) -c task09.c -o gcc_obj/task09.o
+	$(CC) $(CFLAGS) -c task09.c -o gcc_obj/task09.o -lm
 
 # MAP
 map.o: map/map.c map/map.h department.h utility.h
-	$(CC) $(CFLAGS) -c map/map.c -o gcc_obj/map.o
+	$(CC) $(CFLAGS) -c map/map.c -o gcc_obj/map.o -lm
 
 trie.o: map/trie.c map/trie.h department.h utility.h
-	$(CC) $(CFLAGS) -c map/trie.c -o gcc_obj/trie.o
+	$(CC) $(CFLAGS) -c map/trie.c -o gcc_obj/trie.o -lm
 
 # PRIORITY QUEUE
 priority_queue.o: priority_queue/priority_queue.c priority_queue/priority_queue.h utility.h
-	$(CC) $(CFLAGS) -c priority_queue/priority_queue.c -o gcc_obj/priority_queue.o
+	$(CC) $(CFLAGS) -c priority_queue/priority_queue.c -o gcc_obj/priority_queue.o -lm
 
 binary_heap.o: priority_queue/binary_heap.c priority_queue/binary_heap.h utility.h
-	$(CC) $(CFLAGS) -c priority_queue/binary_heap.c -o gcc_obj/binary_heap.o
+	$(CC) $(CFLAGS) -c priority_queue/binary_heap.c -o gcc_obj/binary_heap.o -lm
 
 binomial_heap.o: priority_queue/binomial_heap.c priority_queue/binomial_heap.h utility.h
-	$(CC) $(CFLAGS) -c priority_queue/binomial_heap.c -o gcc_obj/binomial_heap.o
+	$(CC) $(CFLAGS) -c priority_queue/binomial_heap.c -o gcc_obj/binomial_heap.o -lm
 
 fibonacci_heap.o: priority_queue/fibonacci_heap.c priority_queue/fibonacci_heap.h utility.h
-	$(CC) $(CFLAGS) -c priority_queue/fibonacci_heap.c -o gcc_obj/fibonacci_heap.o
+	$(CC) $(CFLAGS) -c priority_queue/fibonacci_heap.c -o gcc_obj/fibonacci_heap.o -lm
 
 # OTHER
 input_reader.o: input_reader.c input_reader.h
-	$(CC) $(CFLAGS) -c input_reader.c -o gcc_obj/input_reader.o
+	$(CC) $(CFLAGS) -c input_reader.c -o gcc_obj/input_reader.o -lm
 
 department.o: department.c department.h priority_queue/priority_queue.h
-	$(CC) $(CFLAGS) -c department.c -o gcc_obj/department.o
+	$(CC) $(CFLAGS) -c department.c -o gcc_obj/department.o -lm
 
 utility.o: utility.c utility.h
-	$(CC) $(CFLAGS) -c utility.c -o gcc_obj/utility.o
+	$(CC) $(CFLAGS) -c utility.c -o gcc_obj/utility.o -lm
 	
 .PHONY: clean
 

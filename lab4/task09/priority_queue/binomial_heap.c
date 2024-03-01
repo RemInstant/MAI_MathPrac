@@ -66,6 +66,7 @@ status_code bmh_node_destruct(bmh_node* node)
     bmh_node_destruct(node->son);
     bmh_node_destruct(node->brother);
     request_destruct(node->req);
+    free(node->req);
     free(node);
     return OK;
 }

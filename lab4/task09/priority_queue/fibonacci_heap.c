@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 #include "fibonacci_heap.h"
 
@@ -60,26 +61,19 @@ status_code fib_node_copy(fib_node** dest_p, const fib_node* src)
 		{
 			fib_node_destruct(dest);
 			free(cur_dest);
-
 			return BAD_ALLOC;
 		}
 		
-		cur_dest->req->txt = (char*)malloc(sizeof(char) * (strlen(cur_src->req->txt) + 1));
-		if (cur_dest->req->txt == NULL)
+		status_code code = request_copy(cur_dest->req, cur_src->req);
+		if (code)
 		{
 			fib_node_destruct(dest);
 			free(cur_dest->req);
 			free(cur_dest);
-
-			return BAD_ALLOC;
+			return code;
 		}
 		
-		cur_dest->req->id = cur_src->req->id;
-		cur_dest->req->prior = cur_src->req->prior;
 		cur_dest->rank = cur_src->rank;
-		strcpy(cur_dest->req->time, cur_src->req->time);
-		strcpy(cur_dest->req->txt, cur_src->req->txt);
-
 		cur_dest->child = NULL;
 		cur_dest->right = NULL;
 		cur_dest->left = prev_dest;
@@ -316,6 +310,9 @@ status_code fib_node_merge(fib_heap* heap, fib_node* node_1, fib_node* node_2, f
 		return NULL_ARG;
 	}
 	
+	size_t tt1 = node_1->rank;
+	size_t tt2 = node_2->rank;
+	
 	if (node_1 == node_2 || node_1->rank != node_2->rank)
 	{
 		return INVALID_INPUT;
@@ -454,7 +451,7 @@ status_code fib_heap_consolidation(fib_heap* heap)
 	status_code code = OK;
 	fib_node* cur = heap->head;
 	fib_node* nxt = heap->head->right;
-	size_t size = cur->rank + 1;
+	size_t size = log2(1.0 * heap->size) + 1;
 
 	fib_node** arr = (fib_node**) calloc(size, sizeof(fib_node*));
 	if (arr == NULL)
@@ -477,30 +474,10 @@ status_code fib_heap_consolidation(fib_heap* heap)
 		{
 			fib_node* node_tmp = arr[cur->rank];
 			arr[cur->rank] = NULL;
-			fib_node_merge(heap, cur, node_tmp, &cur);
-			
-			if (cur->rank >= size)
-			{
-				fib_node** tmp = (fib_node**) realloc(arr, sizeof(fib_node*) * (size * 2));
-				if (tmp == NULL)
-				{
-					code = BAD_ALLOC;
-				}
-				else
-				{
-					arr = tmp;
-					//memset(arr + size, 0, sizeof(fib_node*) * size);
-					for (size_t i = size; i < 2*size; ++i)
-					{
-						arr[i] = NULL;
-					}
-					size *= 2;
-				}
-			}
+			code = fib_node_merge(heap, cur, node_tmp, &cur);
 		}
 		
 		arr[cur->rank] = cur;
-		
 		cur = nxt;
 	}
 	
@@ -535,6 +512,13 @@ status_code fib_heap_consolidation(fib_heap* heap)
 	prev->right = start;
 	start->left = prev;
 	heap->head = top;
+	
+	if (heap->size == 1)
+	{
+		heap->head->right = heap->head->left = NULL;
+	}
+	
+	free(arr);
 	
 	return code;
 	
@@ -640,11 +624,13 @@ status_code fib_heap_pop(fib_heap* heap, request** req)
 	
 	if (heap->head == NULL)
 	{
-		req = NULL;
+		*req = NULL;
 		return OK;
 	}
 
-	if (heap->head->right != NULL)
+	*req = heap->head->req;
+
+	if (heap->head->right != NULL && heap->head->right != heap->head)
 	{
 		if (heap->head->left == heap->head->right)
 		{
