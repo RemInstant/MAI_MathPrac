@@ -3,7 +3,8 @@
 
 #include "utility.h"
 #include "department.h"
-#include "input_reader.h"
+#include "readers.h"
+#include "logger.h"
 
 #include "priority_queue/binomial_heap.h"
 #include "priority_queue/priority_queue.h"
@@ -13,59 +14,100 @@
 
 #include <unistd.h>
 
+// TODO 
+// NAME GENERATOR !!!!!!!!!!!!!!!!!
+// TRANSFER
+// MAPS HEAPS
+
 int main()
 {
-    Department dep;
-    Input_reader ir;
-    
-    department_set_null(&dep);
-    ir_set_null(&ir);
-    
     status_code code = OK;
+    Map dep_map;
+    Input_reader ir;
+    Logger logger;
     
-    code = code ? code : department_construct(&dep, 1, PQB_BINOM, 5.0, 1e-9, 5, 5, compare_request);
+    size_t dep_cnt = 0;
+    char** dep_names = NULL;
+    char cur_time[21];
+    char end_time[21];
+    
+    map_set_null(&dep_map);
+    ir_set_null(&ir);
+    logger_set_null(&logger);
+    
+    code = code ? code : setup_config("config", &dep_map, &dep_cnt, &dep_names, cur_time, end_time, 1e-9);
+    code = code ? code : ir_construct(&ir);
+    code = code ? code : logger_construct(&logger, "log");
     code = code ? code : ir_read_file(&ir, "request_1");
     
-    size_t req_cnt;
-    request** reqs = NULL;
-    code = code ? code : ir_get_up_to(&ir, "2025-01-01T12:00:00Z", &req_cnt, &reqs);
-    
-    
-    if (code)
+    while (!code && strcmp(cur_time, end_time) <= 0)
     {
-        return code;
-    }
-    
-    char cur_time[21];
-    strcpy(cur_time, "2000-01-01T10:00:00Z");
-    
-    
-    char* txt = malloc(sizeof(char) * 4);
-    strcpy(txt, "123");
-    
-    unsigned req_id = 1;
-    
-    size_t msg_cnt = 0;
-    dep_msg* msgs = NULL;
-    
-    while (strcmp(cur_time, "2000-01-01T11:00:00Z"))
-    {
-        code = code ? code : department_handle_finishing(&dep, cur_time, &msg_cnt, &msgs);
-        free(msgs);
+        Department* dep = NULL;
+        size_t msg_cnt = 0;
+        dep_msg* msgs = NULL;
+        size_t req_cnt = 0;
+        request** reqs = NULL;
         
-        if (!strcmp(cur_time, "2000-01-01T10:01:00Z"))
+        code = code ? code : ir_get_up_to(&ir, cur_time, &req_cnt, &reqs);
+        
+        // HANDLE TASK FINISHING
+        for (size_t i = 0; !code && i < dep_cnt; ++i)
         {
-            request* req = (request*) malloc(sizeof(request));
-            req->id = req_id++;
-            req->prior = 2;
-            strcpy(req->time, cur_time);
-            req->txt = txt; 
-            
-            
-            code = code ? code : department_add_request(&dep, req, &msg_cnt, &msgs);
+            code = code ? code : map_get(&dep_map, dep_names[i], &dep);
+            code = code ? code : department_handle_finishing(dep, cur_time, &msg_cnt, &msgs);
+            code = code ? code : logger_multi_log(&logger, cur_time, msg_cnt, msgs);
             free(msgs);
+            msgs = NULL;
         }
+        
+        // HANDLE TASK READING + STARTING
+        for (size_t i = 0; !code && i < req_cnt; ++i)
+        {
+            code = code ? code : map_get(&dep_map, reqs[i]->dep_id, &dep);
+            code = code ? code : department_add_request(dep, reqs[i], &msg_cnt, &msgs);
+            
+            if (!code && msg_cnt == 2 && msgs[1].code == DEPARTMENT_OVERLOADED)
+            {
+                // TRY TRANSFER
+            }
+            
+            code = code ? code : logger_multi_log(&logger, cur_time, msg_cnt, msgs);
+            
+            free(msgs);
+            msgs = NULL;
+        }
+        
+        // HANDLE EXTRA TASK STARTING
+        for (size_t i = 0; !code && i < dep_cnt; ++i)
+        {
+            code = code ? code : map_get(&dep_map, dep_names[i], &dep);
+            code = code ? code : department_handle_starting(dep, cur_time, &msg_cnt, &msgs);
+            code = code ? code : logger_multi_log(&logger, cur_time, msg_cnt, msgs);
+            free(msgs);
+            msgs = NULL;
+        }
+        
+        free(reqs);
         
         iso_time_add(cur_time, 60, cur_time);
     }
+    
+    
+    
+    map_destruct(&dep_map);
+    ir_destruct(&ir);
+    logger_destruct(&logger);
+    
+    for (size_t i = 0; i < dep_cnt; ++i)
+    {
+        free(dep_names[i]);
+    }
+    free(dep_names);
+    
+    if (code)
+    {
+        print_error(code, 1);
+    }
+    
+    return code;
 }

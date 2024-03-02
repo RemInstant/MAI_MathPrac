@@ -9,6 +9,8 @@ MAP_H = map/map.h map/trie.h
 MAP_O = gcc_obj/map.o gcc_obj/trie.o
 MAP_O_TRG = map.o trie.o
 
+OTHER_O = gcc_obj/logger.o gcc_obj/readers.o gcc_obj/department.o gcc_obj/utility.o
+
 all: main pq_test map_test
 
 # MAP TESTS
@@ -27,8 +29,8 @@ pq_test.o: priority_queue/pq_test.c priority_queue/priority_queue.h utility.h
 
 
 # MAIN EXECUTABLE
-main: task09.o $(MAP_O_TRG) $(PQ_O_TRG) input_reader.o department.o utility.o
-	$(CC) $(CFLAGS) -o main gcc_obj/task09.o $(MAP_O) $(PQ_O) gcc_obj/input_reader.o gcc_obj/department.o gcc_obj/utility.o -lm
+main: task09.o $(MAP_O_TRG) $(PQ_O_TRG) readers.o department.o utility.o logger.o
+	$(CC) $(CFLAGS) -o main gcc_obj/task09.o $(MAP_O) $(PQ_O) $(OTHER_O) -lm
 
 task09.o: task09.c priority_queue/priority_queue.h priority_queue/binomial_heap.h utility.h
 	$(CC) $(CFLAGS) -c task09.c -o gcc_obj/task09.o -lm
@@ -54,10 +56,13 @@ fibonacci_heap.o: priority_queue/fibonacci_heap.c priority_queue/fibonacci_heap.
 	$(CC) $(CFLAGS) -c priority_queue/fibonacci_heap.c -o gcc_obj/fibonacci_heap.o -lm
 
 # OTHER
-input_reader.o: input_reader.c input_reader.h
-	$(CC) $(CFLAGS) -c input_reader.c -o gcc_obj/input_reader.o -lm
+logger.o: logger.c logger.h utility.h department.h
+	$(CC) $(CFLAGS) -c logger.c -o gcc_obj/logger.o -lm
 
-department.o: department.c department.h priority_queue/priority_queue.h
+readers.o: readers.c readers.h utility.h priority_queue/priority_queue.h map/map.h
+	$(CC) $(CFLAGS) -c readers.c -o gcc_obj/readers.o -lm
+
+department.o: department.c department.h utility.h priority_queue/priority_queue.h
 	$(CC) $(CFLAGS) -c department.c -o gcc_obj/department.o -lm
 
 utility.o: utility.c utility.h

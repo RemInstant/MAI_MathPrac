@@ -2,6 +2,11 @@
 #define _INPUT_READER_H_
 
 #include "utility.h"
+#include "priority_queue/priority_queue.h"
+#include "map/map.h"
+
+status_code setup_config(const char* path, Map* dep_map, size_t* dep_cnt, char*** dep_names,
+                                char st_time[21], char end_time[21], double eps);
 
 typedef struct Input_reader
 {
