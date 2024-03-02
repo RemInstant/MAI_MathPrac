@@ -46,7 +46,7 @@ int main()
                 dep = (Department*) malloc(sizeof(Department));
                 dep1 = NULL;
                 assert(dep != NULL);
-                assert(department_construct(dep, i, PQB_BINOM, 2.0, 1e-9, 1, 1, compare_request) == OK);
+                assert(department_construct(dep, "123", i, PQB_BINOM, 2.0, 1e-9, 1, 1, compare_request) == OK);
                 
                 key[0] = '0' + (i % 10);
                 key[1] = '0' + ((i*5 + 3) % 10);
@@ -114,7 +114,7 @@ int main()
                 dep = (Department*) malloc(sizeof(Department));
                 dep1 = NULL;
                 assert(dep != NULL);
-                assert(department_construct(dep, i+5, PQB_BINOM, 2.0, 1e-9, 1, 1, compare_request) == OK);
+                assert(department_construct(dep, "123", i+5, PQB_BINOM, 2.0, 1e-9, 1, 1, compare_request) == OK);
                 
                 key[0] = '0' + ((3*i + 17) % 10);
                 key[1] = '0' + ((5*i + 13) % 10);
@@ -169,12 +169,12 @@ int main()
             
             dep = (Department*) malloc(sizeof(Department));
             assert(dep != NULL);
-            assert(department_construct(dep, 2, PQB_BINOM, 2.0, 1e-9, 1, 1, compare_request) == OK);
+            assert(department_construct(dep, "123", 2, PQB_BINOM, 2.0, 1e-9, 1, 1, compare_request) == OK);
             assert(map_insert(&map, key, dep) == OK);
             
             dep = (Department*) malloc(sizeof(Department));
             assert(dep != NULL);
-            assert(department_construct(dep, 2, PQB_BINOM, 2.0, 1e-9, 1, 1, compare_request) == OK);
+            assert(department_construct(dep, "123", 2, PQB_BINOM, 2.0, 1e-9, 1, 1, compare_request) == OK);
             assert(map_insert(&map, key, dep) == BAD_ACCESS);
             assert(department_destruct(dep) == OK);
             
@@ -183,7 +183,7 @@ int main()
                 key[0] = 'A' + i;
                 dep = (Department*) malloc(sizeof(Department));
                 assert(dep != NULL);
-                assert(department_construct(dep, 2, PQB_BINOM, 2.0, 1e-9, 1, 1, compare_request) == OK);
+                assert(department_construct(dep, "123", 2, PQB_BINOM, 2.0, 1e-9, 1, 1, compare_request) == OK);
                 assert(map_insert(&map, key, dep) == OK);
             }
             

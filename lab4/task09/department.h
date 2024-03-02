@@ -55,6 +55,7 @@ typedef struct department_message
 status_code department_set_null(Department* dep);
 status_code department_construct(
     Department* dep,
+    const char* dep_id,
     size_t staff_size,
     pq_base base,
     double overload_coef,

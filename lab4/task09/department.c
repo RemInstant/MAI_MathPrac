@@ -45,6 +45,7 @@ status_code department_set_null(Department* dep)
 
 status_code department_construct(
     Department* dep,
+    const char* dep_id,
     size_t staff_size,
     pq_base base,
     double overload_coef,
@@ -60,9 +61,16 @@ status_code department_construct(
     
     status_code code = OK;
     
+    dep->id = (char*) malloc(sizeof(char) * (strlen(dep_id) + 1));
+    if (dep->id == NULL)
+    {
+        return BAD_ALLOC;
+    }
+    
     dep->staff = (Operator*) malloc(sizeof(Operator) * staff_size);
     if (dep->staff == NULL)
     {
+        free(dep->id);
         return BAD_ALLOC;
     }
     for (size_t i = 0; i < staff_size; ++i)
@@ -100,12 +108,15 @@ status_code department_construct(
         {
             free(dep->staff[i].name);
         }
+        free(dep->id);
         free(dep->staff);
         p_queue_destruct(dep->queue);
         free(dep->queue);
         department_set_null(dep);
         return code;
     }
+    
+    strcpy(dep->id, dep_id);
     dep->staff_size = staff_size;
     dep->free_staff_cnt = staff_size;
     dep->load_coef = 0;
@@ -113,6 +124,7 @@ status_code department_construct(
     dep->eps = eps;
     dep->min_handling_time = min_handling_time;
     dep->max_handling_time = max_handling_time;
+    
     return OK;
 }
 
@@ -167,17 +179,17 @@ status_code department_handle_finishing(Department* dep, const char time[21], si
         }
     }
     
-    if (msg_cnt_tmp == 0)
-    {
-        *msg_cnt = 0;
-        *msgs = NULL;
-        return OK;
-    }
-    
     msgs_tmp = (dep_msg*) malloc(sizeof(dep_msg) * msg_cnt_tmp);
     if (msgs_tmp == NULL)
     {
         return BAD_ALLOC;
+    }
+    
+    if (msg_cnt_tmp == 0)
+    {
+        *msg_cnt = 0;
+        *msgs = msgs_tmp;
+        return OK;
     }
     
     for (size_t i = 0, j = 0; i < dep->staff_size; ++i)
