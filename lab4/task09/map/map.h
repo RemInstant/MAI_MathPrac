@@ -55,7 +55,13 @@ typedef struct Map
 } Map;
 
 status_code map_set_null(Map* map);
-status_code map_init(Map* map, map_base base);
+status_code map_construct(Map* map, map_base base, size_t (*calc_hash)(const char*));
 status_code map_destruct(Map* map);
+
+status_code map_contains(Map* map, const char* key, int* is_contained);
+status_code map_get(Map* map, const char* key, Department** dep);
+status_code map_insert(Map* map, const char* key, Department* dep);
+status_code map_erase(Map* map, const char* key);
+status_code map_get_const_key_vals(Map* map, size_t* dict_size, pair_str_dep** dict);
 
 #endif
