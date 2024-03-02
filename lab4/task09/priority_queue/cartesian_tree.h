@@ -1,0 +1,37 @@
+#ifndef TREAP_H
+#define TREAP_H
+
+#include "data_structs.h"
+
+typedef struct Treap_node {
+    Application* key;
+    int priority;
+    struct Treap_node* left;
+    struct Treap_node* right;
+} Treap_node;
+
+typedef struct Treap {
+    Treap_node* root;
+} Treap;
+
+
+int Treap_init(Treap* t);
+// int Treap_node_init(Treap_node** nd, Application* a);
+// void Treap_node_free(Treap_node* nd);
+
+int Treap_copy(Treap* dest, Treap source);
+
+Treap Treap_merge(Treap t1, Treap t2);
+int Treap_merge_no_destruction(Treap* res, Treap t1, Treap t2);
+//int Treap_split(Treap_node* t, Application* key, Treap_node** t1, Treap_node** t2);
+
+ int Treap_insert(Treap* t, Application* key);
+ int Treap_erase(Treap* t, Application* key);
+
+void Treap_print(FILE* stream, const Treap t);
+//void Treap_print_from_root(FILE* stream, Treap_node* root, int n);
+
+void Treap_destroy(Treap t);
+void Treap_destroy_from_root(Treap_node* root);
+
+#endif
