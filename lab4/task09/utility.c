@@ -1007,8 +1007,8 @@ status_code iso_time_add(const char time[21], ull add_s, char res[21])
     
     res[0] = '0' + ((t.tm_year + 1900) / 1000);
     res[1] = '0' + ((t.tm_year + 1900) / 100 % 10);
-    res[2] = '0' + ((t.tm_year + 1900) / 10 % 100);
-    res[3] = '0' + ((t.tm_year + 1900) / 1 % 1000);
+    res[2] = '0' + ((t.tm_year + 1900) / 10 % 10);
+    res[3] = '0' + ((t.tm_year + 1900) / 1 % 10);
     
     res[5] = '0' + ((t.tm_mon + 1) / 10);
     res[6] = '0' + ((t.tm_mon + 1) % 10);

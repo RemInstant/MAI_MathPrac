@@ -73,7 +73,6 @@ int main()
             
             for (size_t i = 8; i > 0; --i)
             {
-                printf("%u\n", i);
                 assert(p_queue_top(&pq, &req) == OK);
                 assert(atoi(req->txt) == i);
                 assert(p_queue_pop(&pq, &req) == OK);

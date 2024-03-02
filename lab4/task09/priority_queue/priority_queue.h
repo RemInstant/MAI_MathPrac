@@ -40,9 +40,9 @@ status_code p_queue_meld(p_queue* pq_res, p_queue* pq_l, p_queue* pq_r);
 status_code p_queue_copy_meld(p_queue* pq_res, const p_queue* pq_l, const p_queue* pq_r);
 
 status_code p_queue_size(p_queue* pq, size_t* size);
-status_code p_queue_top(p_queue* pq, request** req); // mallocs result
+status_code p_queue_top(p_queue* pq, request** req);
 status_code p_queue_pop(p_queue* pq, request** req);
-status_code p_queue_insert(p_queue* pq, request* req); // mallocs copy of input
+status_code p_queue_insert(p_queue* pq, request* req);
 
 int compare_request(const request* lhs, const request* rhs);
 

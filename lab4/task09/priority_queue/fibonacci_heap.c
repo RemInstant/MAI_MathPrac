@@ -310,9 +310,6 @@ status_code fib_node_merge(fib_heap* heap, fib_node* node_1, fib_node* node_2, f
 		return NULL_ARG;
 	}
 	
-	size_t tt1 = node_1->rank;
-	size_t tt2 = node_2->rank;
-	
 	if (node_1 == node_2 || node_1->rank != node_2->rank)
 	{
 		return INVALID_INPUT;
