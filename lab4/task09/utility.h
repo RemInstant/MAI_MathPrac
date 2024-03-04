@@ -74,6 +74,8 @@ status_code fread_cmd(FILE* file, char** str);
 status_code validate_var_name(const char* var_name);
 status_code parse_dict_str_double(const char* src, ull* cnt, pair_str_double** dict);
 
+unsigned rand_32();
+
 int is_word(const char* str);
 int is_number(const char* str);
 int ctoi(char ch);

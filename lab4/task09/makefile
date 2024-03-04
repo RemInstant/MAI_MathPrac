@@ -11,6 +11,8 @@ MAP_O_TRG = map.o trie.o
 
 OTHER_O = gcc_obj/logger.o gcc_obj/readers.o gcc_obj/department.o gcc_obj/utility.o
 
+VPATH = gcc_obj
+
 all: main pq_test map_test
 
 # MAP TESTS

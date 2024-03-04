@@ -93,13 +93,13 @@ status_code logger_log(Logger* log, const char time[21], department_message msg)
         {
             if (msg.transfer_dep_id == NULL)
             {
-                fprintf(log->file, "[%s] [DEPARTMENT_OVERLOADED]: Department %s was overloaded on receiving request %u. ",
+                fprintf(log->file, "[%s] [DEPARTMENT_OVERLOADED]: Department %s was overloaded after receiving request %u. ",
                         time, msg.dep_id, msg.req_id);
                 fprintf(log->file, "No transfer can be executed.\n");
             }
             else
             {
-                fprintf(log->file, "[%s] [DEPARTMENT_OVERLOADED]: Department %s was overloaded on receiving request %u. ",
+                fprintf(log->file, "[%s] [DEPARTMENT_OVERLOADED]: Department %s was overloaded after receiving request %u. ",
                         time, msg.dep_id, msg.req_id);
                 fprintf(log->file, "Its request was transfered to department %s\n",
                         msg.transfer_dep_id);

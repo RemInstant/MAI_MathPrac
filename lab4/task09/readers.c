@@ -413,7 +413,7 @@ status_code ir_insert_req(Input_reader* ir, request* req)
     
     if (ir->size == ir->cap)
     {
-        request** data_tmp = realloc(ir->data, ir->cap * 2);
+        request** data_tmp = (request**) realloc(ir->data, sizeof(request*) * ir->cap * 2);
         if (data_tmp == NULL)
         {
             return BAD_ALLOC;
@@ -501,7 +501,7 @@ status_code ir_get_up_to(Input_reader* ir, const char time[21], size_t* req_cnt,
     
     for (size_t i = ir->front; i < back; ++i)
     {
-        (*reqs)[i] = ir->data[i];
+        (*reqs)[i - ir->front] = ir->data[i];
     }
     
     ir->front = back;

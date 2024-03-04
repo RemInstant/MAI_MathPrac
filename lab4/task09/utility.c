@@ -525,6 +525,16 @@ status_code parse_dict_str_double(const char* src, ull* cnt, pair_str_double** d
 }
 
 
+unsigned rand_32()
+{
+	unsigned x = rand() & 255;
+	x |= (rand() & 255) << 8;
+	x |= (rand() & 255) << 16;
+	x |= (rand() & 255) << 24;
+	return x;
+}
+
+
 int is_word(const char* str)
 {
     if (str == NULL || str[0] == '\0')
