@@ -3,9 +3,9 @@
 
 #include "department.h"
 
-status_code operator_give_task(Department* dep, size_t op_id, const request* req)
+status_code operator_give_task(Department* dep, size_t op_id, const char time[21], const request* req)
 {
-    if (dep == NULL || req == NULL)
+    if (dep == NULL || time == NULL || req == NULL)
     {
         return NULL_ARG;
     }
@@ -17,9 +17,19 @@ status_code operator_give_task(Department* dep, size_t op_id, const request* req
     Operator* op = &(dep->staff[op_id]);
     dep->free_staff_cnt--;
     
+    unsigned handling_time = 0;
+    if (dep->max_handling_time == UINT_MAX && dep->min_handling_time == 0)
+    {
+        handling_time = rand_32();
+    }
+    else
+    {
+        handling_time = dep->min_handling_time + rand_32() % (dep->max_handling_time - dep->min_handling_time + 1);
+    }
+    
     op->req = req;
-    op->handling_time = 5;
-    strcpy(op->start_time, req->time);
+    op->handling_time = handling_time;
+    strcpy(op->start_time, time);
     iso_time_add(op->start_time, op->handling_time * 60, op->finish_time);
     
     return OK;
@@ -38,6 +48,7 @@ status_code department_set_null(Department* dep)
     dep->load_coef = 0;
     dep->overload_coef = 0;
     dep->eps = 0;
+    dep->overload_flag = 0;
     dep->min_handling_time = 0;
     dep->max_handling_time = 0;
     return OK;
@@ -122,6 +133,7 @@ status_code department_construct(
     dep->load_coef = 0;
     dep->overload_coef = overload_coef;
     dep->eps = eps;
+    dep->overload_flag = 0;
     dep->min_handling_time = min_handling_time;
     dep->max_handling_time = max_handling_time;
     
@@ -156,8 +168,18 @@ status_code department_update_load_coef(Department* dep)
     }
     
     dep->load_coef = 1.0 * task_cnt / dep->staff_size;
+    dep->overload_flag = dep->load_coef - dep->overload_coef > -dep->eps;
     
     return OK;
+}
+
+status_code department_get_task_cnt(Department* dep, size_t* task_cnt)
+{
+    if (dep == NULL || task_cnt == NULL)
+    {
+        return NULL_ARG;
+    }
+    return p_queue_size(dep->queue, task_cnt);
 }
 
 status_code department_handle_finishing(Department* dep, const char time[21], size_t* msg_cnt, dep_msg** msgs)
@@ -173,7 +195,7 @@ status_code department_handle_finishing(Department* dep, const char time[21], si
     for (size_t i = 0; i < dep->staff_size; ++i)
     {
         Operator* op = &(dep->staff[i]);
-        if (!strcmp(time, op->finish_time))
+        if (op->req != NULL && strcmp(time, op->finish_time) >= 0)
         {
             ++msg_cnt_tmp;
         }
@@ -195,7 +217,7 @@ status_code department_handle_finishing(Department* dep, const char time[21], si
     for (size_t i = 0, j = 0; i < dep->staff_size; ++i)
     {
         Operator* op = &(dep->staff[i]);
-        if (!strcmp(time, op->finish_time))
+        if (op->req != NULL && strcmp(time, op->finish_time) >= 0)
         {
             msgs_tmp[j].code = REQUEST_HANDLING_FINISHED;
             msgs_tmp[j].req_id = op->req->id;
@@ -218,12 +240,16 @@ status_code department_handle_finishing(Department* dep, const char time[21], si
     return OK;
 }
 
-status_code department_add_request(Department* dep, request* req, size_t* msg_cnt, dep_msg** msgs)
+status_code department_add_request(Department* dep, const char time[21], request* req, size_t* msg_cnt, dep_msg** msgs)
 {
-    if (dep == NULL || req == NULL || msg_cnt == NULL || msgs == NULL)
+    if (dep == NULL || time == NULL || req == NULL || msg_cnt == NULL || msgs == NULL)
     {
         return NULL_ARG;
     }
+    
+    status_code code = OK;
+    size_t free_id = 0;
+    int prev_overload_flag = dep->overload_flag;
     
     size_t msg_cnt_tmp = 1;
     dep_msg* msgs_tmp = (dep_msg*) malloc(sizeof(dep_msg) * 2);
@@ -237,15 +263,16 @@ status_code department_add_request(Department* dep, request* req, size_t* msg_cn
     msgs_tmp[0].dep_id = dep->id;
     msgs_tmp[0].transfer_dep_id = NULL;
     
-    status_code code = OK;
-    size_t free_id = 0;
+    code = code ? code : p_queue_insert(dep->queue, req);
+    
     if (dep->free_staff_cnt > 0)
     {
         while (dep->staff[free_id].req != NULL)
         {
             ++free_id;
         }
-        code = code ? code : operator_give_task(dep, free_id, req);
+        code = code ? code : p_queue_pop(dep->queue, &req);
+        code = code ? code : operator_give_task(dep, free_id, time, req);
         msgs_tmp[1].code = REQUEST_HANDLING_STARTED;
         msgs_tmp[1].req_id = req->id;
         msgs_tmp[1].dep_id = dep->id;
@@ -253,11 +280,8 @@ status_code department_add_request(Department* dep, request* req, size_t* msg_cn
         msgs_tmp[1].oper_name = dep->staff[free_id].name; // <---------------------------- mb copy???????????
         msg_cnt_tmp = 2;
     }
-    else
-    {
-        code = code ? code : p_queue_insert(dep->queue, req);
-        code = code ? code : department_update_load_coef(dep);
-    }
+    
+    code = code ? code : department_update_load_coef(dep);
     
     if (code)
     {
@@ -265,7 +289,7 @@ status_code department_add_request(Department* dep, request* req, size_t* msg_cn
         return code;
     }
     
-    if (dep->load_coef - dep->overload_coef > -dep->eps)
+    if (!prev_overload_flag && dep->overload_flag)
     {
         msgs_tmp[1].code = DEPARTMENT_OVERLOADED;
         msgs_tmp[1].req_id = req->id;
@@ -311,7 +335,7 @@ status_code department_handle_starting(Department* dep, const char time[21], siz
         
         request* req = NULL;
         code = code ? code : p_queue_pop(dep->queue, &req);
-        code = code ? code : operator_give_task(dep, free_id, req);
+        code = code ? code : operator_give_task(dep, free_id, time, req);
         
         msgs_tmp[i].code = REQUEST_HANDLING_STARTED;
         msgs_tmp[i].req_id = req->id;
@@ -319,6 +343,8 @@ status_code department_handle_starting(Department* dep, const char time[21], siz
         msgs_tmp[i].transfer_dep_id = NULL;
         msgs_tmp[i].oper_name = dep->staff[free_id].name;
     }
+    
+    code = code ? code : department_update_load_coef(dep);
     
     if (code)
     {
@@ -331,5 +357,38 @@ status_code department_handle_starting(Department* dep, const char time[21], siz
     return OK;
 }
 
-status_code department_can_handle_transfer(Department* dep, unsigned extra_task_cnt, int can_handle);
-status_code department_transfer(Department* dep_dest, Department* dep_src);
+status_code department_can_handle_transfer(Department* dep, size_t extra_task_cnt, int* can_handle)
+{
+    if (dep == NULL)
+    {
+        return NULL_ARG;
+    }
+    
+    size_t task_cnt = 0;
+    status_code code = p_queue_size(dep->queue, &task_cnt);
+    if (code)
+    {
+        return code;
+    }
+    
+    double extra_load_coef = 1.0 * (task_cnt + extra_task_cnt) / dep->staff_size;
+    *can_handle = extra_load_coef - dep->overload_coef < -dep->eps;
+    
+    return OK;
+}
+
+status_code department_transfer(Department* dep_dest, Department* dep_src)
+{
+    if (dep_dest == NULL || dep_src == NULL)
+    {
+        return NULL_ARG;
+    }
+    
+    status_code code = OK;
+    
+    code = code ? code : p_queue_meld(dep_dest->queue, dep_dest->queue, dep_src->queue);
+    code = code ? code : department_update_load_coef(dep_dest);
+    code = code ? code : department_update_load_coef(dep_src);
+    
+    return code;
+}

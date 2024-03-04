@@ -23,6 +23,7 @@ typedef struct Department
     double load_coef;
     double overload_coef;
     double eps;
+    int overload_flag;
     unsigned min_handling_time;
     unsigned max_handling_time;
 } Department;
@@ -65,10 +66,11 @@ status_code department_construct(
     int (*comp)(const request*, const request*));
 status_code department_destruct(Department* dep);
 
+status_code department_get_task_cnt(Department* dep, size_t* task_cnt);
 status_code department_handle_finishing(Department* dep, const char time[21], size_t* msg_cnt, dep_msg** msgs);
-status_code department_add_request(Department* dep, request* req, size_t* msg_cnt, dep_msg** msgs);
+status_code department_add_request(Department* dep, const char time[21], request* req, size_t* msg_cnt, dep_msg** msgs);
 status_code department_handle_starting(Department* dep, const char time[21], size_t* msg_cnt, dep_msg** msgs);
-status_code department_can_handle_transfer(Department* dep, unsigned extra_task_cnt, int can_handle);
+status_code department_can_handle_transfer(Department* dep, size_t extra_task_cnt, int* can_handle);
 status_code department_transfer(Department* dep_dest, Department* dep_src);
 
 #endif

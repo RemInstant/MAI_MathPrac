@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #include "utility.h"
 #include "department.h"
@@ -17,6 +18,7 @@
 // TODO 
 // NAME GENERATOR !!!!!!!!!!!!!!!!!
 // TRANSFER
+// fix meld in binary and fib heaps (no destruction)
 // MAPS HEAPS
 
 int main()
@@ -30,6 +32,8 @@ int main()
     char** dep_names = NULL;
     char cur_time[21];
     char end_time[21];
+    
+    srand(time(NULL));
     
     map_set_null(&dep_map);
     ir_set_null(&ir);
@@ -64,11 +68,26 @@ int main()
         for (size_t i = 0; !code && i < req_cnt; ++i)
         {
             code = code ? code : map_get(&dep_map, reqs[i]->dep_id, &dep);
-            code = code ? code : department_add_request(dep, reqs[i], &msg_cnt, &msgs);
+            code = code ? code : department_add_request(dep, cur_time, reqs[i], &msg_cnt, &msgs);
             
             if (!code && msg_cnt == 2 && msgs[1].code == DEPARTMENT_OVERLOADED)
             {
-                // TRY TRANSFER
+                size_t task_cnt = 0;
+                int can_take = 0;
+                Department* dep_taker = NULL;
+                
+                code = code ? code : department_get_task_cnt(dep, &task_cnt);
+                
+                for (size_t j = 0; !code && !can_take && j < dep_cnt; ++j)
+                {
+                    code = code ? code : map_get(&dep_map, dep_names[j], &dep_taker);
+                    code = code ? code : department_can_handle_transfer(dep_taker, task_cnt, &can_take);
+                }
+                if (can_take)
+                {
+                    code = code ? code : department_transfer(dep_taker, dep);
+                    msgs[1].transfer_dep_id = dep_taker->id;
+                }
             }
             
             code = code ? code : logger_multi_log(&logger, cur_time, msg_cnt, msgs);
