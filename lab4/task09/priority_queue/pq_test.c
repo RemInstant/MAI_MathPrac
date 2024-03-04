@@ -20,8 +20,8 @@ int main()
         if (base == PQB_BINARY) continue;
         if (base == PQB_LEFTIST) continue;
         if (base == PQB_SKEW) continue;
-        //if (base == PQB_FIB) continue;
-        if (base == PQB_BINOM) continue;
+        if (base == PQB_FIB) continue;
+        //if (base == PQB_BINOM) continue;
         if (base == PQB_TREAP) continue;
         
         p_queue pq, pq1, pq2, pq3, pq4;
@@ -43,6 +43,8 @@ int main()
         assert(p_queue_copy(&pq2, &pq1) == OK);
         assert(p_queue_meld(&pq, &pq1, &pq2) == OK);
         assert(p_queue_destruct(&pq) == OK);
+        assert(p_queue_destruct(&pq1) == OK);
+        assert(p_queue_destruct(&pq2) == OK);
         
         // One pq
         {
@@ -61,7 +63,6 @@ int main()
                 assert(req->txt != NULL);
                 
                 req->prior = prior[i];
-                strcpy(req->time, "123");
                 req->txt[0] = '0' + prior[i];
                 
                 assert(p_queue_insert(&pq, req) == OK);
@@ -81,6 +82,26 @@ int main()
                 assert(p_queue_size(&pq, &size) == OK);
                 assert(size == i-1);
             }
+            
+            req = (request*) calloc(1, sizeof(request));
+            assert(req != NULL);
+            req->txt = (char*) calloc(2, sizeof(char));
+            assert(req->txt != NULL);
+            req->prior = 1;
+            req->txt[0] = '1';
+            assert(p_queue_insert(&pq, req) == OK);
+            
+            req = (request*) calloc(1, sizeof(request));
+            assert(req != NULL);
+            req->txt = (char*) calloc(2, sizeof(char));
+            assert(req->txt != NULL);
+            req->prior = 2;
+            req->txt[0] = '2';
+            assert(p_queue_insert(&pq, req) == OK);
+            
+            assert(p_queue_pop(&pq, &req) == OK);
+            assert(atoi(req->txt) == 2);
+            free_req(req);
             
             assert(p_queue_destruct(&pq) == OK);
         }
@@ -299,11 +320,6 @@ int main()
             assert(p_queue_destruct(&pq3) == OK);
             assert(p_queue_destruct(&pq4) == OK);
         }
-        
-        assert(p_queue_destruct(&pq) == OK);
-        assert(p_queue_destruct(&pq1) == OK);
-        assert(p_queue_destruct(&pq2) == OK);
-        assert(p_queue_destruct(&pq3) == OK);
         
         if (base == PQB_BINARY) 	printf("Binary heap passed the tests\n");
         if (base == PQB_LEFTIST) 	printf("Leftist heap passed the tests\n");

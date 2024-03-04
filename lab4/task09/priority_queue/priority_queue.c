@@ -182,31 +182,31 @@ status_code p_queue_meld(p_queue* pq_res, p_queue* pq_l, p_queue* pq_r)
     }
     
     status_code code = OK;
-    p_queue pq_tmp = *pq_l;
+    p_queue pq_tmp;
     
-    pq_tmp.ds = malloc(pq_l->ds_size);
-    if (pq_tmp.ds == NULL)
+    if (pq_res == pq_l || pq_res == pq_r)
     {
-        code = BAD_ALLOC;
+        pq_tmp = pq_res == pq_l ? *pq_l : *pq_r;
+    }
+    else
+    {
+        pq_tmp = *pq_l;
+        pq_tmp.ds = malloc(pq_l->ds_size);
+        if (pq_tmp.ds == NULL)
+        {
+            code = BAD_ALLOC;
+        }
     }
     
     code = code ? code : pq_l->meld(pq_tmp.ds, pq_l->ds, pq_r->ds);
     
     if (code)
     {
-        p_queue_destruct(&pq_tmp);
+        if (pq_res != pq_l && pq_res != pq_r)
+        {
+            p_queue_destruct(&pq_tmp);
+        }
         return code;
-    }
-    
-    if (pq_res != pq_l)
-    {
-        free(pq_l->ds);
-        p_queue_set_null(pq_l);
-    }
-    if (pq_res != pq_r)
-    {
-        free(pq_r->ds);
-        p_queue_set_null(pq_r);
     }
     
     *pq_res = pq_tmp;

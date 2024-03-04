@@ -144,9 +144,8 @@ status_code bm_heap_meld(bm_heap* bmh_res, bm_heap* bmh_l, bm_heap* bmh_r)
     if (iter_l == NULL && iter_r == NULL)
     {
         bmh_res->head = NULL;
+        bmh_res->size = 0;
         bmh_res->compare = bmh_l->compare;
-        bm_heap_set_null(bmh_l);
-        bm_heap_set_null(bmh_r);
         return OK;
     }
     
@@ -236,17 +235,13 @@ status_code bm_heap_meld(bm_heap* bmh_res, bm_heap* bmh_l, bm_heap* bmh_r)
         }
     }
     
+    size_t size = bmh_l->size + bmh_r->size;
+    bmh_l->head = bmh_r->head = NULL;
+    bmh_l->size = bmh_r->size = 0;
     bmh_res->head = bmh_tmp.head;
-    bmh_res->size = bmh_l->size + bmh_r->size;
+    bmh_res->size = size;
     bmh_res->compare = bmh_l->compare;
-    if (bmh_l != bmh_res)
-    {
-        bm_heap_set_null(bmh_l);
-    }
-    if (bmh_r != bmh_res)
-    {
-        bm_heap_set_null(bmh_r);
-    }
+    
     return OK;
 }
 
