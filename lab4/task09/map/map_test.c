@@ -11,7 +11,7 @@ int main()
 {
     for (map_base base = MB_HASHSET; base <= MB_TRIE; ++base)
     {
-        if (base == MB_HASHSET) continue;
+        //if (base == MB_HASHSET) continue;
         if (base == MB_ARR) continue;
         if (base == MB_BST) continue;
         //if (base == MB_TRIE) continue;
@@ -21,8 +21,6 @@ int main()
         Department* dep1;
         char* key;
         int is_contained;
-        size_t dict_size;
-        pair_str_dep* dict;
         
         map_set_null(&map);
         
@@ -60,28 +58,7 @@ int main()
                 assert(dep == dep1);
             }
             
-            assert(map_get_const_key_vals(&map, &dict_size, &dict) == OK);
-            assert(dict != NULL);
-            assert(dict_size == 10);
-            
-            for (size_t i = 0; i < dict_size; ++i)
-            {
-                int a = dict[i].str[0] - '0';
-                assert(dict[i].str[1] == '0' + ((a*5 + 3) % 10));
-                
-                strcpy(key, dict[i].str);
-                assert(map_contains(&map, key, &is_contained) == OK);
-                assert(is_contained == 1);
-                assert(map_get(&map, key, &dep) == OK);
-                assert(dict[i].dep = dep);
-            }
-            
-            for (size_t i = 0; i < dict_size; ++i)
-            {
-                free(dict[i].str);
-            }
-            free(dict);
-            
+            // handle only 8 of 10 departments!
             for (size_t i = 0; i < 10; ++i)
             {
                 key[0] = '0' + (i % 10);
@@ -105,25 +82,27 @@ int main()
         {
             assert(map_construct(&map, base, calc_default_str_hash) == OK);
             
-            key = (char*) malloc(sizeof(char) * 9);
+            key = (char*) malloc(sizeof(char) * 11);
             assert(key != NULL);
-            key[8] = '\0';
+            key[10] = '\0';
             
-            for (size_t i = 0; i < 100; ++i)
+            for (size_t i = 0; i < 1000; ++i)
             {
                 dep = (Department*) malloc(sizeof(Department));
                 dep1 = NULL;
                 assert(dep != NULL);
-                assert(department_construct(dep, "123", i+5, PQB_BINOM, 2.0, 1e-9, 1, 1, compare_request) == OK);
+                assert(department_construct(dep, "123", i, PQB_BINOM, 2.0, 1e-9, 1, 1, compare_request) == OK);
                 
-                key[0] = '0' + ((3*i + 17) % 10);
-                key[1] = '0' + ((5*i + 13) % 10);
-                key[2] = '0' + ((i*(i+3) + 2) % 10);
+                key[0] = '0' + ((7*i + 17) % 3);
+                key[1] = '0' + ((17*i + 13) % 5);
+                key[2] = '0' + ((i*(i+3) + 2) % 7);
                 key[3] = '0' + ((i*(i+2)*(i+5) + 17) % 10);
                 key[4] = 'A' + ((3*i + 3) % 26);
                 key[5] = 'A' + ((17*i + 5) % 26);
                 key[6] = 'A' + ((53*i + 7) % 26);
                 key[7] = 'A' + ((97*i + 2) % 26);
+                key[8] = 'A' + ((137*i + 1) % 23);
+                key[9] = 'A' + ((177*i + 55) % 17);
                 
                 assert(map_contains(&map, key, &is_contained) == OK);
                 assert(is_contained == 0);
@@ -134,21 +113,23 @@ int main()
                 assert(dep == dep1);
             }
             
-            for (size_t i = 0; i < 100; ++i)
+            for (size_t i = 0; i < 900; ++i)
             {
-                key[0] = '0' + ((3*i + 17) % 10);
-                key[1] = '0' + ((5*i + 13) % 10);
-                key[2] = '0' + ((i*(i+3) + 2) % 10);
+                key[0] = '0' + ((7*i + 17) % 3);
+                key[1] = '0' + ((17*i + 13) % 5);
+                key[2] = '0' + ((i*(i+3) + 2) % 7);
                 key[3] = '0' + ((i*(i+2)*(i+5) + 17) % 10);
                 key[4] = 'A' + ((3*i + 3) % 26);
                 key[5] = 'A' + ((17*i + 5) % 26);
                 key[6] = 'A' + ((53*i + 7) % 26);
                 key[7] = 'A' + ((97*i + 2) % 26);
+                key[8] = 'A' + ((137*i + 1) % 23);
+                key[9] = 'A' + ((177*i + 55) % 17);
                 
                 assert(map_contains(&map, key, &is_contained) == OK);
                 assert(is_contained == 1);
                 assert(map_get(&map, key, &dep) == OK);
-                assert(dep->staff_size == i+5);
+                assert(dep->staff_size == i);
                 
                 assert(map_erase(&map, key) == OK);
                 assert(map_contains(&map, key, &is_contained) == OK);
@@ -193,10 +174,10 @@ int main()
         
         assert(map_destruct(&map) == OK);
         
-        if (base == MB_HASHSET) 	printf("Hash set passed the tests\n");
-        if (base == MB_ARR) 		printf("Dynamic array passed the tests\n");
-        if (base == MB_BST) 		printf("Binary search tree passed the tests\n");
-        if (base == MB_TRIE) 		printf("Trie passed the tests\n");
+        if (base == MB_HASHSET) printf("Hash set passed the tests\n");
+        if (base == MB_ARR) 	printf("Dynamic array passed the tests\n");
+        if (base == MB_BST) 	printf("Binary search tree passed the tests\n");
+        if (base == MB_TRIE) 	printf("Trie passed the tests\n");
     }
     printf("All tests have been passed\n");
 }

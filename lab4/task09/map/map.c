@@ -2,6 +2,7 @@
 #include <string.h>
 
 #include "map.h"
+#include "hash_set.h"
 #include "trie.h"
 
 status_code map_set_null(Map* map)
@@ -18,7 +19,6 @@ status_code map_set_null(Map* map)
     map->get = NULL;
     map->insert = NULL;
     map->erase = NULL;
-    map->get_const_key_vals = NULL;
     return OK;
 }
 
@@ -34,6 +34,18 @@ status_code map_construct(Map* map, map_base base, size_t (*calc_hash)(const cha
     switch (base)
     {
         case MB_HASHSET:
+        {
+            map->ds = malloc(sizeof(Hash_set));
+            
+            map->set_null           = (status_code (*)(void*))                                      hset_set_null;
+            map->construct          = (status_code (*)(void*, size_t (*)(const char*)))             hset_construct;
+            map->destruct           = (status_code (*)(void*))                                      hset_destruct;
+            map->contains           = (status_code (*)(void*, const char*, int* is_contained))      hset_contains;
+            map->get                = (status_code (*)(void*, const char*, Department** dep))       hset_get;
+            map->insert             = (status_code (*)(void*, const char*, const Department* dep))  hset_insert;
+            map->erase              = (status_code (*)(void*, const char*))                         hset_erase;
+            break;
+        }
         case MB_ARR:
         case MB_BST:
         case MB_TRIE:
@@ -45,9 +57,9 @@ status_code map_construct(Map* map, map_base base, size_t (*calc_hash)(const cha
             map->destruct           = (status_code (*)(void*))                                      trie_destruct;
             map->contains           = (status_code (*)(void*, const char*, int* is_contained))      trie_contains;
             map->get                = (status_code (*)(void*, const char*, Department** dep))       trie_get;
-            map->insert             = (status_code (*)(void*, const char*, const Department* dep))  trie_set;
+            map->insert             = (status_code (*)(void*, const char*, const Department* dep))  trie_insert;
             map->erase              = (status_code (*)(void*, const char*))                         trie_erase;
-            map->get_const_key_vals = (status_code (*)(void*, size_t*, pair_str_dep**))             trie_get_key_vals;
+            break;
         }
     }
     
@@ -114,13 +126,4 @@ status_code map_erase(Map* map, const char* key)
         return NULL_ARG;
     }
     return map->erase(map->ds, key);
-}
-
-status_code map_get_const_key_vals(Map* map, size_t* dict_size, pair_str_dep** dict)
-{
-    if (map == NULL || dict_size == NULL || dict == NULL)
-    {
-        return NULL_ARG;
-    }
-    return map->get_const_key_vals(map->ds, dict_size, dict);
 }
