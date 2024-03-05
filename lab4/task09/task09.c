@@ -18,8 +18,8 @@
 // TODO 
 // NAME GENERATOR !!!!!!!!!!!!!!!!!
 // TRANSFER
-// fix meld in binary and fib heaps (no destruction)
 // MAPS HEAPS
+// unify ctoi funcs in maps
 
 int main()
 {

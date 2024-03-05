@@ -2,14 +2,13 @@
 
 #include "binary_heap.h"
 
-status_code bh_sift_down(bin_heap* bh)
+status_code bh_sift_down(bin_heap* bh, size_t i)
 {
     if (bh == NULL)
     {
         return NULL_ARG;
     }
     
-    int i = 0;
     while (2 * i + 1 < bh->size)
     {
         int left_idx = 2 * i + 1;
@@ -156,20 +155,51 @@ status_code bh_meld(bin_heap* bh, bin_heap* bh_l, bin_heap* bh_r)
         return INVALID_INPUT;
     }
     
-    while (bh_r->size)
+    bin_heap bh_tmp;
+    size_t max_capacity = bh_l->capacity > bh_r->capacity ? bh_l->capacity : bh_r->capacity;
+    
+    if (bh_l->size + bh_r->size > max_capacity)
     {
-        request* tmp = NULL;
-        status_code st = bh_pop(bh_r, &tmp);
-        st = st ? st : bh_insert(bh_l, tmp);
-        if (st)
-        {
-            return st;
-        }
+        max_capacity *= 2;
     }
     
-    *bh = *bh_l;
-    bh_set_null(bh_l);
-    bh_destruct(bh_r);
+    bh_tmp.size = bh_l->size + bh_r->size;
+    bh_tmp.capacity = max_capacity;
+    bh_tmp.elems = (request**) malloc(sizeof(request*) * max_capacity);
+    bh_tmp.compare = bh_l->compare;
+    
+    if (bh_tmp.elems == NULL)
+    {
+        return BAD_ALLOC;
+    }
+    
+    for (size_t i = 0; i < bh_l->size; ++i)
+    {
+        bh_tmp.elems[i] = bh_l->elems[i];
+    }
+    for (size_t i = 0; i < bh_r->size; ++i)
+    {
+        bh_tmp.elems[i + bh_l->size] = bh_r->elems[i];
+    }
+    
+    for (size_t i = 0; i <= bh_tmp.size / 2; ++i)
+    {
+        bh_sift_down(&bh_tmp, bh_tmp.size / 2 - i);
+    }
+    
+    bh_l->size = 0;
+    bh_r->size = 0;
+    
+    if (bh == bh_l)
+    {
+        free(bh_r->elems);
+    }
+    if (bh == bh_r)
+    {
+        free(bh_r->elems);
+    }
+    
+    *bh = bh_tmp;
     
     return OK;
 }
@@ -249,7 +279,7 @@ status_code bh_pop(bin_heap* bh, request** req)
     
     bh->elems[0] = bh->elems[bh->size-1];
     bh->size--;
-    bh_sift_down(bh);
+    bh_sift_down(bh, 0);
     
     return OK;
 }

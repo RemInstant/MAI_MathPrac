@@ -244,13 +244,10 @@ status_code fib_heap_meld(fib_heap* res, fib_heap* heap_l, fib_heap* heap_r)
 		res->head->left = second;
 		second->right = res->head;
 	}
-
-	heap_l->head = NULL;
-	heap_r->head = NULL;
-
-	fib_heap_destruct(heap_l);
-	fib_heap_destruct(heap_r);
-
+	
+	heap_l->head = heap_r->head = NULL;
+	heap_l->size = heap_r->size = 0;
+	
 	return OK;
 }
 

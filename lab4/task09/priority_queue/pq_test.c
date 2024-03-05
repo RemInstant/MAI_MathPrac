@@ -17,10 +17,10 @@ int main()
 {
     for (priority_queue_base base = PQB_BINARY; base <= PQB_TREAP; ++base)
     {
-        if (base == PQB_BINARY) continue;
+        //if (base == PQB_BINARY) continue;
         if (base == PQB_LEFTIST) continue;
         if (base == PQB_SKEW) continue;
-        if (base == PQB_FIB) continue;
+        //if (base == PQB_FIB) continue;
         //if (base == PQB_BINOM) continue;
         if (base == PQB_TREAP) continue;
         
