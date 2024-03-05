@@ -47,7 +47,7 @@ status_code trie_node_construct(trie_node** node)
     {
         return BAD_ALLOC;
     }
-    for (ull i = 0; i < TRIE_ALPABET_LEN; ++i)
+    for (ull i = 0; i < TRIE_ALPABET_SIZE; ++i)
     {
         (*node)->children[i] = NULL;
     }
@@ -67,7 +67,7 @@ status_code trie_node_destruct(trie_node** node)
         return OK;
     }
     
-    for (ull i = 0; i < TRIE_ALPABET_LEN; ++i)
+    for (ull i = 0; i < TRIE_ALPABET_SIZE; ++i)
     {
         trie_node_destruct(&(*node)->children[i]);
     }
@@ -117,9 +117,9 @@ status_code trie_destruct(Trie* trie)
 }
 
 
-status_code trie_search_node(const Trie* trie, const char* str, trie_node** node)
+status_code trie_search_node(const Trie* trie, const char* key, trie_node** node)
 {
-    if (trie == NULL || str == NULL || node == NULL)
+    if (trie == NULL || key == NULL || node == NULL)
     {
         return NULL_ARG;
     }
@@ -129,14 +129,14 @@ status_code trie_search_node(const Trie* trie, const char* str, trie_node** node
     }
     *node = NULL;
     trie_node* cur = trie->root;
-    for (ull i = 0; str[i]; ++i)
+    for (ull i = 0; key[i]; ++i)
     {
         if (cur == NULL)
         {
             *node = NULL;
             return OK;
         }
-        int ind = char_to_ind(str[i]);
+        int ind = char_to_ind(key[i]);
         if (ind == -1)
         {
             return INVALID_INPUT;
@@ -147,9 +147,9 @@ status_code trie_search_node(const Trie* trie, const char* str, trie_node** node
     return OK;
 }
 
-status_code trie_create_node(const Trie* trie, const char* str, trie_node** node)
+status_code trie_create_node(const Trie* trie, const char* key, trie_node** node)
 {
-    if (trie == NULL || str == NULL)
+    if (trie == NULL || key == NULL)
     {
         return NULL_ARG;
     }
@@ -160,9 +160,9 @@ status_code trie_create_node(const Trie* trie, const char* str, trie_node** node
     status_code err_code = OK;
     trie_node* cur = trie->root;
     trie_node* first_new = NULL;
-    for (ull i = 0; str[i] && !err_code; ++i)
+    for (ull i = 0; key[i] && !err_code; ++i)
     {
-        int ind = char_to_ind(str[i]);
+        int ind = char_to_ind(key[i]);
         if (ind == -1)
         {
             err_code = INVALID_INPUT;
@@ -200,7 +200,7 @@ status_code trie_clean_branch(const Trie* trie, trie_node* node, trie_node* clea
         return NULL_ARG;
     }
     int child_flag = 0;
-    for (ull i = 0; i < TRIE_ALPABET_LEN; ++i)
+    for (ull i = 0; i < TRIE_ALPABET_SIZE; ++i)
     {
         if (cleaned_child_node != NULL && node->children[i] == cleaned_child_node)
         {
@@ -222,14 +222,14 @@ status_code trie_clean_branch(const Trie* trie, trie_node* node, trie_node* clea
 }
 
 
-status_code trie_contains(const Trie* trie, const char* str, int* is_contained)
+status_code trie_contains(const Trie* trie, const char* key, int* is_contained)
 {
-    if (trie == NULL || str == NULL || is_contained == NULL)
+    if (trie == NULL || key == NULL || is_contained == NULL)
     {
         return NULL_ARG;
     }
     trie_node* node = NULL;
-    status_code err_code = trie_search_node(trie, str, &node);
+    status_code err_code = trie_search_node(trie, key, &node);
     if (err_code)
     {
         return err_code;
@@ -238,14 +238,14 @@ status_code trie_contains(const Trie* trie, const char* str, int* is_contained)
     return OK;
 }
 
-status_code trie_get(const Trie* trie, const char* str, Department** dep)
+status_code trie_get(const Trie* trie, const char* key, Department** dep)
 {
-    if (trie == NULL || str == NULL || dep == NULL)
+    if (trie == NULL || key == NULL || dep == NULL)
     {
         return NULL_ARG;
     }
     trie_node* node = NULL;
-    status_code err_code = trie_search_node(trie, str, &node);
+    status_code err_code = trie_search_node(trie, key, &node);
     if (err_code)
     {
         return err_code;
@@ -258,14 +258,14 @@ status_code trie_get(const Trie* trie, const char* str, Department** dep)
     return OK;
 }
 
-status_code trie_set(Trie* trie, const char* str, Department* dep)
+status_code trie_insert(Trie* trie, const char* key, Department* dep)
 {
-    if (trie == NULL || str == NULL)
+    if (trie == NULL || key == NULL)
     {
         return NULL_ARG;
     }
     trie_node* node = NULL;
-    status_code err_code = trie_create_node(trie, str, &node);
+    status_code err_code = trie_create_node(trie, key, &node);
     if (err_code)
     {
         return err_code;
@@ -282,14 +282,14 @@ status_code trie_set(Trie* trie, const char* str, Department* dep)
     return OK;
 }
 
-status_code trie_erase(Trie* trie, const char* str)
+status_code trie_erase(Trie* trie, const char* key)
 {
-    if (trie == NULL || str == NULL)
+    if (trie == NULL || key == NULL)
     {
         return NULL_ARG;
     }
     trie_node* node = NULL;
-    status_code err_code = trie_search_node(trie, str, &node);
+    status_code err_code = trie_search_node(trie, key, &node);
     if (err_code)
     {
         return err_code;
@@ -300,118 +300,4 @@ status_code trie_erase(Trie* trie, const char* str)
     }
     node->dep = NULL;
     return trie_clean_branch(trie, node, NULL);
-}
-
-status_code trie_get_key_vals(const Trie* trie, size_t* cnt, trie_key_val** key_vals)
-{
-    if (trie == NULL || cnt == NULL || key_vals == NULL)
-    {
-        return INVALID_ARG;
-    }
-    if (trie->root == NULL)
-    {
-        return INVALID_INPUT;
-    }
-    
-    ull kv_cnt = 0;
-    ull kv_size = 2;
-    trie_key_val* key_vals_tmp = (trie_key_val*) malloc(sizeof(trie_key_val) * 2);
-    if (key_vals_tmp == NULL)
-    {
-        return BAD_ALLOC;
-    }
-    ull str_iter = 0;
-    ull str_size = 2;
-    char* str = malloc(sizeof(char) * 2);
-    if (str == NULL)
-    {
-        free(key_vals_tmp);
-        return BAD_ALLOC;
-    }
-    
-    status_code err_code = OK;
-    trie_node* cur_node = trie->root;
-    int ind = 0;
-    int run_flag = 1;
-    while (!err_code && run_flag)
-    {
-        // Select node to process
-        while (cur_node->children[ind] == NULL && ind < 36)
-        {
-            ++ind;
-        }
-        // No node to process, back to parent
-        if (ind >= 36)
-        {
-            if (cur_node != trie->root)
-            {
-                ind = char_to_ind(str[--str_iter]) + 1;
-                str[str_iter] = '\0';
-                cur_node = cur_node->parent;
-            }
-            else
-            {
-                run_flag = 0;
-            }
-        }
-        // Go process node
-        else
-        {
-            // Update buffer string, ind and cur_node
-            if (str_iter + 1 == str_size)
-            {
-                str_size *= 2;
-                char* tmp = (char*) realloc(str, sizeof(char) * str_size);
-                err_code = tmp != NULL ? OK : BAD_ALLOC;
-                str = tmp != NULL ? tmp : str;
-            }
-            if (!err_code)
-            {
-                str[str_iter++] = ind_to_char(ind);
-                str[str_iter] = '\0';
-            }
-            cur_node = cur_node->children[ind];
-            ind = 0;
-            
-            // Process node
-            if (!err_code && cur_node->dep != NULL)
-            {
-                char* str_copy = (char*) malloc(sizeof(char) * (str_iter + 1));
-                err_code = str_copy != NULL ? OK : BAD_ALLOC;
-                if (str_copy != NULL)
-                {
-                    strcpy(str_copy, str);
-                }
-                if (!err_code && kv_cnt == kv_size)
-                {
-                    kv_size *= 2;
-                    trie_key_val* tmp = (trie_key_val*) realloc(key_vals_tmp, sizeof(trie_key_val) * kv_size);
-                    err_code = tmp != NULL ? OK : BAD_ALLOC;
-                    key_vals_tmp = tmp != NULL ? tmp : key_vals_tmp;
-                }
-                if (!err_code)
-                {
-                    key_vals_tmp[kv_cnt].str = str_copy;
-                    key_vals_tmp[kv_cnt++].dep = (const Department*) cur_node->dep;
-                }
-                else
-                {
-                    free(str_copy);
-                }
-            }
-        }
-    } // while end
-    free(str);
-    if (err_code)
-    {
-        for (ull i = 0; i < kv_cnt; ++i)
-        {
-            free(key_vals_tmp[i].str);
-        }
-        free(key_vals_tmp);
-        return err_code;
-    }
-    *cnt = kv_cnt;
-    *key_vals = key_vals_tmp;
-    return OK;
 }

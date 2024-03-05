@@ -36,13 +36,7 @@ typedef enum status_code
 void print_error(status_code code, int nl_cnt);
 void fprint_error(FILE* file, status_code code, int nl_cnt);
 
-typedef struct pair_str_double
-{
-    char* str;
-    double val;
-} pair_str_double;
-
-int pair_str_double_comparator(const void* ptr_1, const void* ptr_2);
+void free_all(ull cnt, ...);
 
 typedef struct pair_prior_time
 {
@@ -69,10 +63,6 @@ status_code fread_line(FILE* file, char** str, int skip_front_spaces);
 status_code fread_word(FILE* file, char** word, int skip_front_spaces);
 status_code read_line(char** str, int skip_front_spaces);
 status_code sread_until(const char* src, const char* delims, int inclusive_flag, const char** end_ptr, char** str);
-
-status_code fread_cmd(FILE* file, char** str);
-status_code validate_var_name(const char* var_name);
-status_code parse_dict_str_double(const char* src, ull* cnt, pair_str_double** dict);
 
 unsigned rand_32();
 

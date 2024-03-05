@@ -7,6 +7,7 @@
 #include <errno.h>
 #include <math.h>
 #include <time.h>
+#include <stdarg.h>
 
 typedef long long ll;
 typedef unsigned long long ull;
@@ -87,12 +88,18 @@ void fprint_error(FILE* file, status_code code, int nl_cnt)
 }
 
 
-int pair_str_double_comparator(const void* ptr_1, const void* ptr_2)
+void free_all(ull cnt, ...)
 {
-    const pair_str_double* pair_1 = (const pair_str_double*) ptr_1;
-    const pair_str_double* pair_2 = (const pair_str_double*) ptr_2;
-    return strcmp(pair_1->str, pair_2->str);
+	va_list va;
+	va_start(va, cnt);
+	for (ull i = 0; i < cnt; ++i)
+	{
+		void* ptr = va_arg(va, void*);
+		free(ptr);
+	}
+	va_end(va);
 }
+
 
 status_code request_set_null(request* req)
 {
@@ -336,192 +343,6 @@ status_code sread_until(const char* src, const char* delims, int inclusive_flag,
     str_tmp[cnt] = '\0';
     *str = str_tmp;
     return OK;
-}
-
-
-status_code skip_multi_line_comment(FILE* file)
-{
-    if (file == NULL)
-    {
-        return NULL_ARG;
-    }
-    char ch = '{';
-    int comment_nesting = 1;
-    while (comment_nesting > 0 && !feof(file))
-    {
-        ch = getc(file);
-        if (ch == '{')
-        {
-            ++comment_nesting;
-        }
-        else if (ch == '}')
-        {
-            --comment_nesting;
-        }
-    }
-    if (comment_nesting > 0)
-    {
-        return FILE_INVALID_CONTENT;
-    }
-    return OK;
-}
-
-status_code fread_cmd(FILE* file, char** str)
-{
-    if (file == NULL || str == NULL)
-    {
-        return INVALID_INPUT;
-    }
-    ull iter = 0;
-    ull size = 4;
-    char* str_tmp = (char*) malloc(sizeof(char) * size);
-    if (str_tmp == NULL)
-    {
-        return BAD_ALLOC;
-    }
-    char ch = getc(file);
-    int skip_flag = 1;
-    while (skip_flag)
-    {
-        while (ch == ' ' || ch == '\t' || ch == '\n')
-        {
-            ch = getc(file);
-        }
-        skip_flag = 0;
-        if (ch == '%')
-        {
-            while (ch != '\n' && !feof(file))
-            {
-                ch = getc(file);
-            }
-            ch = getc(file);
-            skip_flag = 1;
-        }
-        else if (ch == '{')
-        {
-            status_code err_code = skip_multi_line_comment(file);
-            if (err_code)
-            {
-                free(str_tmp);
-                return err_code;
-            }
-            ch = getc(file);
-            skip_flag = 1;
-        }
-    }
-    if (feof(file))
-    {
-        free(str_tmp);
-        return FILE_END;
-    }
-    while (ch != ';' && !feof(file))
-    {
-        if (iter + 2 == size)
-        {
-            size *= 2;
-            char* tmp = realloc(str_tmp, sizeof(char) * size);
-            if (tmp == NULL)
-            {
-                free(str_tmp);
-                return BAD_ALLOC;
-            }
-            str_tmp = tmp;
-        }
-        str_tmp[iter++] = ch;
-        ch = getc(file);
-        if (ch == '{')
-        {
-            status_code err_code = skip_multi_line_comment(file);
-            if (err_code)
-            {
-                free(str_tmp);
-                return err_code;
-            }
-            ch = getc(file);
-        }
-    }
-    if (ch != ';')
-    {
-        free(str_tmp);
-        return FILE_INVALID_CONTENT;
-    }
-    str_tmp[iter++] = ';';
-    str_tmp[iter] = '\0';
-    *str = str_tmp;
-    return OK;
-}
-
-status_code validate_var_name(const char* var_name)
-{
-    if (var_name == NULL)
-    {
-        return NULL_ARG;
-    }
-    if (var_name[0] == '\0' || isdigit(var_name[0]))
-    {
-        return INVALID_INPUT;
-    }
-    for (ull i = 0; var_name[i]; ++i)
-    {
-        if (!isalnum(var_name[i]))
-        {
-            return INVALID_INPUT;
-        }
-    }
-    return OK;
-}
-
-status_code parse_dict_str_double(const char* src, ull* cnt, pair_str_double** dict)
-{
-    if (src == NULL || cnt == NULL || dict == NULL)
-    {
-        return NULL_ARG;
-    }
-    *cnt = 0;
-    for (ull i = 0; src[i]; ++i)
-    {
-        if (src[i] == ':')
-        {
-            ++(*cnt);
-        }
-    }
-    *dict = (pair_str_double*) malloc(sizeof(pair_str_double) * *cnt);
-    if (*dict == NULL)
-    {
-        return BAD_ALLOC;
-    }
-    for (ull i = 0; i < *cnt; ++i)
-    {
-        (*dict)[i].str = NULL;
-    }
-    // format reminder: {x:-1.11,y:2.1,z:0.81}
-    const char* ptr = src;
-    status_code err_code = *(ptr++) == '{' ? OK : INVALID_INPUT;
-    for (ull i = 0; i < *cnt && !err_code; ++i)
-    {
-        char* raw_double = NULL;
-        err_code = err_code ? err_code : sread_until(ptr, ":", 0, &ptr, &(*dict)[i].str);
-        err_code = err_code ? err_code : validate_var_name((*dict)[i].str);
-        err_code = err_code ? err_code : (*(ptr++) != '\0' ? OK : INVALID_INPUT);
-        err_code = err_code ? err_code : sread_until(ptr, ",}", 0, &ptr, &raw_double);
-        err_code = err_code ? err_code : (*(ptr) != '\0' ? OK : INVALID_INPUT);
-        ptr = (i + 1 < *cnt) ? (ptr + 1) : ptr; // i + 1 < *cnt => ',' is expected to be skipped
-        err_code = err_code ? err_code : parse_double(raw_double, &(*dict)[i].val);
-        free(raw_double);
-    }
-    err_code = err_code ? err_code : (*(ptr++) == '}' ? OK : INVALID_INPUT);
-    err_code = err_code ? err_code : (*ptr == '\0' ? OK : INVALID_INPUT);
-    if (err_code)
-    {
-        for (ull i = 0; i < *cnt; ++i)
-        {
-            free((*dict)[i].str);
-        }
-        free(*dict);
-        *cnt = 0;
-        *dict = NULL;
-    }
-    return err_code;
 }
 
 
@@ -938,7 +759,7 @@ size_t calc_default_str_hash(const char* str)
     for (ull i = 0; str[i]; ++i)
     {
         res *= DEFAULT_HASH_PARAM;
-        res += ctoi(str[i]);
+        res += ctoi(str[i]) + 1;
     }
     return res;
 }
