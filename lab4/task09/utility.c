@@ -56,6 +56,9 @@ void fprint_error(FILE* file, status_code code, int nl_cnt)
         case FILE_INVALID_CONTENT:
             fprintf(file, "File content is invalid");
             return;
+        case FILE_KEY_DUPLICATE:
+            fprintf(file, "File contains key duplicates");
+            return;
         case FILE_END:
             fprintf(file, "Unexpected end of file was found");
             return;

@@ -174,6 +174,12 @@ status_code setup_config(const char* path, Map* dep_map, size_t* dep_cnt, char**
     code = code ? code : (feof(file) ? OK : FILE_INVALID_CONTENT);
     fclose(file);
     
+    if (min_handle_time > max_handle_time || overload_coef - CONFIG_MIN_OVERLOAD_COEF < -eps ||
+            dep_cnt_tmp < CONFIG_MIN_DEP_CNT || dep_cnt_tmp > CONFIG_MAX_DEP_CNT)
+    {
+        code = code ? code : FILE_INVALID_CONTENT;
+    }
+    
     if (code == INVALID_INPUT)
     {
         code = FILE_INVALID_CONTENT;
@@ -203,6 +209,11 @@ status_code setup_config(const char* path, Map* dep_map, size_t* dep_cnt, char**
         code = code ? code : parse_ullong(raw_staff_cnt, 10, &staff_cnt);
         dep_names_tmp[iter] = code ? NULL : dep_name;
         
+        if (staff_cnt < CONFIG_MIN_STAFF_CNT || staff_cnt > CONFIG_MAX_STAFF_CNT)
+        {
+            code = code ? code : FILE_INVALID_CONTENT;
+        }
+        
         char check_char = iter + 1 < dep_cnt_tmp ? ' ' : '\0';
         code = code ? code : (*(ch_ptr1++) == check_char ? OK : FILE_INVALID_CONTENT);
         code = code ? code : (*(ch_ptr2++) == check_char ? OK : FILE_INVALID_CONTENT);
@@ -216,6 +227,7 @@ status_code setup_config(const char* path, Map* dep_map, size_t* dep_cnt, char**
         code = code ? code : department_construct(dep, dep_name, staff_cnt, queue_base, overload_coef, eps,
                                                         min_handle_time, max_handle_time, compare_request);
         code = code ? code : map_insert(&dep_map_tmp, dep_name, dep);
+        code = code == BAD_ACCESS ? FILE_INVALID_CONTENT : code;
         
         free(raw_staff_cnt);
         
@@ -258,12 +270,14 @@ status_code ir_set_null(Input_reader* ir)
     ir->cap = 0;
     ir->data = NULL;
     ir->front = 0;
-    ir->sorted_by_id = 0;
+    ir->max_prior = 0;
+    ir->dep_cnt = 0;
+    ir->dep_names = NULL;
     
     return OK;
 }
 
-status_code ir_construct(Input_reader* ir)
+status_code ir_construct(Input_reader* ir, size_t max_prior, size_t dep_cnt, const char** dep_names)
 {
     if (ir == NULL)
     {
@@ -274,7 +288,9 @@ status_code ir_construct(Input_reader* ir)
     ir->cap = 2;
     ir->data = (request**) malloc(sizeof(request*) * 2);
     ir->front = 0;
-    ir->sorted_by_id = 0;
+    ir->max_prior = max_prior;
+    ir->dep_cnt = dep_cnt;
+    ir->dep_names = dep_names;
     
     if (ir->data == NULL)
     {
@@ -305,9 +321,9 @@ status_code ir_destruct(Input_reader* ir)
 
 
 // 2024-01-01T12:00:00Z 000000001 2 DEP001A "this is request text"
-status_code ir_read_file_line(FILE* file, request** req)
+status_code ir_read_file_line(Input_reader* ir, FILE* file, request** req)
 {
-    if (file == NULL || req == NULL)
+    if (ir == NULL || file == NULL || req == NULL)
     {
         return NULL_ARG;
     }
@@ -316,7 +332,7 @@ status_code ir_read_file_line(FILE* file, request** req)
     char* time = NULL;
     char* req_id_str = NULL;
     char* prior_str = NULL;
-    char* dep_id = NULL;
+    char* dep_name = NULL;
     char* txt = NULL;
     char check_ch;
     ull req_id;
@@ -328,7 +344,7 @@ status_code ir_read_file_line(FILE* file, request** req)
     
     code = code ? code : fread_word(file, &req_id_str, 1);
     code = code ? code : fread_word(file, &prior_str, 1);
-    code = code ? code : fread_word(file, &dep_id, 1);
+    code = code ? code : fread_word(file, &dep_name, 1);
     
     code = code ? code : fread_char(file, &check_ch, 1);
     code = code ? code : fread_line(file, &txt, 0);
@@ -338,6 +354,19 @@ status_code ir_read_file_line(FILE* file, request** req)
     code = code ? code : parse_ullong(prior_str, 10, &prior);
     code = code ? code : (check_ch == '"' ? OK : FILE_INVALID_CONTENT);
     code = code ? code : (txt[strlen(txt) - 1] == '"' ? OK : FILE_INVALID_CONTENT);
+    
+    code = code ? code : (prior <= ir->max_prior ? OK : FILE_INVALID_CONTENT);
+    
+    int is_dep_exist = 0;
+    for (size_t i = 0; !code && i < ir->dep_cnt; ++i)
+    {
+        if (!strcmp(ir->dep_names[i], dep_name))
+        {
+            is_dep_exist = 1;
+            break;
+        }
+    }
+    code = code ? code : (is_dep_exist ? OK : FILE_INVALID_CONTENT);
     
     if (!code)
     {
@@ -352,7 +381,7 @@ status_code ir_read_file_line(FILE* file, request** req)
         {
             req_tmp->id = (unsigned) req_id;
             req_tmp->prior = (unsigned) prior;
-            req_tmp->dep_id = dep_id;
+            req_tmp->dep_id = dep_name;
             req_tmp->txt = txt;
             strcpy(req_tmp->time, time);
         }
@@ -369,7 +398,7 @@ status_code ir_read_file_line(FILE* file, request** req)
     
     if (code)
     {
-        free(dep_id);
+        free(dep_name);
         free(txt);
         free(req_tmp);
         return code;
@@ -392,6 +421,15 @@ status_code ir_update_front(Input_reader* ir)
     }
     ir->size -= ir->front;
     ir->front = 0;
+    
+    request** tmp = (request**) realloc(ir->data, sizeof(request*) * ir->size);
+    if (tmp == NULL)
+    {
+        return BAD_ALLOC;
+    }
+    
+    ir->cap = ir->size;
+    ir->data = tmp;
     
     return OK;
 }
@@ -435,7 +473,7 @@ status_code ir_read_file(Input_reader* ir, const char* path)
     }
     
     status_code code = OK;
-    size_t new_data_begin;
+    size_t new_data_begin = ir->size;
     request* req = NULL;
     FILE* file = NULL;
     
@@ -444,12 +482,9 @@ status_code ir_read_file(Input_reader* ir, const char* path)
         code = FILE_OPENING_ERROR;
     }
     
-    code = code ? code : ir_update_front(ir);
-    new_data_begin = ir->size;
-    
     while (!code)
     {
-        code = code ? code : ir_read_file_line(file, &req);
+        code = code ? code : ir_read_file_line(ir, file, &req);
         code = code ? code : ir_insert_req(ir, req);
         req = code ? req : NULL;
     }
@@ -472,7 +507,7 @@ status_code ir_read_file(Input_reader* ir, const char* path)
         return code;
     }
     
-    qsort(ir->data + ir->front, ir->size - ir->front, sizeof(request*), request_ptr_compare_by_time);
+    qsort(ir->data, ir->size, sizeof(request*), request_ptr_compare_by_time);
     
     return OK;
 }

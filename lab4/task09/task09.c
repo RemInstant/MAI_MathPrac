@@ -18,14 +18,16 @@
 // TODO 
 // MAPS HEAPS
 // unify ctoi funcs in maps
+// rename dep_id to dep_name
 
-int main()
+int main(int argc, char** argv)
 {
     status_code code = OK;
     Map dep_map;
     Input_reader ir;
     Logger logger;
     
+    size_t max_priority = 10;
     size_t dep_cnt = 0;
     char** dep_names = NULL;
     char cur_time[21];
@@ -38,7 +40,7 @@ int main()
     logger_set_null(&logger);
     
     code = code ? code : setup_config("config", &dep_map, &dep_cnt, &dep_names, cur_time, end_time, 1e-9);
-    code = code ? code : ir_construct(&ir);
+    code = code ? code : ir_construct(&ir, max_priority, dep_cnt, (const char**) dep_names);
     code = code ? code : logger_construct(&logger, "log");
     code = code ? code : ir_read_file(&ir, "request_1");
     
