@@ -3,6 +3,7 @@
 
 #include "map.h"
 #include "hash_set.h"
+#include "binary_search_tree.h"
 #include "trie.h"
 
 status_code map_set_null(Map* map)
@@ -48,6 +49,18 @@ status_code map_construct(Map* map, map_base base, size_t (*calc_hash)(const cha
         }
         case MB_ARR:
         case MB_BST:
+        {
+            map->ds = malloc(sizeof(Binary_search_tree));
+            
+            map->set_null           = (status_code (*)(void*))                                      bst_set_null;
+            map->construct          = (status_code (*)(void*, size_t (*)(const char*)))             bst_construct;
+            map->destruct           = (status_code (*)(void*))                                      bst_destruct;
+            map->contains           = (status_code (*)(void*, const char*, int* is_contained))      bst_contains;
+            map->get                = (status_code (*)(void*, const char*, Department** dep))       bst_get;
+            map->insert             = (status_code (*)(void*, const char*, const Department* dep))  bst_insert;
+            map->erase              = (status_code (*)(void*, const char*))                         bst_erase;
+            break;
+        }
         case MB_TRIE:
         {
             map->ds = malloc(sizeof(Trie));

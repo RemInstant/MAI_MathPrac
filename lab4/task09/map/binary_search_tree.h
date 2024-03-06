@@ -19,7 +19,7 @@ typedef struct Binary_search_tree
 
 
 status_code bst_set_null(bst* tree);
-status_code bst_construct(bst* tree);
+status_code bst_construct(bst* tree, size_t (*unused)(const char*));
 status_code bst_destruct(bst* tree);
 
 status_code bst_contains(bst* tree, const char* key, int* is_contained);

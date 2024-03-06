@@ -11,10 +11,10 @@ int main()
 {
     for (map_base base = MB_HASHSET; base <= MB_TRIE; ++base)
     {
-        //if (base == MB_HASHSET) continue;
+        if (base == MB_HASHSET) continue;
         if (base == MB_ARR) continue;
-        if (base == MB_BST) continue;
-        //if (base == MB_TRIE) continue;
+        //if (base == MB_BST) continue;
+        if (base == MB_TRIE) continue;
         
         Map map;
         Department* dep;

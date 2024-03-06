@@ -10,25 +10,25 @@ status_code bst_node_construct(bst_node** node, const char* key, Department* dep
     {
         return NULL_ARG;
     }
-
+    
     *node = (bst_node*) malloc(sizeof(bst_node));
     if (*node == NULL)
     {
         return BAD_ALLOC;
     }
-
+    
     (*node)->key = (char*) malloc(sizeof(char) * (strlen(key) + 1));
     if ((*node)->key == NULL)
     {
         free(*node);
         return BAD_ALLOC;
     }
-
+    
     strcpy((*node)->key, key);
     (*node)->left = NULL;
     (*node)->right = NULL;
     (*node)->dep = dep;
-
+    
     return OK;
 }
 
@@ -42,7 +42,7 @@ status_code bst_node_destruct(bst_node** node)
     {
         return OK;
     }
-
+    
     bst_node_destruct(&(*node)->left);
     bst_node_destruct(&(*node)->right);
     
@@ -50,7 +50,7 @@ status_code bst_node_destruct(bst_node** node)
     free((*node)->key);
     free(*node);
     *node = NULL;
-
+    
     return OK;
 }
 
@@ -67,15 +67,15 @@ status_code bst_set_null(bst* tree)
     return OK;
 }
 
-status_code bst_construct(bst* tree)
+status_code bst_construct(bst* tree, size_t (*unused)(const char*))
 {
     if (tree == NULL)
     {
         return NULL_ARG;
     }
-
+    
     tree->root = NULL;
-
+    
     return OK;
 }
 
@@ -85,15 +85,15 @@ status_code bst_destruct(bst* tree)
     {
         return OK;
     }
-
+    
     status_code err_code = OK;
     if (tree->root != NULL)
     {
         err_code = bst_node_destruct(&tree->root);
     }
-
+    
     tree->root = NULL;
-
+    
     return err_code;
 }
 
@@ -102,29 +102,24 @@ status_code bst_search_node(bst* tree, const char* key, bst_node** node)
 {
     if (tree == NULL || key == NULL || node == NULL)
     {
-        return INVALID_ARG;
+        return NULL_ARG;
     }
-
+    
     if (tree->root == NULL)
     {
-        return BAD_ACCESS;
+        *node = NULL;
+        return OK;
     }
-
+    
     bst_node* cur = tree->root;
-    int comp;
-
+    int comp = 0;
+    
     while (cur != NULL)
     {
-        if (cur->key == NULL)
-        {
-            return INVALID_ARG;
-        }
-
         comp = strcmp(key, cur->key);
         if (comp == 0)
         {
             *node = cur;
-
             return OK;
         }
         else if (comp < 0)
@@ -136,27 +131,22 @@ status_code bst_search_node(bst* tree, const char* key, bst_node** node)
             cur = cur->right;
         }
     }
-
-    return BAD_ACCESS;
+    
+    *node = NULL;
+    return OK;
 }
 
 status_code bst_contains(bst* tree, const char* key, int* is_contained)
 {
     if (tree == NULL || key == NULL || is_contained == NULL)
     {
-        return INVALID_ARG;
+        return NULL_ARG;
     }
-
+    
     bst_node* node = NULL;
-    status_code status = bst_search_node(tree, key, &node);
-    if (status)
-    {
-        *is_contained = 0;
-        return status;
-    }
-
-    *is_contained = node != NULL && node->dep != NULL;
-
+    bst_search_node(tree, key, &node);
+    *is_contained = node == NULL ? 0 : 1;
+    
     return OK;
 }
 
@@ -164,23 +154,19 @@ status_code bst_get(bst* tree, const char* key, Department** dep)
 {
     if (tree == NULL || key == NULL || dep == NULL)
     {
-        return INVALID_ARG;
+        return NULL_ARG;
     }
-
+    
     bst_node* node = NULL;
-    status_code status = bst_search_node(tree, key, &node);
-    if (status)
-    {
-        return status;
-    }
-
+    bst_search_node(tree, key, &node);
+    
     if (node == NULL)
     {
         return BAD_ACCESS;
     }
-
+    
     *dep = node->dep;
-
+    
     return OK;
 }
 
@@ -188,54 +174,33 @@ status_code bst_insert(bst* tree, const char* key, Department* dep)
 {
     if (tree == NULL || key == NULL || dep == NULL)
     {
-        return INVALID_ARG;
+        return NULL_ARG;
     }
-
-    bst_node* cur = tree->root;
-    bst_node* parent = NULL;
-    status_code status = OK;
-    int comp;
-
+    
     if (tree->root == NULL)
     {
-        status = bst_node_construct(&tree->root, key, dep);
+        return bst_node_construct(&tree->root, key, dep);
     }
-    else
+    
+    bst_node* cur = tree->root;
+    bst_node* parent = NULL;
+    int comp = 0;
+    
+    while (cur != NULL)
     {
-        while (cur != NULL)
+        parent = cur;
+        comp = strcmp(key, cur->key);
+        
+        if (comp == 0)
         {
-            if (cur->key == NULL)
-            {
-                return INVALID_ARG;
-            }
-
-            comp = strcmp(key, cur->key);
-            if (comp == 0)
-            {
-                return BAD_ACCESS;
-            }
-            else if (comp < 0)
-            {
-                if (cur->left == NULL)
-                {
-                    status = bst_node_construct(&cur->left, key, dep);
-                }
-
-                cur = cur->left;
-            }
-            else
-            {
-                if (cur->right == NULL)
-                {
-                    status = bst_node_construct(&cur->right, key, dep);
-                }
-
-                cur = cur->right;
-            }
+            return BAD_ACCESS;
         }
+        
+        cur = comp < 0 ? cur->left : cur->right;
     }
-
-    return status;
+    
+    return comp < 0 ? bst_node_construct(&parent->left, key, dep)
+                    : bst_node_construct(&parent->right, key, dep);
 }
 
 status_code bst_del_node(bst_node** del_node)
@@ -247,7 +212,6 @@ status_code bst_del_node(bst_node** del_node)
         return OK;
     }
 
-    status_code status;
     bst_node* new_node;
     if (node->left == NULL && node->right == NULL)
     {
@@ -270,17 +234,16 @@ status_code bst_del_node(bst_node** del_node)
             prev = new_node;
             new_node = new_node->left;
         }
-
-        prev->left = new_node->right;
-
+        
         new_node->left = node->left;
+        prev->left = new_node->right;
+        
         if (node->right != new_node)
         {
             new_node->right = node->right;
         }
     }
     
-    //department_destruct(node->dep);
     free(node->key);
     free(node);
     *del_node = new_node;
@@ -292,10 +255,9 @@ status_code bst_erase(bst* tree, const char* key)
 {
     if (tree == NULL || key == NULL)
     {
-        return INVALID_ARG;
+        return NULL_ARG;
     }
 
-    bst_node* new = NULL;
     bst_node* prev = NULL;
     bst_node* cur = tree->root;
     int comp, flag;

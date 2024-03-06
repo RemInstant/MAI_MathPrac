@@ -5,9 +5,9 @@ PQ_H = priority_queue/priority_queue.h priority_queue/binary_heap.h priority_que
 PQ_O = gcc_obj/priority_queue.o gcc_obj/binary_heap.o gcc_obj/binomial_heap.o gcc_obj/fibonacci_heap.o
 PQ_O_TRG = priority_queue.o binary_heap.o binomial_heap.o fibonacci_heap.o
 
-MAP_H = map/map.h map/hash_set.h map/trie.h
-MAP_O = gcc_obj/map.o gcc_obj/hash_set.o gcc_obj/trie.o
-MAP_O_TRG = map.o hash_set.o trie.o
+MAP_H = map/map.h map/hash_set.h map/binary_search_tree.h map/trie.h
+MAP_O = gcc_obj/map.o gcc_obj/hash_set.o gcc_obj/binary_search_tree.o gcc_obj/trie.o
+MAP_O_TRG = map.o hash_set.o binary_search_tree.o trie.o
 
 OTHER_O = gcc_obj/logger.o gcc_obj/readers.o gcc_obj/department.o gcc_obj/utility.o
 
@@ -43,6 +43,9 @@ map.o: map/map.c map/map.h department.h utility.h
 
 hash_set.o: map/hash_set.c map/hash_set.h department.h utility.h
 	$(CC) $(CFLAGS) -c map/hash_set.c -o gcc_obj/hash_set.o -lm
+	
+binary_search_tree.o: map/binary_search_tree.c map/binary_search_tree.h department.h utility.h
+	$(CC) $(CFLAGS) -c map/binary_search_tree.c -o gcc_obj/binary_search_tree.o -lm
 
 trie.o: map/trie.c map/trie.h department.h utility.h
 	$(CC) $(CFLAGS) -c map/trie.c -o gcc_obj/trie.o -lm
