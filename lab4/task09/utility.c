@@ -346,6 +346,85 @@ status_code sread_until(const char* src, const char* delims, int inclusive_flag,
 }
 
 
+status_code generate_random_str(char** str, const char* alphabet, size_t max_len)
+{
+	if (str == NULL)
+	{
+		return NULL_ARG;
+	}
+    
+	char flags[256];
+    memset(flags, 0, sizeof(char) * 256);
+    
+    for (size_t i = 0; alphabet[i]; ++i)
+    {
+        if (i > 0 && alphabet[i] == '-')
+        {
+            if (alphabet[i+1] == '\0' || alphabet[i-1] > alphabet[i+1])
+            {
+                return INVALID_INPUT;
+            }
+            
+            for (size_t j = alphabet[i-1]; j <= alphabet[i+1]; ++j)
+            {
+                flags[(int) j] = 1;
+            }
+        }
+        else
+        {
+            flags[(int) alphabet[i]] = 1;
+        }
+    }
+    
+    size_t len = 0;
+	char symbols[256];
+    char* ptr = symbols;
+    
+    for (size_t i = 0; i < 256; ++i)
+    {
+        if (flags[i])
+        {
+            *ptr++ = (char) i;
+        }
+    }
+    
+    *ptr = '\0';
+    len = ptr - symbols;
+    
+	size_t iter = 0;
+	size_t size = 4;
+	*str = (char*) malloc(sizeof(char) * size);
+	if (*str == NULL)
+	{
+		return BAD_ALLOC;
+	}
+	
+	char ch = symbols[rand() % (len + 1)];
+	while ((ch != '\0' || iter == 0) && iter < max_len)
+	{
+		while (iter == 0 && ch == '\0')
+		{
+			ch = symbols[rand() % (len + 1)];
+		}
+		if (iter > size - 2)
+		{
+			size *= 2;
+			char* temp_str = realloc(*str, size);
+			if (temp_str == NULL)
+			{
+				free(*str);
+				return BAD_ALLOC;
+			}
+			*str = temp_str;
+		}
+		(*str)[iter++] = ch;
+		ch = symbols[rand() % (len + 1)];
+	}
+	(*str)[iter] = '\0';
+	return OK;
+}
+
+
 unsigned rand_32()
 {
 	unsigned x = rand() & 255;

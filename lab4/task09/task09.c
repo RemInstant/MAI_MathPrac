@@ -16,8 +16,6 @@
 #include <unistd.h>
 
 // TODO 
-// NAME GENERATOR !!!!!!!!!!!!!!!!!
-// TRANSFER
 // MAPS HEAPS
 // unify ctoi funcs in maps
 

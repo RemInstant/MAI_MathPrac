@@ -60,20 +60,20 @@ status_code logger_log(Logger* log, const char time[21], department_message msg)
                 return INVALID_INPUT;
             }
             
-            fprintf(log->file, "[%s] [NEW_REQUEST]: Request %u was received by department %s.\n",
+            fprintf(log->file, "[%s] [NEW_REQUEST]: Request %u was received by dep. %s.\n",
                     time, msg.req_id, msg.dep_id);
             
             break;
         }
         case REQUEST_HANDLING_STARTED:
         {
-            if (msg.oper_name == NULL)
+            if (msg.oper_name == NULL || msg.dep_id == NULL)
             {
                 return INVALID_INPUT;
             }
             
-            fprintf(log->file, "[%s] [REQUEST_HANDLING_STARTED]: Handling of request %u was started by operator %s.\n",
-                    time, msg.req_id, msg.oper_name);
+            fprintf(log->file, "[%s] [REQUEST_HANDLING_STARTED]: Handling of request %u was started in dep. %s by operator %s.\n",
+                    time, msg.req_id, msg.dep_id, msg.oper_name);
             
             break;
         }
@@ -84,7 +84,7 @@ status_code logger_log(Logger* log, const char time[21], department_message msg)
                 return INVALID_INPUT;
             }
             
-            fprintf(log->file, "[%s] [REQUEST_HANDLING_FINISHED]: Handling of request %u was finished by operator %s in %u minutes.\n",
+            fprintf(log->file, "[%s] [REQUEST_HANDLING_FINISHED]: Handling of request %u was finished in by operator %s in %u minutes.\n",
                     time, msg.req_id, msg.oper_name, msg.handling_time);
             
             break;

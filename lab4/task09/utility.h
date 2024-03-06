@@ -64,6 +64,8 @@ status_code fread_word(FILE* file, char** word, int skip_front_spaces);
 status_code read_line(char** str, int skip_front_spaces);
 status_code sread_until(const char* src, const char* delims, int inclusive_flag, const char** end_ptr, char** str);
 
+status_code generate_random_str(char** str, const char* alphabet, size_t max_len);
+
 unsigned rand_32();
 
 int is_word(const char* str);

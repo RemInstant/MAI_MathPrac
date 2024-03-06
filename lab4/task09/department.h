@@ -7,7 +7,7 @@
 typedef struct Operator
 {
     char* name;
-    const request* req;
+    request* req;
     char start_time[21];
     char finish_time[21];
     unsigned handling_time;

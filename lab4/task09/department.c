@@ -3,7 +3,48 @@
 
 #include "department.h"
 
-status_code operator_give_task(Department* dep, size_t op_id, const char time[21], const request* req)
+status_code generate_names(Department* dep)
+{
+    if (dep == NULL)
+    {
+        return NULL_ARG;
+    }
+    
+    status_code code = OK;
+    
+    for (size_t i = 0; !code && i < dep->staff_size; ++i)
+    {
+        int flag = 0;
+        
+        do
+        {
+            code = generate_random_str(&dep->staff[i].name, "a-zA-Z", 40);
+            
+            for (size_t j = 0; !code && j < i; ++j)
+            {
+                if (!strcmp(dep->staff[i].name, dep->staff[j].name))
+                {
+                    flag = 1;
+                    free(dep->staff[i].name);
+                    break;
+                }
+            }
+        } while (!code && flag);
+    }
+    
+    if (code)
+    {
+        for (size_t i = 0; i < dep->staff_size; ++i)
+        {
+            free(dep->staff[i].name);
+            dep->staff[i].name = NULL;
+        }
+    }
+    
+    return code;
+}
+
+status_code operator_give_task(Department* dep, size_t op_id, const char time[21], request* req)
 {
     if (dep == NULL || time == NULL || req == NULL)
     {
@@ -34,6 +75,7 @@ status_code operator_give_task(Department* dep, size_t op_id, const char time[21
     
     return OK;
 }
+
 
 status_code department_set_null(Department* dep)
 {
@@ -92,18 +134,9 @@ status_code department_construct(
         dep->staff[i].finish_time[0] = '\0';
         dep->staff[i].handling_time = 0;
     }
-    for (size_t i = 0; i < staff_size && !code; ++i)
-    {
-        dep->staff[i].name = (char*) malloc(sizeof(char) * 4);
-        if (dep->staff[i].name == NULL)
-        {
-            code = BAD_ALLOC;
-        }
-        else
-        {
-            strcpy(dep->staff[i].name, "123");
-        }
-    }
+    
+    dep->staff_size = staff_size;
+    code = code ? code : generate_names(dep);
     
     if (!code)
     {
@@ -115,20 +148,11 @@ status_code department_construct(
     code = code ? code : p_queue_construct(dep->queue, base, comp);
     if (code)
     {
-        for (size_t i = 0; i < staff_size; ++i)
-        {
-            free(dep->staff[i].name);
-        }
-        free(dep->id);
-        free(dep->staff);
-        p_queue_destruct(dep->queue);
-        free(dep->queue);
-        department_set_null(dep);
+        department_destruct(dep);
         return code;
     }
     
     strcpy(dep->id, dep_id);
-    dep->staff_size = staff_size;
     dep->free_staff_cnt = staff_size;
     dep->load_coef = 0;
     dep->overload_coef = overload_coef;
@@ -144,11 +168,17 @@ status_code department_destruct(Department* dep)
 {
     if (dep == NULL)
     {
-        return NULL_ARG;
+        return OK;
     }
+    
+    for (size_t i = 0; i < dep->staff_size; ++i)
+    {
+        request_destruct(dep->staff[i].req);
+        free_all(2, dep->staff[i].name, dep->staff[i].req);
+    }
+    
     p_queue_destruct(dep->queue);
-    free(dep->queue);
-    free(dep->staff);
+    free_all(3, dep->id, dep->queue, dep->staff);
     department_set_null(dep);
     return OK;
 }

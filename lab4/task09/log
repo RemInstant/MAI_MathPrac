@@ -1,31 +1,31 @@
-[2024-01-01T12:00:00Z] [NEW_REQUEST]: Request 2 was received by department DEP001A.
-[2024-01-01T12:00:00Z] [REQUEST_HANDLING_STARTED]: Handling of request 2 was started by operator 123.
-[2024-01-01T12:00:00Z] [NEW_REQUEST]: Request 3 was received by department DEP001A.
-[2024-01-01T12:00:00Z] [REQUEST_HANDLING_STARTED]: Handling of request 3 was started by operator 123.
-[2024-01-01T12:00:00Z] [NEW_REQUEST]: Request 1 was received by department DEP001A.
-[2024-01-01T12:00:00Z] [REQUEST_HANDLING_STARTED]: Handling of request 1 was started by operator 123.
-[2024-01-01T12:01:00Z] [NEW_REQUEST]: Request 5 was received by department DEP001A.
-[2024-01-01T12:01:00Z] [NEW_REQUEST]: Request 4 was received by department DEP001A.
-[2024-01-01T12:01:00Z] [NEW_REQUEST]: Request 6 was received by department DEP001A.
+[2024-01-01T12:00:00Z] [NEW_REQUEST]: Request 2 was received by dep. DEP001A.
+[2024-01-01T12:00:00Z] [REQUEST_HANDLING_STARTED]: Handling of request 2 was started in dep. DEP001A by operator mrxSxOhNpuHMWVIrSWGwpkOHUAVMceHyzGOyndwc.
+[2024-01-01T12:00:00Z] [NEW_REQUEST]: Request 3 was received by dep. DEP001A.
+[2024-01-01T12:00:00Z] [REQUEST_HANDLING_STARTED]: Handling of request 3 was started in dep. DEP001A by operator IJWgIvPScOFKbUWHwGOPheUbBBpndeeAJGiJMDBE.
+[2024-01-01T12:00:00Z] [NEW_REQUEST]: Request 1 was received by dep. DEP001A.
+[2024-01-01T12:00:00Z] [REQUEST_HANDLING_STARTED]: Handling of request 1 was started in dep. DEP001A by operator GYPHGabxP.
+[2024-01-01T12:01:00Z] [NEW_REQUEST]: Request 5 was received by dep. DEP001A.
+[2024-01-01T12:01:00Z] [NEW_REQUEST]: Request 4 was received by dep. DEP001A.
+[2024-01-01T12:01:00Z] [NEW_REQUEST]: Request 6 was received by dep. DEP001A.
 [2024-01-01T12:01:00Z] [DEPARTMENT_OVERLOADED]: Department DEP001A was overloaded after receiving request 6. Its request was transfered to department DEP023A
-[2024-01-01T12:01:00Z] [REQUEST_HANDLING_STARTED]: Handling of request 5 was started by operator 123.
-[2024-01-01T12:01:00Z] [REQUEST_HANDLING_STARTED]: Handling of request 4 was started by operator 123.
-[2024-01-01T12:01:00Z] [REQUEST_HANDLING_STARTED]: Handling of request 6 was started by operator 123.
-[2024-01-01T12:30:00Z] [REQUEST_HANDLING_FINISHED]: Handling of request 2 was finished by operator 123 in 30 minutes.
-[2024-01-01T12:30:00Z] [REQUEST_HANDLING_FINISHED]: Handling of request 3 was finished by operator 123 in 30 minutes.
-[2024-01-01T12:30:00Z] [REQUEST_HANDLING_FINISHED]: Handling of request 1 was finished by operator 123 in 30 minutes.
-[2024-01-01T12:31:00Z] [REQUEST_HANDLING_FINISHED]: Handling of request 5 was finished by operator 123 in 30 minutes.
-[2024-01-01T12:31:00Z] [REQUEST_HANDLING_FINISHED]: Handling of request 4 was finished by operator 123 in 30 minutes.
-[2024-01-01T12:31:00Z] [REQUEST_HANDLING_FINISHED]: Handling of request 6 was finished by operator 123 in 30 minutes.
-[2024-01-01T12:40:00Z] [NEW_REQUEST]: Request 8 was received by department DEP001A.
-[2024-01-01T12:40:00Z] [REQUEST_HANDLING_STARTED]: Handling of request 8 was started by operator 123.
-[2024-01-01T12:40:00Z] [NEW_REQUEST]: Request 9 was received by department DEP001A.
-[2024-01-01T12:40:00Z] [REQUEST_HANDLING_STARTED]: Handling of request 9 was started by operator 123.
-[2024-01-01T12:40:00Z] [NEW_REQUEST]: Request 10 was received by department DEP001A.
-[2024-01-01T12:40:00Z] [REQUEST_HANDLING_STARTED]: Handling of request 10 was started by operator 123.
-[2024-01-01T12:40:00Z] [NEW_REQUEST]: Request 7 was received by department DEP001A.
-[2024-01-01T13:10:00Z] [REQUEST_HANDLING_FINISHED]: Handling of request 8 was finished by operator 123 in 30 minutes.
-[2024-01-01T13:10:00Z] [REQUEST_HANDLING_FINISHED]: Handling of request 9 was finished by operator 123 in 30 minutes.
-[2024-01-01T13:10:00Z] [REQUEST_HANDLING_FINISHED]: Handling of request 10 was finished by operator 123 in 30 minutes.
-[2024-01-01T13:10:00Z] [REQUEST_HANDLING_STARTED]: Handling of request 7 was started by operator 123.
-[2024-01-01T13:40:00Z] [REQUEST_HANDLING_FINISHED]: Handling of request 7 was finished by operator 123 in 30 minutes.
+[2024-01-01T12:01:00Z] [REQUEST_HANDLING_STARTED]: Handling of request 5 was started in dep. DEP023A by operator xsm.
+[2024-01-01T12:01:00Z] [REQUEST_HANDLING_STARTED]: Handling of request 4 was started in dep. DEP023A by operator ongmZDiSG.
+[2024-01-01T12:01:00Z] [REQUEST_HANDLING_STARTED]: Handling of request 6 was started in dep. DEP023A by operator YaZUxCgADNdJjNycQKghFQhblkTOrtMZdzAwNx.
+[2024-01-01T12:30:00Z] [REQUEST_HANDLING_FINISHED]: Handling of request 2 was finished in by operator mrxSxOhNpuHMWVIrSWGwpkOHUAVMceHyzGOyndwc in 30 minutes.
+[2024-01-01T12:30:00Z] [REQUEST_HANDLING_FINISHED]: Handling of request 3 was finished in by operator IJWgIvPScOFKbUWHwGOPheUbBBpndeeAJGiJMDBE in 30 minutes.
+[2024-01-01T12:30:00Z] [REQUEST_HANDLING_FINISHED]: Handling of request 1 was finished in by operator GYPHGabxP in 30 minutes.
+[2024-01-01T12:31:00Z] [REQUEST_HANDLING_FINISHED]: Handling of request 5 was finished in by operator xsm in 30 minutes.
+[2024-01-01T12:31:00Z] [REQUEST_HANDLING_FINISHED]: Handling of request 4 was finished in by operator ongmZDiSG in 30 minutes.
+[2024-01-01T12:31:00Z] [REQUEST_HANDLING_FINISHED]: Handling of request 6 was finished in by operator YaZUxCgADNdJjNycQKghFQhblkTOrtMZdzAwNx in 30 minutes.
+[2024-01-01T12:40:00Z] [NEW_REQUEST]: Request 8 was received by dep. DEP001A.
+[2024-01-01T12:40:00Z] [REQUEST_HANDLING_STARTED]: Handling of request 8 was started in dep. DEP001A by operator mrxSxOhNpuHMWVIrSWGwpkOHUAVMceHyzGOyndwc.
+[2024-01-01T12:40:00Z] [NEW_REQUEST]: Request 9 was received by dep. DEP001A.
+[2024-01-01T12:40:00Z] [REQUEST_HANDLING_STARTED]: Handling of request 9 was started in dep. DEP001A by operator IJWgIvPScOFKbUWHwGOPheUbBBpndeeAJGiJMDBE.
+[2024-01-01T12:40:00Z] [NEW_REQUEST]: Request 10 was received by dep. DEP001A.
+[2024-01-01T12:40:00Z] [REQUEST_HANDLING_STARTED]: Handling of request 10 was started in dep. DEP001A by operator GYPHGabxP.
+[2024-01-01T12:40:00Z] [NEW_REQUEST]: Request 7 was received by dep. DEP001A.
+[2024-01-01T13:10:00Z] [REQUEST_HANDLING_FINISHED]: Handling of request 8 was finished in by operator mrxSxOhNpuHMWVIrSWGwpkOHUAVMceHyzGOyndwc in 30 minutes.
+[2024-01-01T13:10:00Z] [REQUEST_HANDLING_FINISHED]: Handling of request 9 was finished in by operator IJWgIvPScOFKbUWHwGOPheUbBBpndeeAJGiJMDBE in 30 minutes.
+[2024-01-01T13:10:00Z] [REQUEST_HANDLING_FINISHED]: Handling of request 10 was finished in by operator GYPHGabxP in 30 minutes.
+[2024-01-01T13:10:00Z] [REQUEST_HANDLING_STARTED]: Handling of request 7 was started in dep. DEP001A by operator mrxSxOhNpuHMWVIrSWGwpkOHUAVMceHyzGOyndwc.
+[2024-01-01T13:40:00Z] [REQUEST_HANDLING_FINISHED]: Handling of request 7 was finished in by operator mrxSxOhNpuHMWVIrSWGwpkOHUAVMceHyzGOyndwc in 30 minutes.
