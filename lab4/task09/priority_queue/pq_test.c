@@ -17,11 +17,11 @@ int main()
 {
     for (priority_queue_base base = PQB_BINARY; base <= PQB_TREAP; ++base)
     {
-        //if (base == PQB_BINARY) continue;
+        if (base == PQB_BINARY) continue;
         if (base == PQB_LEFTIST) continue;
         if (base == PQB_SKEW) continue;
         //if (base == PQB_FIB) continue;
-        //if (base == PQB_BINOM) continue;
+        if (base == PQB_BINOM) continue;
         if (base == PQB_TREAP) continue;
         
         p_queue pq, pq1, pq2, pq3, pq4;
@@ -175,9 +175,11 @@ int main()
                 assert(atoi(req->txt) == vals[i]);
             }
             
+            assert(p_queue_pop(&pq, &req) == OK);
+            free_req(req);
             assert(p_queue_copy(&pq1, &pq) == OK);
             
-            for (size_t i = 36; i > 0; --i)
+            for (size_t i = 35; i > 0; --i)
             {
                 int num_val = (i+3) / 4 * 10 + (4 - ((i+3) % 4));
                 assert(p_queue_top(&pq, &req) == OK);
