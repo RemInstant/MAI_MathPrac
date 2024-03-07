@@ -66,7 +66,13 @@ status_code lft_node_copy(lft_node** result, const lft_node* src)
     return OK;
 }
 
-lft_node* lft_node_merge(lft_node* a, lft_node* b, int (*compare)(const request*, const request*)) {
+lft_node* lft_node_merge(lft_node* a, lft_node* b, int (*compare)(const request*, const request*))
+{
+    if (compare == NULL)
+    {
+        return NULL;
+    }
+    
     if (a == NULL)
     {
         return b;
@@ -149,7 +155,7 @@ status_code lft_heap_destruct(lft_heap* lft)
 {
     if(lft == NULL)
     {
-        return NULL_ARG;
+        return OK;
     }
     
     lft_node_destruct(lft->head);
@@ -177,8 +183,8 @@ status_code lft_heap_meld(lft_heap* lft_res, lft_heap* lft_l, lft_heap* lft_r)
     lft_tmp.size = lft_l->size + lft_r->size;
     lft_tmp.compare = lft_l->compare;
     
-    lft_heap_set_null(lft_l);
-    lft_heap_set_null(lft_r);
+    lft_l->head = lft_r->head = NULL;
+    lft_l->size = lft_r->size = 0;
     
     *lft_res = lft_tmp;
     
@@ -187,7 +193,7 @@ status_code lft_heap_meld(lft_heap* lft_res, lft_heap* lft_l, lft_heap* lft_r)
 
 status_code lft_heap_copy_meld(lft_heap* lft_res, const lft_heap* lft_l, const lft_heap* lft_r)
 {
-    if (lft_res == NULL)
+    if (lft_res == NULL || lft_l == NULL || lft_r == NULL)
     {
         return NULL_ARG;
     }
@@ -294,7 +300,5 @@ status_code lft_heap_insert(lft_heap* lft, request* req)
     lft_add.size = 1;
     lft_add.compare = lft->compare;
     
-    lft_heap_meld(lft, lft, &lft_add);
-    
-    return OK;
+    return lft_heap_meld(lft, lft, &lft_add);
 }

@@ -4,6 +4,7 @@
 #include "priority_queue.h"
 #include "binary_heap.h"
 #include "leftist_heap.h"
+#include "skew_heap.h"
 #include "binomial_heap.h"
 #include "fibonacci_heap.h"
 
@@ -75,6 +76,22 @@ status_code p_queue_construct(p_queue* pq, pq_base base, int (*compare)(const re
             break;
         }
         case PQB_SKEW:
+        {
+            pq->ds_size = sizeof(Skew_heap);
+            pq->ds = malloc(sizeof(Skew_heap));
+            
+            pq->set_null 	= (status_code (*)(void*)) 											skw_heap_set_null;
+            pq->construct 	= (status_code (*)(void*, int (*)(const request*, const request*))) skw_heap_construct;
+            pq->copy 		= (status_code (*)(void*, const void*)) 							skw_heap_copy;
+            pq->destruct 	= (status_code (*)(void*)) 											skw_heap_destruct;
+            pq->meld 		= (status_code (*)(void*, void*, void*)) 							skw_heap_meld;
+            pq->copy_meld 	= (status_code (*)(void*, const void*, const void*))                skw_heap_copy_meld;
+            pq->size 		= (status_code (*)(void*, size_t*))                                 skw_heap_size;
+            pq->top 		= (status_code (*)(void*, request**))                               skw_heap_top;
+            pq->pop 		= (status_code (*)(void*, request**))                               skw_heap_pop;
+            pq->insert 		= (status_code (*)(void*, const request*))                          skw_heap_insert;
+            break;
+        }
         case PQB_BINOM:
         {
             pq->ds_size = sizeof(Binomial_heap);
