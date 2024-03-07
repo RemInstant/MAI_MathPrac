@@ -12,13 +12,14 @@ int main()
     for (map_base base = MB_HASHSET; base <= MB_TRIE; ++base)
     {
         if (base == MB_HASHSET) continue;
-        if (base == MB_ARR) continue;
-        //if (base == MB_BST) continue;
+        //if (base == MB_ARR) continue;
+        if (base == MB_BST) continue;
         if (base == MB_TRIE) continue;
         
         Map map;
         Department* dep;
         Department* dep1;
+        char* dep_name;
         char* key;
         int is_contained;
         
@@ -88,10 +89,15 @@ int main()
             
             for (size_t i = 0; i < 1000; ++i)
             {
+                dep_name = (char*) malloc(sizeof(char) * 4);
+                assert(dep_name != NULL);
+                sprintf(dep_name, "%llu", i);
                 dep = (Department*) malloc(sizeof(Department));
                 dep1 = NULL;
                 assert(dep != NULL);
-                assert(department_construct(dep, "123", i, PQB_BINOM, 2.0, 1e-9, 1, 1, compare_request) == OK);
+                assert(department_construct(dep, dep_name, 1, PQB_BINOM, 2.0, 1e-9, 1, 1, compare_request) == OK);
+                free(dep_name);
+                dep_name = NULL;
                 
                 key[0] = '0' + ((7*i + 17) % 3);
                 key[1] = '0' + ((17*i + 13) % 5);
@@ -129,7 +135,7 @@ int main()
                 assert(map_contains(&map, key, &is_contained) == OK);
                 assert(is_contained == 1);
                 assert(map_get(&map, key, &dep) == OK);
-                assert(dep->staff_size == i);
+                assert(atoi(dep->id) == i);
                 
                 assert(map_erase(&map, key) == OK);
                 assert(map_contains(&map, key, &is_contained) == OK);

@@ -13,12 +13,11 @@
 #include "map/trie.h"
 #include "map/map.h"
 
-#include <unistd.h>
-
 // TODO 
 // MAPS HEAPS
 // unify ctoi funcs in maps
 // rename dep_id to dep_name
+// check comparators equality before meld
 
 int main(int argc, char** argv)
 {

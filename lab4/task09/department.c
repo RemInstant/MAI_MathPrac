@@ -19,6 +19,7 @@ status_code generate_names(Department* dep)
         do
         {
             code = generate_random_str(&dep->staff[i].name, "a-zA-Z", 40);
+            flag = 0;
             
             for (size_t j = 0; !code && j < i; ++j)
             {

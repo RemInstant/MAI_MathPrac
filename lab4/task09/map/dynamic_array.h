@@ -10,24 +10,21 @@ typedef struct arr_elem
     Department* dep;
 } arr_elem;
 
-typedef struct Array
+typedef struct Dynamic_array
 {
     arr_elem** elems;
     size_t size;
     size_t capacity;
-    int sorted;
-} Array;
+} Dynamic_array, Array;
 
 
-status_code arr_construct (Array* arr);
-status_code arr_destruct (Array* arr);
-status_code arr_set_null (Array* arr);
+status_code arr_set_null(Array* arr);
+status_code arr_construct(Array* arr);
+status_code arr_destruct(Array* arr);
 
-status_code arr_insert (Array* arr, const char* key, Department* dep);
-status_code arr_print (Array* arr);
-status_code arr_dich_search (Array* arr, const char* key, int* res);
 status_code arr_contains(Array* arr, const char* key, int* is_contained);
 status_code arr_get(Array* arr, const char* key, Department** dep);
+status_code arr_insert(Array* arr, const char* key, Department* dep);
 status_code arr_erase(Array* arr, const char* key);
 
 #endif // _ARRAY_H_
