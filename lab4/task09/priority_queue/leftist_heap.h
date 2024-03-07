@@ -3,17 +3,17 @@
 
 #include "../utility.h"
 
-typedef struct Leftist_node
+typedef struct leftist_node
 {
     request* req;
     int distance;
-    struct Leftist_node* left;
-    struct Leftist_node* right;
-} Leftist_node, lft_node;
+    struct leftist_node* left;
+    struct leftist_node* right;
+} leftist_node, lft_node;
 
 typedef struct Leftist_heap
 {
-    Leftist_node* head;
+    leftist_node* head;
     unsigned int size;
     int (*compare)(const request*, const request*);
 } Leftist_heap, lft_heap;

@@ -18,15 +18,15 @@ int main()
     for (priority_queue_base base = PQB_BINARY; base <= PQB_TREAP; ++base)
     {
         if (base == PQB_BINARY) continue;
-        if (base == PQB_LEFTIST) continue;
+        //if (base == PQB_LEFTIST) continue;
         if (base == PQB_SKEW) continue;
-        //if (base == PQB_FIB) continue;
+        if (base == PQB_FIB) continue;
         if (base == PQB_BINOM) continue;
         if (base == PQB_TREAP) continue;
         
         p_queue pq, pq1, pq2, pq3, pq4;
         size_t size;
-        request* req;
+        request* req = NULL;
         
         assert(p_queue_set_null(&pq) == OK);
         assert(p_queue_set_null(&pq1) == OK);
@@ -74,14 +74,19 @@ int main()
             
             for (size_t i = 8; i > 0; --i)
             {
+                req = NULL;
                 assert(p_queue_top(&pq, &req) == OK);
                 assert(atoi(req->txt) == i);
+                req = NULL;
                 assert(p_queue_pop(&pq, &req) == OK);
                 assert(atoi(req->txt) == i);
                 free_req(req);
                 assert(p_queue_size(&pq, &size) == OK);
                 assert(size == i-1);
             }
+            
+            assert(p_queue_pop(&pq, &req) == OK);
+            assert(req == NULL);
             
             req = (request*) calloc(1, sizeof(request));
             assert(req != NULL);
@@ -302,6 +307,10 @@ int main()
             assert(size == 36);
             assert(p_queue_size(&pq4, &size) == OK);
             assert(size == 36);
+            assert(p_queue_size(&pq1, &size) == OK);
+            assert(size == 0);
+            assert(p_queue_size(&pq2, &size) == OK);
+            assert(size == 0);
             
             for (size_t i = 36; i > 0; --i)
             {

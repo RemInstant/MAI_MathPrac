@@ -3,6 +3,7 @@
 
 #include "priority_queue.h"
 #include "binary_heap.h"
+#include "leftist_heap.h"
 #include "binomial_heap.h"
 #include "fibonacci_heap.h"
 
@@ -41,8 +42,8 @@ status_code p_queue_construct(p_queue* pq, pq_base base, int (*compare)(const re
     {
         case PQB_BINARY: // omg rename functions
         {
-            pq->ds_size = sizeof(bin_heap);
-            pq->ds = malloc(sizeof(bin_heap));
+            pq->ds_size = sizeof(Binary_heap);
+            pq->ds = malloc(sizeof(Binary_heap));
             
             pq->set_null 	= (status_code (*)(void*)) 											bh_set_null;
             pq->construct 	= (status_code (*)(void*, int (*)(const request*, const request*))) bh_construct;
@@ -58,23 +59,26 @@ status_code p_queue_construct(p_queue* pq, pq_base base, int (*compare)(const re
         }
         case PQB_LEFTIST:
         {
-            // pattern
-            pq->set_null 	= (status_code (*)(void*)) 											bh_set_null;
-            pq->construct 	= (status_code (*)(void*, int (*)(const request*, const request*))) bh_construct;
-            pq->copy 		= (status_code (*)(void*, const void*)) 							bh_copy;
-            pq->destruct 	= (status_code (*)(void*)) 											bh_destruct;
-            pq->meld 		= (status_code (*)(void*, void*, void*)) 							bh_meld;
-            pq->copy_meld 	= (status_code (*)(void*, const void*, const void*))                bh_copy_meld;
-            pq->size 		= (status_code (*)(void*, size_t*))                                 bh_size;
-            pq->top 		= (status_code (*)(void*, request**))                               bh_top;
-            pq->pop 		= (status_code (*)(void*, request**))                               bh_pop;
-            pq->insert 		= (status_code (*)(void*, const request*))                          bh_insert;
+            pq->ds_size = sizeof(Leftist_heap);
+            pq->ds = malloc(sizeof(Leftist_heap));
+            
+            pq->set_null 	= (status_code (*)(void*)) 											lft_heap_set_null;
+            pq->construct 	= (status_code (*)(void*, int (*)(const request*, const request*))) lft_heap_construct;
+            pq->copy 		= (status_code (*)(void*, const void*)) 							lft_heap_copy;
+            pq->destruct 	= (status_code (*)(void*)) 											lft_heap_destruct;
+            pq->meld 		= (status_code (*)(void*, void*, void*)) 							lft_heap_meld;
+            pq->copy_meld 	= (status_code (*)(void*, const void*, const void*))                lft_heap_copy_meld;
+            pq->size 		= (status_code (*)(void*, size_t*))                                 lft_heap_size;
+            pq->top 		= (status_code (*)(void*, request**))                               lft_heap_top;
+            pq->pop 		= (status_code (*)(void*, request**))                               lft_heap_pop;
+            pq->insert 		= (status_code (*)(void*, const request*))                          lft_heap_insert;
+            break;
         }
         case PQB_SKEW:
         case PQB_BINOM:
         {
-            pq->ds_size = sizeof(bm_heap);
-            pq->ds = malloc(sizeof(bm_heap));
+            pq->ds_size = sizeof(Binomial_heap);
+            pq->ds = malloc(sizeof(Binomial_heap));
             
             pq->set_null    = (status_code (*)(void*))                                          bm_heap_set_null;
             pq->construct   = (status_code (*)(void*, int (*)(const request*, const request*))) bm_heap_construct;

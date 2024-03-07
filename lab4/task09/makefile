@@ -1,13 +1,13 @@
 CC = gcc
 CFLAGS = -g -Wall -Wpedantic -Wshadow -Wformat=2 -Wcast-align -Wnull-dereference -fdiagnostics-color=always -std=c17 -lm
 
-PQ_H = priority_queue/priority_queue.h priority_queue/binary_heap.h priority_queue/binomial_heap.h priority_queue/fibonacci_heap.h
-PQ_O = gcc_obj/priority_queue.o gcc_obj/binary_heap.o gcc_obj/binomial_heap.o gcc_obj/fibonacci_heap.o
-PQ_O_TRG = priority_queue.o binary_heap.o binomial_heap.o fibonacci_heap.o
+PQ_H = priority_queue/priority_queue.h priority_queue/binary_heap.h priority_queue/leftist_heap.h priority_queue/binomial_heap.h priority_queue/fibonacci_heap.h
+PQ_O = gcc_obj/priority_queue.o gcc_obj/binary_heap.o gcc_obj/leftist_heap.o gcc_obj/binomial_heap.o gcc_obj/fibonacci_heap.o
+PQ_O_TRG = priority_queue.o binary_heap.o leftist_heap.o binomial_heap.o fibonacci_heap.o
 
-MAP_H = map/map.h map/hash_set.h map/binary_search_tree.h map/trie.h
-MAP_O = gcc_obj/map.o gcc_obj/hash_set.o gcc_obj/binary_search_tree.o gcc_obj/trie.o
-MAP_O_TRG = map.o hash_set.o binary_search_tree.o trie.o
+MAP_H = map/map.h map/hash_set.h map/dynamic_array.h map/binary_search_tree.h map/trie.h
+MAP_O = gcc_obj/map.o gcc_obj/hash_set.o gcc_obj/dynamic_array.o gcc_obj/binary_search_tree.o gcc_obj/trie.o
+MAP_O_TRG = map.o hash_set.o dynamic_array.o binary_search_tree.o trie.o
 
 OTHER_O = gcc_obj/logger.o gcc_obj/readers.o gcc_obj/department.o gcc_obj/utility.o
 
@@ -43,7 +43,10 @@ map.o: map/map.c map/map.h department.h utility.h
 
 hash_set.o: map/hash_set.c map/hash_set.h department.h utility.h
 	$(CC) $(CFLAGS) -c map/hash_set.c -o gcc_obj/hash_set.o -lm
-	
+
+dynamic_array.o: map/dynamic_array.c map/dynamic_array.h department.h utility.h
+	$(CC) $(CFLAGS) -c map/dynamic_array.c -o gcc_obj/dynamic_array.o -lm
+
 binary_search_tree.o: map/binary_search_tree.c map/binary_search_tree.h department.h utility.h
 	$(CC) $(CFLAGS) -c map/binary_search_tree.c -o gcc_obj/binary_search_tree.o -lm
 
@@ -56,6 +59,9 @@ priority_queue.o: priority_queue/priority_queue.c priority_queue/priority_queue.
 
 binary_heap.o: priority_queue/binary_heap.c priority_queue/binary_heap.h utility.h
 	$(CC) $(CFLAGS) -c priority_queue/binary_heap.c -o gcc_obj/binary_heap.o -lm
+
+leftist_heap.o: priority_queue/leftist_heap.c priority_queue/leftist_heap.h utility.h
+	$(CC) $(CFLAGS) -c priority_queue/leftist_heap.c -o gcc_obj/leftist_heap.o -lm
 
 binomial_heap.o: priority_queue/binomial_heap.c priority_queue/binomial_heap.h utility.h
 	$(CC) $(CFLAGS) -c priority_queue/binomial_heap.c -o gcc_obj/binomial_heap.o -lm
