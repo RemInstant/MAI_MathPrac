@@ -219,10 +219,12 @@ status_code bh_copy_meld(bin_heap* bh, const bin_heap* bh_l, const bin_heap* bh_
     status_code st = bh_copy(&bh_lc, bh_l);
     st = st ? st : bh_copy(&bh_rc, bh_r);
     st = st ? st : bh_meld(&bh_res, &bh_lc, &bh_rc);
+    
+    bh_destruct(&bh_rc);
+    bh_destruct(&bh_lc);
+    
     if (st)
     {
-        bh_destruct(&bh_rc);
-        bh_destruct(&bh_lc);
         bh_destruct(&bh_res);
         return st;
     }

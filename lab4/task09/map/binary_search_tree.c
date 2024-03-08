@@ -32,24 +32,18 @@ status_code bst_node_construct(bst_node** node, const char* key, Department* dep
     return OK;
 }
 
-status_code bst_node_destruct(bst_node** node)
+status_code bst_node_destruct(bst_node* node)
 {
     if (node == NULL)
-    {
-        return NULL_ARG;
-    }
-    if (*node == NULL)
     {
         return OK;
     }
     
-    bst_node_destruct(&(*node)->left);
-    bst_node_destruct(&(*node)->right);
+    bst_node_destruct(node->left);
+    bst_node_destruct(node->right);
     
-    //department_destruct((*node)->dep);
-    free((*node)->key);
-    free(*node);
-    *node = NULL;
+    department_destruct(node->dep);
+    free_all(3, node->key, node->dep, node);
     
     return OK;
 }
@@ -89,7 +83,7 @@ status_code bst_destruct(bst* tree)
     status_code err_code = OK;
     if (tree->root != NULL)
     {
-        err_code = bst_node_destruct(&tree->root);
+        err_code = bst_node_destruct(tree->root);
     }
     
     tree->root = NULL;
