@@ -4,6 +4,11 @@
 #include <stdio.h>
 
 #define DEFAULT_HASH_PARAM 37
+#define CONFIG_MIN_DEP_CNT 1
+#define CONFIG_MAX_DEP_CNT 100
+#define CONFIG_MIN_STAFF_CNT 1
+#define CONFIG_MAX_STAFF_CNT 50
+#define CONFIG_MIN_OVERLOAD_COEF 1.0
 
 typedef unsigned char uchar;
 typedef long long ll;
@@ -31,6 +36,7 @@ typedef enum status_code
     ZERO_POWERED_ZERO,
     BAD_ALLOC,
     BAD_ACCESS,
+    USER_INPUT_END,
 } status_code;
 
 void print_error(status_code code, int nl_cnt);

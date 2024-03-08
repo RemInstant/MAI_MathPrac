@@ -13,7 +13,14 @@ OTHER_O = gcc_obj/logger.o gcc_obj/readers.o gcc_obj/department.o gcc_obj/utilit
 
 VPATH = gcc_obj
 
-all: main pq_test map_test
+all: main pq_test map_test config_generator
+
+# CONFIG GENERATOR
+config_generator: config_generator.o utility.o
+	$(CC) $(CFLAGS) -o config_gen gcc_obj/config_generator.o gcc_obj/utility.o -lm
+
+config_generator.o: config_generator.c utility.h
+	$(CC) $(CFLAGS) -c config_generator.c -o gcc_obj/config_generator.o -lm
 
 # MAP TESTS
 map_test: map_test.o $(MAP_O_TRG) $(PQ_O_TRG) department.o utility.o

@@ -5,12 +5,6 @@
 #include "priority_queue/priority_queue.h"
 #include "map/map.h"
 
-#define CONFIG_MIN_DEP_CNT 1
-#define CONFIG_MAX_DEP_CNT 100
-#define CONFIG_MIN_STAFF_CNT 1
-#define CONFIG_MAX_STAFF_CNT 50
-#define CONFIG_MIN_OVERLOAD_COEF 1.0
-
 status_code setup_config(const char* path, Map* dep_map, size_t* dep_cnt, char*** dep_names,
                                 char st_time[21], char end_time[21], double eps);
 

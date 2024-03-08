@@ -18,6 +18,8 @@
 // unify ctoi funcs in maps
 // rename dep_id to dep_name
 // check comparators equality before meld
+// start time rounding
+// clever input reader?
 
 int main(int argc, char** argv)
 {

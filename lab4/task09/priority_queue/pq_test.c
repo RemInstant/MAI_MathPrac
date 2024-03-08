@@ -20,8 +20,8 @@ int main()
         if (base == PQB_BINARY) continue;
         if (base == PQB_LEFTIST) continue;
         //if (base == PQB_SKEW) continue;
-        if (base == PQB_FIB) continue;
         if (base == PQB_BINOM) continue;
+        if (base == PQB_FIB) continue;
         if (base == PQB_TREAP) continue;
         
         p_queue pq, pq1, pq2, pq3, pq4;
