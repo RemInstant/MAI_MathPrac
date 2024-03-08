@@ -16,13 +16,14 @@ typedef struct Input_reader
     request** data;
     size_t front;
     
+    char st_time[21];
     size_t max_prior;
     size_t dep_cnt;
     const char** dep_names;
 } Input_reader;
 
 status_code ir_set_null(Input_reader* ir);
-status_code ir_construct(Input_reader* ir, size_t max_prior, size_t dep_cnt, const char** dep_names);
+status_code ir_construct(Input_reader* ir, const char st_time[21], size_t max_prior, size_t dep_cnt, const char** dep_names);
 status_code ir_destruct(Input_reader* ir);
 
 status_code ir_read_file(Input_reader* ir, const char* path); // O(n^2) !!!

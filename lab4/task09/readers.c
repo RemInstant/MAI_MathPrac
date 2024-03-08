@@ -171,18 +171,18 @@ status_code setup_config(const char* path, Map* dep_map, size_t* dep_cnt, char**
     free(raw_dep_cnt);
     free(raw_overload_coef);
     
-    code = code ? code : (feof(file) ? OK : FILE_INVALID_CONTENT);
+    code = code ? code : (feof(file) ? OK : FILE_INVALID_CONFIG);
     fclose(file);
     
     if (min_handle_time > max_handle_time || overload_coef - CONFIG_MIN_OVERLOAD_COEF < -eps ||
             dep_cnt_tmp < CONFIG_MIN_DEP_CNT || dep_cnt_tmp > CONFIG_MAX_DEP_CNT)
     {
-        code = code ? code : FILE_INVALID_CONTENT;
+        code = code ? code : FILE_INVALID_CONFIG;
     }
     
     if (code == INVALID_INPUT)
     {
-        code = FILE_INVALID_CONTENT;
+        code = FILE_INVALID_CONFIG;
     }
     
     // CONSTRUCT DEPARTMENT MAP
@@ -211,12 +211,12 @@ status_code setup_config(const char* path, Map* dep_map, size_t* dep_cnt, char**
         
         if (staff_cnt < CONFIG_MIN_STAFF_CNT || staff_cnt > CONFIG_MAX_STAFF_CNT)
         {
-            code = code ? code : FILE_INVALID_CONTENT;
+            code = code ? code : FILE_INVALID_CONFIG;
         }
         
         char check_char = iter + 1 < dep_cnt_tmp ? ' ' : '\0';
-        code = code ? code : (*(ch_ptr1++) == check_char ? OK : FILE_INVALID_CONTENT);
-        code = code ? code : (*(ch_ptr2++) == check_char ? OK : FILE_INVALID_CONTENT);
+        code = code ? code : (*(ch_ptr1++) == check_char ? OK : FILE_INVALID_CONFIG);
+        code = code ? code : (*(ch_ptr2++) == check_char ? OK : FILE_INVALID_CONFIG);
         
         Department* dep = (Department*) (malloc(sizeof(Department)));;
         if (dep == NULL)
@@ -227,7 +227,7 @@ status_code setup_config(const char* path, Map* dep_map, size_t* dep_cnt, char**
         code = code ? code : department_construct(dep, dep_name, staff_cnt, queue_base, overload_coef, eps,
                                                         min_handle_time, max_handle_time, compare_request);
         code = code ? code : map_insert(&dep_map_tmp, dep_name, dep);
-        code = code == BAD_ACCESS ? FILE_INVALID_CONTENT : code;
+        code = code == BAD_ACCESS ? FILE_INVALID_CONFIG : code;
         
         free(raw_staff_cnt);
         
@@ -273,13 +273,14 @@ status_code ir_set_null(Input_reader* ir)
     ir->max_prior = 0;
     ir->dep_cnt = 0;
     ir->dep_names = NULL;
+    memset(ir->st_time, 0, 21 * sizeof(char));
     
     return OK;
 }
 
-status_code ir_construct(Input_reader* ir, size_t max_prior, size_t dep_cnt, const char** dep_names)
+status_code ir_construct(Input_reader* ir, const char st_time[21], size_t max_prior, size_t dep_cnt, const char** dep_names)
 {
-    if (ir == NULL)
+    if (ir == NULL || st_time == NULL || dep_names == NULL)
     {
         return NULL_ARG;
     }
@@ -288,15 +289,17 @@ status_code ir_construct(Input_reader* ir, size_t max_prior, size_t dep_cnt, con
     ir->cap = 2;
     ir->data = (request**) malloc(sizeof(request*) * 2);
     ir->front = 0;
-    ir->max_prior = max_prior;
-    ir->dep_cnt = dep_cnt;
-    ir->dep_names = dep_names;
     
     if (ir->data == NULL)
     {
         ir_set_null(ir);
         return BAD_ALLOC;
     }
+    
+    strcpy(ir->st_time, st_time);
+    ir->max_prior = max_prior;
+    ir->dep_cnt = dep_cnt;
+    ir->dep_names = dep_names;
     
     return OK;
 }
@@ -350,6 +353,7 @@ status_code ir_read_file_line(Input_reader* ir, FILE* file, request** req)
     code = code ? code : fread_line(file, &txt, 0);
     
     code = code ? code : iso_time_validate(time);
+    code = code ? code : (strcmp(time, ir->st_time) >= 0 ? OK : FILE_INVALID_CONTENT);
     code = code ? code : parse_ullong(req_id_str, 10, &req_id);
     code = code ? code : parse_ullong(prior_str, 10, &prior);
     code = code ? code : (check_ch == '"' ? OK : FILE_INVALID_CONTENT);

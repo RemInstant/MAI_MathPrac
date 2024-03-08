@@ -18,7 +18,6 @@
 // unify ctoi funcs in maps
 // rename dep_id to dep_name
 // check comparators equality before meld
-// start time rounding
 // clever input reader?
 
 int main(int argc, char** argv)
@@ -41,7 +40,7 @@ int main(int argc, char** argv)
     logger_set_null(&logger);
     
     code = code ? code : setup_config("config", &dep_map, &dep_cnt, &dep_names, cur_time, end_time, 1e-9);
-    code = code ? code : ir_construct(&ir, max_priority, dep_cnt, (const char**) dep_names);
+    code = code ? code : ir_construct(&ir, cur_time, max_priority, dep_cnt, (const char**) dep_names);
     code = code ? code : logger_construct(&logger, "log");
     code = code ? code : ir_read_file(&ir, "request_1");
     

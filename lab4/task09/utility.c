@@ -56,6 +56,9 @@ void fprint_error(FILE* file, status_code code, int nl_cnt)
         case FILE_INVALID_CONTENT:
             fprintf(file, "File content is invalid");
             return;
+        case FILE_INVALID_CONFIG:
+            fprintf(file, "Configuration file is invalid");
+            return;
         case FILE_KEY_DUPLICATE:
             fprintf(file, "File contains key duplicates");
             return;
