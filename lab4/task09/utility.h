@@ -99,7 +99,10 @@ status_code fbpow_safely(double base, ll pow, double* res);
 
 size_t calc_default_str_hash(const char* str);
 
+// time_int = 0 <=> 1980-01-01T00:00:00Z
 status_code iso_time_validate(const char time[21]);
+status_code iso_time_convert_to_int(const char time[21], ull* time_int);
+status_code iso_time_convert_to_str(ull time_int, char time[21]);
 status_code iso_time_add(const char time[21], ull add_s, char res[21]);
 
 #endif // _UTILITY_H_

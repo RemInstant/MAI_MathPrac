@@ -19,6 +19,7 @@
 // rename dep_id to dep_name
 // check comparators equality before meld
 // clever input reader?
+// turn str time into unsigned long long
 
 int main(int argc, char** argv)
 {

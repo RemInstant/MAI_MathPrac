@@ -900,6 +900,51 @@ status_code iso_time_validate(const char time[21])
     return OK;
 }
 
+status_code iso_time_convert_to_int(const char time[21], ull* time_int)
+{
+    if (time == NULL || time_int == NULL)
+    {
+        return NULL_ARG;
+    }
+    
+    char time_tmp[21];
+    strcpy(time_tmp, time);
+    
+    struct tm t;
+    t.tm_sec = atoi(time_tmp + 17);
+    t.tm_min = atoi(time_tmp + 14);
+    t.tm_hour = atoi(time_tmp + 11);
+    t.tm_mday = atoi(time_tmp + 8);
+    t.tm_mon = atoi(time_tmp + 5) - 1;
+    t.tm_year = atoi(time_tmp) - 1900;
+    
+    *time_int = (ull) mktime(&t);
+    
+    return OK;
+}
+
+status_code iso_time_convert_to_str(ull time_int, char time[21])
+{
+    if (time == NULL)
+    {
+        return NULL_ARG;
+    }
+    
+    struct tm t;
+    t.tm_sec = time_int;
+    t.tm_min = 0;
+    t.tm_hour = 0;
+    t.tm_mday = 1;
+    t.tm_mon = 0;
+    t.tm_year = 1980;
+    
+    mktime(&t);
+    
+    sprintf(time, "%04d-%02d-%02dT%02d:%02d:%02dZ", t.tm_year + 1900, t.tm_mon + 1, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec);
+    
+    return OK;
+}
+
 status_code iso_time_add(const char time[21], ull add_s, char res[21])
 {
     if (time == NULL || res == NULL)
