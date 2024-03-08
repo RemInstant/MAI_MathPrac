@@ -33,7 +33,7 @@ status_code hset_construct(hset* hs, ull (*calc_hash)(const char*))
 	}
     
 	hs->chains = (hs_node**) calloc(MIN_HS_SIZE, sizeof(hs_node*));
-	hs->chain_sizes = (ull*) calloc(MIN_HS_SIZE, sizeof(ull));
+	hs->chain_sizes = (size_t*) calloc(MIN_HS_SIZE, sizeof(ull));
     
 	if (hs->chains == NULL || hs->chain_sizes == NULL)
 	{

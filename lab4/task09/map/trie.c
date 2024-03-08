@@ -72,7 +72,7 @@ status_code trie_node_destruct(trie_node** node)
         trie_node_destruct(&(*node)->children[i]);
     }
     department_destruct((*node)->dep);
-    free(*node);
+    free_all(2, (*node)->dep, *node);
     *node = NULL;
     return OK;
 }

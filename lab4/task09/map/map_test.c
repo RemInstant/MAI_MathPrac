@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <time.h>
 
 #include "../utility.h"
 #include "map.h"
@@ -9,12 +10,15 @@
 
 int main()
 {
+    clock_t timer;
     for (map_base base = MB_HASHSET; base <= MB_TRIE; ++base)
     {
-        if (base == MB_HASHSET) continue;
+        //if (base == MB_HASHSET) continue;
         //if (base == MB_ARR) continue;
-        if (base == MB_BST) continue;
-        if (base == MB_TRIE) continue;
+        //if (base == MB_BST) continue;
+        //if (base == MB_TRIE) continue;
+        
+        timer = clock();
         
         Map map;
         Department* dep;
@@ -59,7 +63,6 @@ int main()
                 assert(dep == dep1);
             }
             
-            // handle only 8 of 10 departments!
             for (size_t i = 0; i < 10; ++i)
             {
                 key[0] = '0' + (i % 10);
@@ -74,6 +77,7 @@ int main()
                 assert(map_contains(&map, key, &is_contained) == OK);
                 assert(is_contained == 0);
                 assert(department_destruct(dep) == OK);
+                free(dep);
             }
             
             free(key);
@@ -91,7 +95,7 @@ int main()
             {
                 dep_name = (char*) malloc(sizeof(char) * 4);
                 assert(dep_name != NULL);
-                sprintf(dep_name, "%llu", i);
+                sprintf(dep_name, "%llu", (ull) i);
                 dep = (Department*) malloc(sizeof(Department));
                 dep1 = NULL;
                 assert(dep != NULL);
@@ -141,6 +145,7 @@ int main()
                 assert(map_contains(&map, key, &is_contained) == OK);
                 assert(is_contained == 0);
                 assert(department_destruct(dep) == OK);
+                free(dep);
             }
             
             free(key);
@@ -164,6 +169,7 @@ int main()
             assert(department_construct(dep, "123", 2, PQB_BINOM, 2.0, 1e-9, 1, 1, compare_request) == OK);
             assert(map_insert(&map, key, dep) == BAD_ACCESS);
             assert(department_destruct(dep) == OK);
+            free(dep);
             
             for (size_t i = 1; i < 20; ++i)
             {
@@ -180,10 +186,10 @@ int main()
         
         assert(map_destruct(&map) == OK);
         
-        if (base == MB_HASHSET) printf("Hash set passed the tests\n");
-        if (base == MB_ARR) 	printf("Dynamic array passed the tests\n");
-        if (base == MB_BST) 	printf("Binary search tree passed the tests\n");
-        if (base == MB_TRIE) 	printf("Trie passed the tests\n");
+        if (base == MB_HASHSET) printf("%-40s %llums\n", "Hash set passed the tests", (ull) clock() - timer);
+        if (base == MB_ARR) 	printf("%-40s %llums\n", "Dynamic array passed the tests", (ull) clock() - timer);
+        if (base == MB_BST) 	printf("%-40s %llums\n", "Binary search tree passed the tests", (ull) clock() - timer);
+        if (base == MB_TRIE) 	printf("%-40s %llums\n", "Trie passed the tests", (ull) clock() - timer);
     }
     printf("All tests have been passed\n");
 }

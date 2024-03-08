@@ -88,7 +88,7 @@ utility.o: utility.c utility.h
 .PHONY: clean
 
 clean:
-	rm -force gcc_obj/*.o
-	rm -force main
-	rm -force pq_test
-	rm -force map_test
+	rm gcc_obj/*
+	rm main
+	rm pq_test
+	rm map_test

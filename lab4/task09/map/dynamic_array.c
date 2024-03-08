@@ -125,9 +125,10 @@ status_code arr_destruct(Array* arr)
     
     for (int i = 0; i < arr->size; ++i)
     {
-        free_all(2, arr->elems[i]->key, arr->elems[i]);
+        department_destruct(arr->elems[i]->dep);
+        free_all(3, arr->elems[i]->key, arr->elems[i]->dep, arr->elems[i]);
     }
-
+    
     free(arr->elems);
     arr_set_null(arr);
     
@@ -212,6 +213,7 @@ status_code arr_insert(Array* arr, const char* key, Department* dep)
     
     if (comp == 0)
     {
+        free_all(2, elem->key, elem);
         return BAD_ACCESS;
     }
     
