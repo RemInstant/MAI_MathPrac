@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <time.h>
 
 #include "../utility.h"
 #include "priority_queue.h"
@@ -15,14 +16,17 @@ void free_req(request* req)
 
 int main()
 {
+    clock_t timer;
     for (priority_queue_base base = PQB_BINARY; base <= PQB_TREAP; ++base)
     {
-        if (base == PQB_BINARY) continue;
-        if (base == PQB_LEFTIST) continue;
+        //if (base == PQB_BINARY) continue;
+        //if (base == PQB_LEFTIST) continue;
         //if (base == PQB_SKEW) continue;
-        if (base == PQB_FIB) continue;
-        if (base == PQB_BINOM) continue;
+        //if (base == PQB_FIB) continue;
+        //if (base == PQB_BINOM) continue;
         if (base == PQB_TREAP) continue;
+        
+        timer = clock();
         
         p_queue pq, pq1, pq2, pq3, pq4;
         size_t size;
@@ -332,12 +336,12 @@ int main()
             assert(p_queue_destruct(&pq4) == OK);
         }
         
-        if (base == PQB_BINARY) 	printf("Binary heap passed the tests\n");
-        if (base == PQB_LEFTIST) 	printf("Leftist heap passed the tests\n");
-        if (base == PQB_SKEW) 		printf("Skew heap passed the tests\n");
-        if (base == PQB_BINOM) 		printf("Binomial heap passed the tests\n");
-        if (base == PQB_FIB) 		printf("Fibonacci heap passed the tests\n");
-        if (base == PQB_TREAP) 		printf("Treap passed the tests\n");
+        if (base == PQB_BINARY)  printf("%-40s %llums\n", "Binary heap passed the tests", (ull) clock() - timer);
+        if (base == PQB_LEFTIST) printf("%-40s %llums\n", "Leftist heap passed the tests", (ull) clock() - timer);
+        if (base == PQB_SKEW) 	 printf("%-40s %llums\n", "Skew heap passed the tests", (ull) clock() - timer);
+        if (base == PQB_BINOM) 	 printf("%-40s %llums\n", "Binomial heap passed the tests", (ull) clock() - timer);
+        if (base == PQB_FIB) 	 printf("%-40s %llums\n", "Fibonacci heap passed the tests", (ull) clock() - timer);
+        if (base == PQB_TREAP) 	 printf("%-40s %llums\n", "Treap passed the tests", (ull) clock() - timer);
     }
     printf("All tests have been passed\n");
 }
