@@ -19,9 +19,12 @@ int Treap_init(Treap* t);
 // int Treap_node_init(Treap_node** nd, Application* a);
 // void Treap_node_free(Treap_node* nd);
 
+int Treap_get_max(Treap t, Application** res);
+int Treap_del_max(Treap* t);
+
 int Treap_copy(Treap* dest, Treap source);
 
-Treap Treap_merge(Treap t1, Treap t2);
+int Treap_merge(Treap* res, Treap t1, Treap t2);
 int Treap_merge_no_destruction(Treap* res, Treap t1, Treap t2);
 //int Treap_split(Treap_node* t, Application* key, Treap_node** t1, Treap_node** t2);
 

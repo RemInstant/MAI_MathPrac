@@ -120,11 +120,15 @@ Treap_node* Treap_merge_from_root(Treap_node* t1, Treap_node* t2) {
     }
 }
 
-Treap Treap_merge(Treap t1, Treap t2) {
-    Treap res;
-    res.root = Treap_merge_from_root(t1.root, t1.root);
+// Treap Treap_merge(Treap t1, Treap t2) {
+//     Treap res;
+//     res.root = Treap_merge_from_root(t1.root, t1.root);
 
-    return res;
+//     return res;
+// }
+
+int Treap_merge(Treap* res, Treap t1, Treap t2) {
+    res->root = Treap_merge_from_root(t1.root, t2.root);
 }
 
 int Treap_merge_from_root_no_destruction(Treap_node** res, Treap_node* t1, Treap_node* t2) {
@@ -237,6 +241,10 @@ void Treap_print_from_root(FILE* stream, Treap_node* root, int n) {
 }
 
 void Treap_print(FILE* stream, const Treap t) {
+    if (t.root == NULL) {
+        fprintf(stream, "The tree is empty!\n");
+        return;
+    }
     Treap_print_from_root(stream, t.root, 0);
 }
 
@@ -253,4 +261,49 @@ void Treap_destroy_from_root(Treap_node* root) {
     Treap_destroy_from_root(root->right);
 
     free(root);
+}
+
+// int Treap_get_max_from(Tre)
+
+int Treap_get_max(Treap t, Application** res) {
+    Treap_node* root = t.root;
+
+    Treap_node* prev = root;
+    Treap_node* tmp_node = root;
+
+    while (tmp_node != NULL) {
+        prev = tmp_node;
+        tmp_node = tmp_node->right;
+    }
+
+    *res = prev->key;
+
+    return ok;
+}
+
+int Treap_del_max(Treap* t) {
+    if (t->root == NULL) {
+        return ok;
+    }
+
+    Treap_node* root = t->root;
+
+    if (root->right == NULL) {
+        t->root = root->left;
+        Treap_node_free(root);
+        return ok;
+    }
+
+    Treap_node* prev = root;
+    Treap_node* tmp_node = root->right;
+
+    while (tmp_node->right != NULL) {
+        prev = tmp_node;
+        tmp_node = tmp_node->right;
+    }
+
+    Treap_node_free(tmp_node);
+    prev->right = NULL;
+
+    return ok;
 }
