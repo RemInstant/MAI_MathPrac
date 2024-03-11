@@ -40,16 +40,12 @@ status_code bmh_node_copy(bmh_node** node_dest, const bmh_node* node_src)
     tmp_node->brother = NULL;
     tmp_node->rank = node_src->rank;
     
-    status_code son_code = bmh_node_copy(&tmp_node->son, node_src->son);
-    if (son_code)
+    code = code ? code : bmh_node_copy(&tmp_node->son, node_src->son);
+    code = code ? code : bmh_node_copy(&tmp_node->brother, node_src->brother);
+    if (code)
     {
-        return son_code;
-    }
-    
-    status_code brother_code = bmh_node_copy(&tmp_node->brother, node_src->brother);
-    if (brother_code)
-    {
-        return brother_code;
+        bmh_node_destruct(tmp_node);
+        return code;
     }
     
     *node_dest = tmp_node;
@@ -66,8 +62,7 @@ status_code bmh_node_destruct(bmh_node* node)
     bmh_node_destruct(node->son);
     bmh_node_destruct(node->brother);
     request_destruct(node->req);
-    free(node->req);
-    free(node);
+    free_all(2, node->req, node);
     return OK;
 }
 
@@ -268,13 +263,15 @@ status_code bm_heap_copy_meld(bm_heap* bmh_res, const bm_heap* bmh_l, const bm_h
     code = code ? code : bm_heap_copy(&bmh_rc, bmh_r);
     code = code ? code : bm_heap_meld(bmh_res, &bmh_lc, &bmh_rc);
     
+    bm_heap_destruct(&bmh_lc);
+    bm_heap_destruct(&bmh_rc);
+    
     if (code)
     {
         bm_heap_destruct(bmh_res);
-        bm_heap_destruct(&bmh_lc);
-        bm_heap_destruct(&bmh_rc);
         return code;
     }
+    
     return OK;
 }
 

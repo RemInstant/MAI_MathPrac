@@ -1,11 +1,11 @@
-#include "stdlib.h"
-#include "string.h"
+#include <stdlib.h>
+#include <string.h>
 
 #include "leftist_heap.h"
 
 void lft_node_destruct(lft_node* node)
 {
-    if(node == NULL)
+    if (node == NULL)
     {
         return;
     }
@@ -19,32 +19,32 @@ void lft_node_destruct(lft_node* node)
 
 status_code lft_node_copy(lft_node** result, const lft_node* src)
 {
-    if(result == NULL)
+    if (result == NULL)
     {
         return NULL_ARG;
     }
     
-    if(src == NULL)
+    if (src == NULL)
     {
         *result = NULL;
         return OK;
     }
     
     lft_node* node = (lft_node*) malloc(sizeof(lft_node));
-    if(node == NULL)
+    if (node == NULL)
     {
         return BAD_ALLOC;
     }
     
     node->req = (request*) malloc(sizeof(request));
-    if(node->req == NULL)
+    if (node->req == NULL)
     {
         free(node);
         return BAD_ALLOC;
     }
     
     status_code code = request_copy(node->req, src->req);
-    if(code)
+    if (code)
     {
         free_all(2, node->req, node);
         return BAD_ALLOC;
@@ -55,7 +55,7 @@ status_code lft_node_copy(lft_node** result, const lft_node* src)
     
     code = code ? code : lft_node_copy(&node->right, src->right);
     code = code ? code : lft_node_copy(&node->left, src->left);
-    if(code)
+    if (code)
     {
         lft_node_destruct(node);
         return code;
@@ -68,7 +68,7 @@ status_code lft_node_copy(lft_node** result, const lft_node* src)
 
 lft_node* lft_node_merge(lft_node* a, lft_node* b, int (*compare)(const request*, const request*))
 {
-    if (compare == NULL)
+    if (compare == NULL || (a == NULL && b == NULL))
     {
         return NULL;
     }
@@ -106,7 +106,7 @@ lft_node* lft_node_merge(lft_node* a, lft_node* b, int (*compare)(const request*
 
 status_code lft_heap_set_null(lft_heap* lft)
 {
-    if(lft == NULL)
+    if (lft == NULL)
     {
         return NULL_ARG;
     }
@@ -133,13 +133,13 @@ status_code lft_heap_construct(lft_heap* lft, int (*compare)(const request*, con
 
 status_code lft_heap_copy(lft_heap* lft_dest, const lft_heap* lft_src)
 {
-    if(lft_dest == NULL || lft_src == NULL)
+    if (lft_dest == NULL || lft_src == NULL)
     {
         return NULL_ARG;
     }
     
     status_code code = lft_node_copy(&lft_dest->head, lft_src->head);
-    if(code)
+    if (code)
     {
         lft_heap_destruct(lft_dest);
         return code;
@@ -153,7 +153,7 @@ status_code lft_heap_copy(lft_heap* lft_dest, const lft_heap* lft_src)
 
 status_code lft_heap_destruct(lft_heap* lft)
 {
-    if(lft == NULL)
+    if (lft == NULL)
     {
         return OK;
     }
@@ -167,7 +167,7 @@ status_code lft_heap_destruct(lft_heap* lft)
 
 status_code lft_heap_meld(lft_heap* lft_res, lft_heap* lft_l, lft_heap* lft_r)
 {
-    if(lft_res == NULL || lft_l == NULL || lft_r == NULL)
+    if (lft_res == NULL || lft_l == NULL || lft_r == NULL)
     {
         return NULL_ARG;
     }
@@ -214,11 +214,12 @@ status_code lft_heap_copy_meld(lft_heap* lft_res, const lft_heap* lft_l, const l
     code = code ? code : lft_heap_copy(&lft_rc, lft_r);
     code = code ? code : lft_heap_meld(lft_res, &lft_lc, &lft_rc);
     
+    lft_heap_destruct(&lft_lc);
+    lft_heap_destruct(&lft_rc);
+    
     if (code)
     {
         lft_heap_destruct(lft_res);
-        lft_heap_destruct(&lft_lc);
-        lft_heap_destruct(&lft_rc);
         return code;
     }
     
@@ -228,7 +229,7 @@ status_code lft_heap_copy_meld(lft_heap* lft_res, const lft_heap* lft_l, const l
 
 status_code lft_heap_size(const lft_heap* lft, size_t* size)
 {
-    if(lft == NULL)
+    if (lft == NULL)
     {
         return NULL_ARG;
     }
@@ -238,7 +239,7 @@ status_code lft_heap_size(const lft_heap* lft, size_t* size)
 
 status_code lft_heap_top(const lft_heap* lft, request** req)
 {
-    if(lft == NULL)
+    if (lft == NULL)
     {
         return NULL_ARG;
     }
@@ -256,7 +257,7 @@ status_code lft_heap_top(const lft_heap* lft, request** req)
 
 status_code lft_heap_pop(lft_heap* lft, request** req)
 {
-    if(lft == NULL || req == NULL)
+    if (lft == NULL || req == NULL)
     {
         return NULL_ARG;
     }
@@ -279,13 +280,13 @@ status_code lft_heap_pop(lft_heap* lft, request** req)
 
 status_code lft_heap_insert(lft_heap* lft, request* req)
 {
-    if(lft == NULL || req == NULL)
+    if (lft == NULL || req == NULL)
     {
         return NULL_ARG;
     }
     
     lft_node* new_node = (lft_node*) malloc(sizeof(lft_node));
-    if(new_node == NULL)
+    if (new_node == NULL)
     {
         return BAD_ALLOC;
     }

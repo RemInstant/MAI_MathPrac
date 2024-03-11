@@ -1,40 +1,52 @@
 #ifndef TREAP_H
 #define TREAP_H
 
-#include "data_structs.h"
+#include "../utility.h"
 
-typedef struct Treap_node {
-    Application* key;
-    int priority;
+typedef struct treap_node
+{
+    request* req;
+    unsigned priority;
     struct Treap_node* left;
     struct Treap_node* right;
-} Treap_node;
+} treap_node;
 
-typedef struct Treap {
-    Treap_node* root;
-} Treap;
+typedef struct Cartesian_tree
+{
+    treap_node* root;
+    size_t size;
+    int (*compare)(const request*, const request*);
+} Cartesian_tree, Treap;
 
 
-int Treap_init(Treap* t);
-// int Treap_node_init(Treap_node** nd, Application* a);
-// void Treap_node_free(Treap_node* nd);
+status_code treap_set_null(Treap* treap);
+status_code treap_construct(Treap* treap, int (*compare)(const request*, const request*));
+status_code treap_copy(Treap* treap_dest, const Treap* treap_src);
+status_code treap_destruct(Treap* treap);
 
-int Treap_get_max(Treap t, Application** res);
-int Treap_del_max(Treap* t);
+status_code treap_meld(Treap* treap_res, Treap* treap_l, Treap* treap_r);
+status_code treap_copy_meld(Treap* treap_res, const Treap* treap_l, const Treap* treap_r);
 
-int Treap_copy(Treap* dest, Treap source);
+status_code treap_size(const Treap* treap, size_t* size);
+status_code treap_top(const Treap* treap, request** req);
+status_code treap_pop(Treap* treap, request** req);
+status_code treap_insert(Treap* treap, request* req);
 
-int Treap_merge(Treap* res, Treap t1, Treap t2);
-int Treap_merge_no_destruction(Treap* res, Treap t1, Treap t2);
-//int Treap_split(Treap_node* t, Application* key, Treap_node** t1, Treap_node** t2);
+status_code Treap_init(Treap* t);
 
- int Treap_insert(Treap* t, Application* key);
- int Treap_erase(Treap* t, Application* key);
+status_code Treap_get_max(Treap t, request** res);
+status_code Treap_del_max(Treap* t);
+
+
+
+status_code Treap_merge(Treap* res, Treap t1, Treap t2);
+status_code Treap_merge_no_destruction(Treap* res, Treap t1, Treap t2);
+
+status_code Treap_insert(Treap* t, request* key);
+status_code Treap_erase(Treap* t, request* key);
 
 void Treap_print(FILE* stream, const Treap t);
-//void Treap_print_from_root(FILE* stream, Treap_node* root, int n);
 
 void Treap_destroy(Treap t);
-void Treap_destroy_from_root(Treap_node* root);
 
 #endif

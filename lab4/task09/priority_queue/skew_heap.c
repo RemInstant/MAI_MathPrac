@@ -1,12 +1,11 @@
-#include "stdlib.h"
-#include "string.h"
+#include <stdlib.h>
+#include <string.h>
 
 #include "skew_heap.h"
-//include utility stuff
 
 void skw_node_destruct(skw_node* node)
 {
-    if(node == NULL)
+    if (node == NULL)
     {
         return;
     }
@@ -20,32 +19,32 @@ void skw_node_destruct(skw_node* node)
 
 status_code skw_node_copy(skw_node** result, const skw_node* src)
 {
-    if(result == NULL)
+    if (result == NULL)
     {
         return NULL_ARG;
     }
     
-    if(src == NULL)
+    if (src == NULL)
     {
         *result = NULL;
         return OK;
     }
     
     skw_node* node = (skw_node*) malloc(sizeof(skw_node));
-    if(node == NULL)
+    if (node == NULL)
     {
         return BAD_ALLOC;
     }
     
     node->req = (request*) malloc(sizeof(request));
-    if(node->req == NULL)
+    if (node->req == NULL)
     {
         free(node);
         return BAD_ALLOC;
     }
     
     status_code code = request_copy(node->req, src->req);
-    if(code)
+    if (code)
     {
         free_all(2, node->req, node);
         return BAD_ALLOC;
@@ -55,7 +54,7 @@ status_code skw_node_copy(skw_node** result, const skw_node* src)
     node->left = NULL;
     code = code ? code : skw_node_copy(&node->left, src->left);
     code = code ? code : skw_node_copy(&node->right, src->right);
-    if(code)
+    if (code)
     {
         skw_node_destruct(node);
         return code;
@@ -68,7 +67,7 @@ status_code skw_node_copy(skw_node** result, const skw_node* src)
 
 skw_node* skw_node_merge(skw_node* a, skw_node* b, int (*compare)(const request*, const request*))
 {
-    if (compare == NULL)
+    if (compare == NULL || (a == NULL && b == NULL))
     {
         return NULL;
     }
@@ -101,7 +100,7 @@ skw_node* skw_node_merge(skw_node* a, skw_node* b, int (*compare)(const request*
 
 status_code skw_heap_set_null(skw_heap* skw)
 {
-    if(skw == NULL)
+    if (skw == NULL)
     {
         return NULL_ARG;
     }
@@ -128,13 +127,13 @@ status_code skw_heap_construct(skw_heap* skw, int (*compare)(const request*, con
 
 status_code skw_heap_copy(skw_heap* skw_dest, const skw_heap* skw_src)
 {
-    if(skw_dest == NULL || skw_src == NULL)
+    if (skw_dest == NULL || skw_src == NULL)
     {
         return NULL_ARG;
     }
     
     status_code code = skw_node_copy(&skw_dest->head, skw_src->head);
-    if(code)
+    if (code)
     {
         skw_heap_destruct(skw_dest);
         return code;
@@ -148,7 +147,7 @@ status_code skw_heap_copy(skw_heap* skw_dest, const skw_heap* skw_src)
 
 status_code skw_heap_destruct(skw_heap* skw)
 {
-    if(skw == NULL)
+    if (skw == NULL)
     {
         return OK;
     }
@@ -162,7 +161,7 @@ status_code skw_heap_destruct(skw_heap* skw)
 
 status_code skw_heap_meld(skw_heap* skw_res, skw_heap* skw_l, skw_heap* skw_r)
 {
-    if(skw_res == NULL || skw_l == NULL || skw_r == NULL)
+    if (skw_res == NULL || skw_l == NULL || skw_r == NULL)
     {
         return NULL_ARG;
     }
@@ -209,11 +208,12 @@ status_code skw_heap_copy_meld(skw_heap* skw_res, const skw_heap* skw_l, const s
     code = code ? code : skw_heap_copy(&skw_rc, skw_r);
     code = code ? code : skw_heap_meld(skw_res, &skw_lc, &skw_rc);
     
+    skw_heap_destruct(&skw_lc);
+    skw_heap_destruct(&skw_rc);
+    
     if (code)
     {
         skw_heap_destruct(skw_res);
-        skw_heap_destruct(&skw_lc);
-        skw_heap_destruct(&skw_rc);
         return code;
     }
     
@@ -222,7 +222,7 @@ status_code skw_heap_copy_meld(skw_heap* skw_res, const skw_heap* skw_l, const s
 
 status_code skw_heap_size(const skw_heap* skw, size_t* size)
 {
-    if(skw == NULL)
+    if (skw == NULL)
     {
         return NULL_ARG;
     }
@@ -232,7 +232,7 @@ status_code skw_heap_size(const skw_heap* skw, size_t* size)
 
 status_code skw_heap_top(const skw_heap* skw, request** req)
 {
-    if(skw == NULL)
+    if (skw == NULL)
     {
         return NULL_ARG;
     }
@@ -250,7 +250,7 @@ status_code skw_heap_top(const skw_heap* skw, request** req)
 
 status_code skw_heap_pop(skw_heap* skw, request** req)
 {
-    if(skw == NULL || req == NULL)
+    if (skw == NULL || req == NULL)
     {
         return NULL_ARG;
     }
@@ -273,7 +273,7 @@ status_code skw_heap_pop(skw_heap* skw, request** req)
 
 status_code skw_heap_insert(skw_heap* skw, request* req)
 {
-    if(skw == NULL || req == NULL)
+    if (skw == NULL || req == NULL)
     {
         return NULL_ARG;
     }
@@ -281,7 +281,7 @@ status_code skw_heap_insert(skw_heap* skw, request* req)
     
     
     skw_node* new_node = (skw_node*) malloc(sizeof(skw_node));
-    if(new_node == NULL)
+    if (new_node == NULL)
     {
         return BAD_ALLOC;
     }

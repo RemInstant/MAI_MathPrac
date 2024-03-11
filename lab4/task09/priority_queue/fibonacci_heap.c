@@ -194,41 +194,39 @@ status_code fib_heap_meld(fib_heap* res, fib_heap* heap_l, fib_heap* heap_r)
 	return OK;
 }
 
-status_code fib_heap_copy_meld(fib_heap* res, const fib_heap* heap_l, const fib_heap* heap_r)
+status_code fib_heap_copy_meld(fib_heap* fib_res, const fib_heap* fib_l, const fib_heap* fib_r)
 {
-	if (res == NULL || heap_l == NULL || heap_r == NULL)
+	if (fib_res == NULL || fib_l == NULL || fib_r == NULL)
 	{
 		return NULL_ARG;
 	}
 	
-	if (res == heap_l || res == heap_r)
+	if (fib_res == fib_l || fib_res == fib_r)
 	{
 		return INVALID_INPUT;
 	}
 	
-	fib_heap copy_heap_l, copy_heap_r;
-
-	status_code status = fib_heap_copy(&copy_heap_l, heap_l);
-	if (status != OK)
-	{
-		return status;
-	}
-
-	status = fib_heap_copy(&copy_heap_r, heap_r);
-	if (status != OK)
-	{	
-		fib_heap_destruct(&copy_heap_l);
-		return status;
-	}
-
-	status = fib_heap_meld(res, &copy_heap_l, &copy_heap_r);
-	if (status != OK)
-	{
-		fib_heap_destruct(&copy_heap_l);
-		fib_heap_destruct(&copy_heap_r);
-	}
-
-	return status;
+	status_code code = OK;
+    fib_heap fib_lc, fib_rc;
+        
+    fib_heap_set_null(&fib_lc);
+    fib_heap_set_null(&fib_rc);
+    fib_heap_set_null(fib_res);
+    
+    code = code ? code : fib_heap_copy(&fib_lc, fib_l);
+    code = code ? code : fib_heap_copy(&fib_rc, fib_r);
+    code = code ? code : fib_heap_meld(fib_res, &fib_lc, &fib_rc);
+    
+    fib_heap_destruct(&fib_lc);
+    fib_heap_destruct(&fib_rc);
+    
+    if (code)
+    {
+        fib_heap_destruct(fib_res);
+        return code;
+    }
+    
+    return OK;
 }
 
 status_code fib_heap_size(const fib_heap* heap, size_t* size)
