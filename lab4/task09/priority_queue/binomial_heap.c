@@ -3,6 +3,19 @@
 
 #include "binomial_heap.h"
 
+void bmh_node_destruct(bmh_node* node)
+{
+    if (node == NULL)
+    {
+        return;
+    }
+    
+    bmh_node_destruct(node->son);
+    bmh_node_destruct(node->brother);
+    request_destruct(node->req);
+    free_all(2, node->req, node);
+}
+
 status_code bmh_node_copy(bmh_node** node_dest, const bmh_node* node_src)
 {
     if (node_dest == NULL)
@@ -53,28 +66,17 @@ status_code bmh_node_copy(bmh_node** node_dest, const bmh_node* node_src)
     return OK;
 }
 
-status_code bmh_node_destruct(bmh_node* node)
-{
-    if (node == NULL)
-    {
-        return OK;
-    }
-    bmh_node_destruct(node->son);
-    bmh_node_destruct(node->brother);
-    request_destruct(node->req);
-    free_all(2, node->req, node);
-    return OK;
-}
-
 status_code bm_heap_set_null(bm_heap* bmh)
 {
     if (bmh == NULL)
     {
         return NULL_ARG;
     }
+    
     bmh->head = NULL;
     bmh->size = 0;
     bmh->compare = NULL;
+    
     return OK;
 }
 
@@ -84,9 +86,11 @@ status_code bm_heap_construct(bm_heap* bmh, int (*compare)(const request*, const
     {
         return NULL_ARG;
     }
+    
     bmh->head = NULL;
     bmh->size = 0;
     bmh->compare = compare;
+    
     return OK;
 }
 
@@ -99,12 +103,14 @@ status_code bm_heap_copy(bm_heap* bmh_dest, const bm_heap* bmh_src)
     
     bmh_dest->size = bmh_src->size;
     bmh_dest->compare = bmh_src->compare;
+    
     status_code code = bmh_node_copy(&bmh_dest->head, bmh_src->head);
     if (code)
     {
         bm_heap_destruct(bmh_dest);
         return code;
     }
+    
     return OK;
 }
 
@@ -112,11 +118,13 @@ status_code bm_heap_destruct(bm_heap* bmh)
 {
     if (bmh == NULL)
     {
-        return OK; // or NULL_ARG???
+        return OK;
     }
-    status_code code = bmh_node_destruct(bmh->head);
+    
+    bmh_node_destruct(bmh->head);
     bm_heap_set_null(bmh);
-    return code;
+    
+    return OK;
 }
 
 status_code bm_heap_meld(bm_heap* bmh_res, bm_heap* bmh_l, bm_heap* bmh_r)
@@ -301,6 +309,7 @@ status_code bm_heap_find(const bm_heap* bmh, bmh_node** prev, bmh_node** node)
     bmh_node* prev_node = NULL;
     bmh_node* target_node = bmh->head;
     bmh_node* cur_node = bmh->head;
+    
     while (cur_node->brother != NULL)
     {
         if (bmh->compare(cur_node->brother->req, target_node->req) < 0)
@@ -316,6 +325,7 @@ status_code bm_heap_find(const bm_heap* bmh, bmh_node** prev, bmh_node** node)
         *prev = prev_node;
     }
     *node = target_node;
+    
     return OK;
 }
 
@@ -399,6 +409,7 @@ status_code bm_heap_pop(bm_heap* bmh, request** req)
     bmh->size -= node_size;
     bmh_add.size = node_size - 1;
     bm_heap_meld(bmh, bmh, &bmh_add);
+    
     return OK;
 }
 
@@ -425,5 +436,6 @@ status_code bm_heap_insert(bm_heap* bmh, request* req)
     bmh_add.size = 1;
     bmh_add.compare = bmh->compare;
     bm_heap_meld(bmh, bmh, &bmh_add);
+    
     return OK;
 }

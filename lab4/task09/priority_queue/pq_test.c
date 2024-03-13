@@ -24,7 +24,7 @@ int main()
         //if (base == PQB_SKEW) continue;
         //if (base == PQB_BINOM) continue;
         //if (base == PQB_FIB) continue;
-        if (base == PQB_TREAP) continue;
+        //if (base == PQB_TREAP) continue;
         
         timer = clock();
         

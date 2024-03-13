@@ -1,5 +1,5 @@
-#ifndef TREAP_H
-#define TREAP_H
+#ifndef _CARTESIAN_TREE_H_
+#define _CARTESIAN_TREE_H_
 
 #include "../utility.h"
 
@@ -7,8 +7,8 @@ typedef struct treap_node
 {
     request* req;
     unsigned priority;
-    struct Treap_node* left;
-    struct Treap_node* right;
+    struct treap_node* left;
+    struct treap_node* right;
 } treap_node;
 
 typedef struct Cartesian_tree
@@ -32,21 +32,4 @@ status_code treap_top(const Treap* treap, request** req);
 status_code treap_pop(Treap* treap, request** req);
 status_code treap_insert(Treap* treap, request* req);
 
-status_code Treap_init(Treap* t);
-
-status_code Treap_get_max(Treap t, request** res);
-status_code Treap_del_max(Treap* t);
-
-
-
-status_code Treap_merge(Treap* res, Treap t1, Treap t2);
-status_code Treap_merge_no_destruction(Treap* res, Treap t1, Treap t2);
-
-status_code Treap_insert(Treap* t, request* key);
-status_code Treap_erase(Treap* t, request* key);
-
-void Treap_print(FILE* stream, const Treap t);
-
-void Treap_destroy(Treap t);
-
-#endif
+#endif // _CARTESIAN_TREE_H_

@@ -7,6 +7,7 @@
 #include "skew_heap.h"
 #include "binomial_heap.h"
 #include "fibonacci_heap.h"
+#include "cartesian_tree.h"
 
 status_code p_queue_set_null(p_queue* pq)
 {
@@ -110,10 +111,9 @@ status_code p_queue_construct(p_queue* pq, pq_base base, int (*compare)(const re
             break;
         }
         case PQB_FIB:
-        case PQB_TREAP:
         {
-            pq->ds_size = sizeof(fib_heap);
-            pq->ds = malloc(sizeof(fib_heap));
+            pq->ds_size = sizeof(Fibonacci_heap);
+            pq->ds = malloc(sizeof(Fibonacci_heap));
             
             pq->set_null    = (status_code (*)(void*))                                          fib_heap_set_null;
             pq->construct   = (status_code (*)(void*, int (*)(const request*, const request*))) fib_heap_construct;
@@ -125,6 +125,23 @@ status_code p_queue_construct(p_queue* pq, pq_base base, int (*compare)(const re
             pq->top         = (status_code (*)(void*, request**))                               fib_heap_top;
             pq->pop         = (status_code (*)(void*, request**))                               fib_heap_pop;
             pq->insert      = (status_code (*)(void*, const request*))                          fib_heap_insert;
+            break;
+        }
+        case PQB_TREAP:
+        {
+            pq->ds_size = sizeof(Cartesian_tree);
+            pq->ds = malloc(sizeof(Cartesian_tree));
+            
+            pq->set_null    = (status_code (*)(void*))                                          treap_set_null;
+            pq->construct   = (status_code (*)(void*, int (*)(const request*, const request*))) treap_construct;
+            pq->copy        = (status_code (*)(void*, const void*))                             treap_copy;
+            pq->destruct    = (status_code (*)(void*))                                          treap_destruct;
+            pq->meld        = (status_code (*)(void*, void*, void*))                            treap_meld;
+            pq->copy_meld   = (status_code (*)(void*, const void*, const void*))                treap_copy_meld;
+            pq->size        = (status_code (*)(void*, size_t*))                                 treap_size;
+            pq->top         = (status_code (*)(void*, request**))                               treap_top;
+            pq->pop         = (status_code (*)(void*, request**))                               treap_pop;
+            pq->insert      = (status_code (*)(void*, const request*))                          treap_insert;
             break;
         }
     }

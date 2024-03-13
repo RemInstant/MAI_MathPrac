@@ -1,9 +1,9 @@
 CC = gcc
 CFLAGS = -g -Wall -Wpedantic -Wshadow -Wformat=2 -Wcast-align -Wnull-dereference -fdiagnostics-color=always -std=c17 -lm
 
-PQ_H = priority_queue/priority_queue.h priority_queue/binary_heap.h priority_queue/leftist_heap.h priority_queue/skew_heap.h priority_queue/binomial_heap.h priority_queue/fibonacci_heap.h
-PQ_O = gcc_obj/priority_queue.o gcc_obj/binary_heap.o gcc_obj/leftist_heap.o gcc_obj/skew_heap.o gcc_obj/binomial_heap.o gcc_obj/fibonacci_heap.o
-PQ_O_TRG = priority_queue.o binary_heap.o leftist_heap.o skew_heap.o binomial_heap.o fibonacci_heap.o
+PQ_H = priority_queue/priority_queue.h priority_queue/binary_heap.h priority_queue/leftist_heap.h priority_queue/skew_heap.h priority_queue/binomial_heap.h priority_queue/fibonacci_heap.h priority_queue/cartesian_tree.h
+PQ_O = gcc_obj/priority_queue.o gcc_obj/binary_heap.o gcc_obj/leftist_heap.o gcc_obj/skew_heap.o gcc_obj/binomial_heap.o gcc_obj/fibonacci_heap.o gcc_obj/cartesian_tree.o
+PQ_O_TRG = priority_queue.o binary_heap.o leftist_heap.o skew_heap.o binomial_heap.o fibonacci_heap.o cartesian_tree.o
 
 MAP_H = map/map.h map/hash_set.h map/dynamic_array.h map/binary_search_tree.h map/trie.h
 MAP_O = gcc_obj/map.o gcc_obj/hash_set.o gcc_obj/dynamic_array.o gcc_obj/binary_search_tree.o gcc_obj/trie.o
@@ -86,6 +86,9 @@ binomial_heap.o: priority_queue/binomial_heap.c priority_queue/binomial_heap.h u
 
 fibonacci_heap.o: priority_queue/fibonacci_heap.c priority_queue/fibonacci_heap.h utility.h
 	$(CC) $(CFLAGS) -c priority_queue/fibonacci_heap.c -o gcc_obj/fibonacci_heap.o -lm
+	
+cartesian_tree.o: priority_queue/cartesian_tree.c priority_queue/cartesian_tree.h utility.h
+	$(CC) $(CFLAGS) -c priority_queue/cartesian_tree.c -o gcc_obj/cartesian_tree.o -lm
 
 # OTHER
 logger.o: logger.c logger.h utility.h department.h

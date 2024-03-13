@@ -4,28 +4,38 @@
 
 #include "cartesian_tree.h"
 
-/*
-1. Добавление данных по ключу
-2. Удаление данных с максимальным приоритетом по ключу
-3. Получение данных с максимальным приоритетом по ключу
-4. Слияние двух очередей без разрушения исходных
-5. Слияние с разрушением
-*/
-
-int treap_node_construct(treap_node** nd, request* a)
+int treap_node_construct(treap_node** node, request* req)
 {
-    *nd = (treap_node*)malloc(sizeof(treap_node));
-    if (*nd == NULL) {
+    if (node == NULL || req == NULL)
+    {
+        return NULL_ARG;
+    }
+    
+    *node = (treap_node*) malloc(sizeof(treap_node));
+    if (*node == NULL)
+    {
         return BAD_ALLOC;
     }
 
-    (*nd)->req = a;
-    (*nd)->left = NULL;
-    (*nd)->right = NULL;
-
-    (*nd)->priority = rand();
+    (*node)->req = req;
+    (*node)->left = NULL;
+    (*node)->right = NULL;
+    (*node)->priority = rand();
 
     return OK;
+}
+
+void treap_node_destruct(treap_node* node)
+{
+    if (node == NULL)
+    {
+        return;
+    }
+    
+    treap_node_destruct(node->left);
+    treap_node_destruct(node->right);
+    request_destruct(node->req);
+    free_all(2, node->req, node);
 }
 
 status_code treap_node_copy(treap_node** node_dest, treap_node* node_src)
@@ -73,31 +83,15 @@ status_code treap_node_copy(treap_node** node_dest, treap_node* node_src)
         treap_node_destruct(tmp_node);
         return OK;
     }
-    code;
     
     *node_dest = tmp_node;
     
     return OK;
 }
 
-void treap_node_destruct(treap_node* node)
-{
-    if (node == NULL)
-    {
-        return;
-    }
-    
-    treap_node_destruct(node->left);
-    treap_node_destruct(node->right);
-    request_destruct(node->req);
-    free(node);
-    
-    return;
-}
-
 treap_node* treap_node_merge(treap_node* t1, treap_node* t2)
 {
-    if (t1 == NULL && t1 == NULL)
+    if (t1 == NULL && t2 == NULL)
     {
         return NULL;
     }
@@ -123,8 +117,60 @@ treap_node* treap_node_merge(treap_node* t1, treap_node* t2)
     }
 }
 
+void treap_node_split(treap_node* t, int (*compare)(const request*, const request*), 
+                        request* req, treap_node** t1, treap_node** t2) {
+    if (compare == NULL || req == NULL || t1 == NULL || t2 == NULL)
+    {
+        return;
+    }
 
+    if (t == NULL)
+    {
+        *t1 = NULL;
+        *t2 = NULL;
+        return;
+    }
 
+    if (compare(t->req, req) < 0)
+    {
+        treap_node_split(t->right, compare, req, &(t->right), t2);
+        *t1 = t;
+    }
+    else
+    {
+        treap_node_split(t->left, compare, req, t1, &(t->left));
+        *t2 = t;
+    }
+}
+
+treap_node* treap_node_meld(treap_node* t1, treap_node* t2, int (*compare)(const request*, const request*))
+{
+    if ((t1 == NULL && t2 == NULL) || compare == NULL)
+    {
+        return NULL;
+    }
+    if (t1 == NULL)
+    {
+        return t2;
+    }
+    if (t2 == NULL)
+    {
+        return t1;
+    }
+    
+    treap_node* less = NULL;
+    treap_node* greater = NULL;
+    
+    t1 = treap_node_meld(t1, t2->left, compare);
+    t1 = treap_node_meld(t1, t2->right, compare);
+    t2->left = t2->right = NULL;
+    
+    treap_node_split(t1, compare, t2->req, &less, &greater);
+    less = treap_node_merge(less, t2);
+    t1 = treap_node_merge(less, greater);
+    
+    return t1;
+}
 
 
 status_code treap_set_null(Treap* treap)
@@ -169,7 +215,7 @@ status_code treap_copy(Treap* treap_dest, const Treap* treap_src)
     }
     
     treap_dest->size = treap_src->size;
-    treap_dest->compare = treap_src->size;
+    treap_dest->compare = treap_src->compare;
     
     return OK;
 }
@@ -197,7 +243,7 @@ status_code treap_meld(Treap* treap_res, Treap* treap_l, Treap* treap_r)
     
     Treap treap_tmp;
     
-    treap_tmp.root = treap_node_merge(treap_l->root, treap_r->root);
+    treap_tmp.root = treap_node_meld(treap_l->root, treap_r->root, treap_l->compare);
     treap_tmp.size = treap_l->size + treap_r->size;
     treap_tmp.compare = treap_l->compare;
     
@@ -223,20 +269,20 @@ status_code treap_copy_meld(Treap* treap_res, const Treap* treap_l, const Treap*
     status_code code = OK;
     Treap treap_lc, treap_rc;
         
-    treap_heap_set_null(&treap_lc);
-    treap_heap_set_null(&treap_rc);
-    treap_heap_set_null(treap_res);
+    treap_set_null(&treap_lc);
+    treap_set_null(&treap_rc);
+    treap_set_null(treap_res);
     
-    code = code ? code : treap_heap_copy(&treap_lc, treap_l);
-    code = code ? code : treap_heap_copy(&treap_rc, treap_r);
-    code = code ? code : treap_heap_meld(treap_res, &treap_lc, &treap_rc);
+    code = code ? code : treap_copy(&treap_lc, treap_l);
+    code = code ? code : treap_copy(&treap_rc, treap_r);
+    code = code ? code : treap_meld(treap_res, &treap_lc, &treap_rc);
     
-    treap_heap_destruct(&treap_lc);
-    treap_heap_destruct(&treap_rc);
+    treap_destruct(&treap_lc);
+    treap_destruct(&treap_rc);
     
     if (code)
     {
-        treap_heap_destruct(treap_res);
+        treap_destruct(treap_res);
         return code;
     }
     
@@ -244,154 +290,100 @@ status_code treap_copy_meld(Treap* treap_res, const Treap* treap_l, const Treap*
 }
 
 
-
-int Treap_split(treap_node* t, request* key, treap_node** t1, treap_node** t2) {
-    if (key == NULL) {
+status_code treap_size(const Treap* treap, size_t* size)
+{
+    if (treap == NULL || size == NULL)
+    {
         return NULL_ARG;
-    }   
-
-    if (t == NULL) {
-        *t1 = NULL;
-        *t2 = NULL;
-        return OK;
     }
-
-    int st = OK;
-    if (compare_requests(t->key, key) == -1) {
-        st = Treap_split(t->right, key, &(t->right), t2);
-        if (st != OK) {
-            return st;
-        }
-        *t1 = t;
-    }
-    else {
-        st = Treap_split(t->left, key, t1, &(t->left));
-        if (st != OK) {
-            return st;
-        }
-        *t2 = t;
-    }
+    *size = treap->size;
     return OK;
 }
 
-int Treap_insert(Treap* t, request* key) {
-    treap_node* new_nd = NULL;
-    int st = OK;
-
-    st = treap_node_init(&new_nd, key);
-    if (st != OK) {
-        free_request(key);
-        return st;
-    }
-
-    treap_node* less, *greater;
-    st = Treap_split(t->root, key, &less, &greater);
-    if (st != OK) {
-        treap_node_free(new_nd);
-        return st;
-    }
-
-    t->root = Treap_merge_from_root(Treap_merge_from_root(less, new_nd), greater);
-
-    return OK;
-}
-
-int Treap_erase(Treap* t, request* key) {
-    treap_node *less, *equal, *greater;
-    int st = OK;
-    st = Treap_split(t->root, key, &less, &greater);
-    if (st != OK) {
-        return st;
-    }
-
-    key->id += 1;
-    st = Treap_split(greater, key, &equal, &greater);
-    if (st != OK) {
-        return st;
+status_code treap_top(const Treap* treap, request** req)
+{
+    if (treap == NULL || req == NULL)
+    {
+        return NULL_ARG;
     }
     
-    t->root = Treap_merge_from_root(less, greater);
-    key->id -= 1;
+    treap_node* cur = treap->root;
+    
+    if (cur == NULL)
+    {
+        *req = NULL;
+        return OK;
+    }
+    
+    while (cur->left != NULL)
+    {
+        cur = cur->left;
+    }
 
-    treap_node_free(equal);
+    *req = cur->req;
 
     return OK;
 }
 
-void Treap_print_from_root(FILE* stream, treap_node* root, int n) {
-    if (root != NULL) {
-        Treap_print_from_root(stream, root->right, n + 1);
-        for (int i = 0; i < n; i++) fprintf(stream, "\t");
-        //print_request(stream, root->key);
-        printf("I:%d P:%d\n", root->key->id, root->priority);
-        Treap_print_from_root(stream, root->left, n + 1);
+status_code treap_pop(Treap* treap, request** req)
+{
+    if (treap == NULL || req == NULL)
+    {
+        return NULL_ARG;
     }
-}
-
-void Treap_print(FILE* stream, const Treap t) {
-    if (t.root == NULL) {
-        fprintf(stream, "The tree is empty!\n");
-        return;
+    
+    treap_node* prev = NULL;
+    treap_node* cur = treap->root;
+    
+    if (cur == NULL)
+    {
+        *req = NULL;
+        return OK;
     }
-    Treap_print_from_root(stream, t.root, 0);
-}
-
-void Treap_destroy(Treap t) {
-    Treap_destroy_from_root(t.root);
-}
-
-void Treap_destroy_from_root(treap_node* root) {
-    if (root == NULL) {
-        return;
+    
+    while (cur->left != NULL) {
+        prev = cur;
+        cur = cur->left;
     }
-    free_request(root->key);
-    Treap_destroy_from_root(root->left);
-    Treap_destroy_from_root(root->right);
-
-    free(root);
-}
-
-// int Treap_get_max_from(Tre)
-
-int Treap_get_max(Treap t, request** res) {
-    treap_node* root = t.root;
-
-    treap_node* prev = root;
-    treap_node* tmp_node = root;
-
-    while (tmp_node != NULL) {
-        prev = tmp_node;
-        tmp_node = tmp_node->right;
+    
+    if (prev != NULL)
+    {
+        prev->left = cur->right;
     }
-
-    *res = prev->key;
-
+    else
+    {
+        treap->root = treap->root->right;
+    }
+    
+    *req = cur->req;
+    free(cur);
+    treap->size--;
+    
     return OK;
 }
 
-int Treap_del_max(Treap* t) {
-    if (t->root == NULL) {
-        return OK;
+status_code treap_insert(Treap* treap, request* req)
+{
+    if (treap == NULL || req == NULL)
+    {
+        return NULL_ARG;
+    }
+    
+    treap_node* node = NULL;
+    
+    status_code code = treap_node_construct(&node, req);
+    if (code)
+    {
+        return code;
     }
 
-    treap_node* root = t->root;
-
-    if (root->right == NULL) {
-        t->root = root->left;
-        treap_node_free(root);
-        return OK;
-    }
-
-    treap_node* prev = root;
-    treap_node* tmp_node = root->right;
-
-    while (tmp_node->right != NULL) {
-        prev = tmp_node;
-        tmp_node = tmp_node->right;
-    }
-
-    treap_node_free(tmp_node);
-    prev->right = NULL;
+    treap_node* less = NULL;
+    treap_node* greater = NULL;
+    
+    treap_node_split(treap->root, treap->compare, req, &less, &greater);
+    less = treap_node_merge(less, node);
+    treap->root = treap_node_merge(less, greater);
+    treap->size++;
 
     return OK;
 }

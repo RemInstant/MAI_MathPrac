@@ -4,11 +4,11 @@
 
 #include "fibonacci_heap.h"
 
-status_code fib_node_destruct(fib_node* node)
+void fib_node_destruct(fib_node* node)
 {
 	if (node == NULL)
 	{
-		return OK;
+		return;
 	}
 
 	if (node->left != NULL)
@@ -20,10 +20,7 @@ status_code fib_node_destruct(fib_node* node)
 	fib_node_destruct(node->right);
 
 	request_destruct(node->req);
-	free(node->req);
-	free(node);
-
-	return OK;
+	free_all(2, node->req, node);
 }
 
 status_code fib_node_copy(fib_node** node_dest, const fib_node* node_src, const fib_node* barrier)
@@ -282,7 +279,7 @@ status_code fib_node_merge(fib_heap* heap, fib_node* node_1, fib_node* node_2, f
 	return OK;
 }
 
-status_code fib_heap_consolidation(fib_heap* heap)
+status_code fib_heap_consolidate(fib_heap* heap)
 {
 	if (heap == NULL)
 	{
@@ -428,7 +425,7 @@ status_code fib_heap_pop(fib_heap* heap, request** req)
 	free(top);
 	heap->size--;
 	
-	return fib_heap_consolidation(heap);
+	return fib_heap_consolidate(heap);
 }
 
 status_code fib_heap_insert(fib_heap* heap, request* req)
