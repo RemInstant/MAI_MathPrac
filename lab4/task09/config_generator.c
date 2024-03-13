@@ -207,10 +207,12 @@ int main(int argc, char** argv)
             
             for (size_t i = 0; !code && i < dep_cnt; ++i)
             {
+                ull staff_cnt_tmp = 0;
                 printf("staff-%llu (E to exit): ", (ull) i);
                 code = code ? code : read_line(&input, 0);
                 code = code ? code : (strcmp(input, "E") ? code : USER_INPUT_END);
-                code = code ? code : parse_ullong(input, 10, &staff_cnts[i]);
+                code = code ? code : parse_ullong(input, 10, &staff_cnt_tmp);
+                staff_cnts[i] = (size_t) staff_cnt_tmp;
                 free(input);
                 input = NULL;
                 
@@ -274,7 +276,7 @@ int main(int argc, char** argv)
         
         for (size_t i = 0; i + 1 < dep_cnt; ++i)
         {
-            fprintf(file, "%llu ", staff_cnts[i]);
+            fprintf(file, "%llu ", (ull) staff_cnts[i]);
         }
         fprintf(file, "%llu\n", (ull) staff_cnts[dep_cnt - 1]);
         
