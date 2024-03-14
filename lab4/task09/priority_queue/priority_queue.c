@@ -30,7 +30,7 @@ status_code p_queue_set_null(p_queue* pq)
     return OK;
 }
 
-status_code p_queue_construct(p_queue* pq, pq_base base, int (*compare)(const request*, const request*))
+status_code p_queue_construct(p_queue* pq, pq_base_t base, int (*compare)(const request*, const request*))
 {
     if (pq == NULL)
     {

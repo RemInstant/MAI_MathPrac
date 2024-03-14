@@ -11,7 +11,7 @@
 int main()
 {
     clock_t timer;
-    for (map_base base = MB_HASHSET; base <= MB_TRIE; ++base)
+    for (map_base_t base = MB_HASHSET; base <= MB_TRIE; ++base)
     {
         //if (base == MB_HASHSET) continue;
         //if (base == MB_ARR) continue;

@@ -4,13 +4,13 @@
 #include "../utility.h"
 #include "../department.h"
 
-typedef enum map_base
+typedef enum map_base_t
 {
     MB_HASHSET,
     MB_ARR,
     MB_BST,
     MB_TRIE,
-} map_base;
+} map_base_t;
 
 // Map contains POINTERS to departments, so department cannot be freed in case its erasing, BUT destruct frees all contained data
 typedef struct Map
@@ -50,7 +50,7 @@ typedef struct Map
 } Map;
 
 status_code map_set_null(Map* map);
-status_code map_construct(Map* map, map_base base, size_t (*calc_hash)(const char*));
+status_code map_construct(Map* map, map_base_t base, size_t (*calc_hash)(const char*));
 status_code map_destruct(Map* map);
 
 status_code map_contains(Map* map, const char* key, int* is_contained);

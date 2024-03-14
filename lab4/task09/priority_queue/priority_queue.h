@@ -3,7 +3,7 @@
 
 #include "../utility.h"
 
-typedef enum priority_queue_base
+typedef enum priority_queue_base_t
 {
     PQB_BINARY,
     PQB_LEFTIST,
@@ -11,12 +11,12 @@ typedef enum priority_queue_base
     PQB_BINOM,
     PQB_FIB,
     PQB_TREAP,
-} priority_queue_base, pq_base;
+} priority_queue_base_t, pq_base_t;
 
 // Priority queue contains POINTERS to requests (NOT A COPIES)
 typedef struct Priority_queue
 {
-    pq_base base;
+    pq_base_t base;
     size_t ds_size;
     void* ds;
     status_code (*set_null)(void* ds);
@@ -32,7 +32,7 @@ typedef struct Priority_queue
 } Priority_queue, p_queue;
 
 status_code p_queue_set_null(p_queue* pq);
-status_code p_queue_construct(p_queue* pq, pq_base base, int (*compare)(const request*, const request*));
+status_code p_queue_construct(p_queue* pq, pq_base_t base, int (*compare)(const request*, const request*));
 status_code p_queue_copy(p_queue* pq_dest, const p_queue* pq_src);
 status_code p_queue_destruct(p_queue* pq);
 

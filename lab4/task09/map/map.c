@@ -24,7 +24,7 @@ status_code map_set_null(Map* map)
     return OK;
 }
 
-status_code map_construct(Map* map, map_base base, size_t (*calc_hash)(const char*))
+status_code map_construct(Map* map, map_base_t base, size_t (*calc_hash)(const char*))
 {
     if (map == NULL || calc_hash == NULL)
     {

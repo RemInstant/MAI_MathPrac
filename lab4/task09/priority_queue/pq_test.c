@@ -17,7 +17,7 @@ void free_req(request* req)
 int main()
 {
     clock_t timer;
-    for (priority_queue_base base = PQB_BINARY; base <= PQB_TREAP; ++base)
+    for (priority_queue_base_t base = PQB_BINARY; base <= PQB_TREAP; ++base)
     {
         //if (base == PQB_BINARY) continue;
         //if (base == PQB_LEFTIST) continue;
