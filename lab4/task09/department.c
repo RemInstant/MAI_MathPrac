@@ -102,7 +102,7 @@ status_code department_construct(
     Department* dep,
     const char* dep_id,
     size_t staff_size,
-    pq_base base,
+    pq_base_t base,
     double overload_coef,
     double eps,
     unsigned min_handling_time,
