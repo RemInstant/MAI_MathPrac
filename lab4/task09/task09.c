@@ -15,8 +15,6 @@
 
 // TODO 
 // unify ctoi funcs in maps
-// rename dep_name to dep_name
-// check comparators equality before meld
 // clever input reader?
 // turn str time into unsigned long long
 

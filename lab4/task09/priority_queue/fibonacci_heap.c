@@ -84,163 +84,163 @@ status_code fib_node_copy(fib_node** node_dest, const fib_node* node_src, const 
 }
 
 
-status_code fib_heap_construct(fib_heap* heap, int (*compare)(const request*, const request*))
+status_code fib_heap_construct(fib_heap* fh, int (*compare)(const request*, const request*))
 {
-	if (heap == NULL)
+	if (fh == NULL)
 	{
 		return NULL_ARG;
 	}
 
-	heap->head = NULL;
-	heap->compare = compare;
-	heap->size = 0;
+	fh->head = NULL;
+	fh->compare = compare;
+	fh->size = 0;
 
 	return OK;
 }
 
-status_code fib_heap_set_null(fib_heap* heap)
+status_code fib_heap_set_null(fib_heap* fh)
 {
-	if (heap == NULL)
+	if (fh == NULL)
 	{
 		return NULL_ARG;
 	}
 
-	heap->head = NULL;
-	heap->compare = NULL;
-	heap->size = 0;
+	fh->head = NULL;
+	fh->compare = NULL;
+	fh->size = 0;
 
 	return OK;
 }
 
-status_code fib_heap_destruct(fib_heap* heap)
+status_code fib_heap_destruct(fib_heap* fh)
 {
-	if (heap == NULL)
+	if (fh == NULL)
 	{
 		return OK;
 	}
 
-	fib_node_destruct(heap->head);
-	fib_heap_set_null(heap);
+	fib_node_destruct(fh->head);
+	fib_heap_set_null(fh);
 
 	return OK;
 }
 
-status_code fib_heap_copy(fib_heap* dest, const fib_heap* src)
+status_code fib_heap_copy(fib_heap* fh_dest, const fib_heap* fh_src)
 {
-	if (dest == NULL || src == NULL)
+	if (fh_dest == NULL || fh_src == NULL)
 	{
 		return NULL_ARG;
 	}
 
-	status_code status = fib_heap_construct(dest, src->compare);
-	status = status ? status : fib_node_copy(&(dest->head), src->head, NULL);
+	status_code status = fib_heap_construct(fh_dest, fh_src->compare);
+	status = status ? status : fib_node_copy(&(fh_dest->head), fh_src->head, NULL);
 	if (status != OK)
 	{
-		fib_heap_destruct(dest);
+		fib_heap_destruct(fh_dest);
 		return status;
 	}
 	
-	dest->size = src->size;
+	fh_dest->size = fh_src->size;
 
 	return OK;
 }
 
-status_code fib_heap_meld(fib_heap* res, fib_heap* heap_l, fib_heap* heap_r)
+status_code fib_heap_meld(fib_heap* fh_res, fib_heap* fh_l, fib_heap* fh_r)
 {
-	if (res == NULL || heap_l == NULL || heap_r == NULL)
+	if (fh_res == NULL || fh_l == NULL || fh_r == NULL)
 	{
 		return NULL_ARG;
 	}
 	
-	if (heap_l == heap_r)
+	if (fh_l == fh_r || fh_l->compare != fh_r->compare)
 	{
 		return INVALID_INPUT;
 	}
 	
-	if (heap_l->head == NULL || heap_r->head == NULL)
+	if (fh_l->head == NULL || fh_r->head == NULL)
 	{
-		res->head = heap_l->head == NULL ? heap_r->head : heap_l->head;
-		fib_heap_set_null(heap_l);
-		fib_heap_set_null(heap_r);
+		fh_res->head = fh_l->head == NULL ? fh_r->head : fh_l->head;
+		fib_heap_set_null(fh_l);
+		fib_heap_set_null(fh_r);
 		return OK;
 	}
 	
-	fib_heap heap_tmp;
+	fib_heap fh_tmp;
 	
-	heap_tmp.size = heap_l->size + heap_r->size;
-	heap_tmp.compare = heap_l->compare;
+	fh_tmp.size = fh_l->size + fh_r->size;
+	fh_tmp.compare = fh_l->compare;
 	
-	if (heap_l->head == NULL || heap_r->head == NULL)
+	if (fh_l->head == NULL || fh_r->head == NULL)
 	{
-		heap_tmp.head = heap_l->head == NULL ? heap_r->head : heap_l->head;
+		fh_tmp.head = fh_l->head == NULL ? fh_r->head : fh_l->head;
 	}
 	else
 	{
-		heap_l->head->left->right = heap_r->head;
-		heap_l->head->left = heap_r->head->left;
-		heap_r->head->left = heap_l->head->left;
-		heap_r->head->left->right = heap_l->head;
+		fh_l->head->left->right = fh_r->head;
+		fh_l->head->left = fh_r->head->left;
+		fh_r->head->left = fh_l->head->left;
+		fh_r->head->left->right = fh_l->head;
 		
-		heap_tmp.head = heap_l->compare(heap_l->head->req, heap_r->head->req) <= 0 ? heap_l->head : heap_r->head;
+		fh_tmp.head = fh_l->compare(fh_l->head->req, fh_r->head->req) <= 0 ? fh_l->head : fh_r->head;
 	}
 	
-	heap_l->size = heap_r->size = 0;
-	heap_l->head = heap_r->head = NULL;
-	*res = heap_tmp;
+	fh_l->size = fh_r->size = 0;
+	fh_l->head = fh_r->head = NULL;
+	*fh_res = fh_tmp;
 	
 	return OK;
 }
 
-status_code fib_heap_copy_meld(fib_heap* fib_res, const fib_heap* fib_l, const fib_heap* fib_r)
+status_code fib_heap_copy_meld(fib_heap* fh_res, const fib_heap* fh_l, const fib_heap* fh_r)
 {
-	if (fib_res == NULL || fib_l == NULL || fib_r == NULL)
+	if (fh_res == NULL || fh_l == NULL || fh_r == NULL)
 	{
 		return NULL_ARG;
 	}
 	
-	if (fib_res == fib_l || fib_res == fib_r)
+	if (fh_res == fh_l || fh_res == fh_r)
 	{
 		return INVALID_INPUT;
 	}
 	
 	status_code code = OK;
-    fib_heap fib_lc, fib_rc;
+    fib_heap fh_lc, fh_rc;
         
-    fib_heap_set_null(&fib_lc);
-    fib_heap_set_null(&fib_rc);
-    fib_heap_set_null(fib_res);
+    fib_heap_set_null(&fh_lc);
+    fib_heap_set_null(&fh_rc);
+    fib_heap_set_null(fh_res);
     
-    code = code ? code : fib_heap_copy(&fib_lc, fib_l);
-    code = code ? code : fib_heap_copy(&fib_rc, fib_r);
-    code = code ? code : fib_heap_meld(fib_res, &fib_lc, &fib_rc);
+    code = code ? code : fib_heap_copy(&fh_lc, fh_l);
+    code = code ? code : fib_heap_copy(&fh_rc, fh_r);
+    code = code ? code : fib_heap_meld(fh_res, &fh_lc, &fh_rc);
     
-    fib_heap_destruct(&fib_lc);
-    fib_heap_destruct(&fib_rc);
+    fib_heap_destruct(&fh_lc);
+    fib_heap_destruct(&fh_rc);
     
     if (code)
     {
-        fib_heap_destruct(fib_res);
+        fib_heap_destruct(fh_res);
         return code;
     }
     
     return OK;
 }
 
-status_code fib_heap_size(const fib_heap* heap, size_t* size)
+status_code fib_heap_size(const fib_heap* fh, size_t* size)
 {
-	if (heap == NULL)
+	if (fh == NULL)
 	{
 		return NULL_ARG;
 	}
 
-	*size = heap->size;
+	*size = fh->size;
 
 	return OK;
 }
 
-status_code fib_node_merge(fib_heap* heap, fib_node* node_1, fib_node* node_2, fib_node** res)
+status_code fib_node_merge(fib_heap* fh, fib_node* node_1, fib_node* node_2, fib_node** res)
 {
-	if (heap == NULL || node_1 == NULL || node_2 == NULL || res == NULL)
+	if (fh == NULL || node_1 == NULL || node_2 == NULL || res == NULL)
 	{
 		return NULL_ARG;
 	}
@@ -250,7 +250,7 @@ status_code fib_node_merge(fib_heap* heap, fib_node* node_1, fib_node* node_2, f
 		return INVALID_INPUT;
 	}
 	
-	if (heap->compare(node_1->req, node_2->req) > 0)
+	if (fh->compare(node_1->req, node_2->req) > 0)
 	{
 		fib_node* tmp = node_1;
 		node_1 = node_2;
@@ -279,22 +279,22 @@ status_code fib_node_merge(fib_heap* heap, fib_node* node_1, fib_node* node_2, f
 	return OK;
 }
 
-status_code fib_heap_consolidate(fib_heap* heap)
+status_code fib_heap_consolidate(fib_heap* fh)
 {
-	if (heap == NULL)
+	if (fh == NULL)
 	{
 		return NULL_ARG;
 	}
 	
-	if (heap->head == NULL || heap->head->right == heap->head)
+	if (fh->head == NULL || fh->head->right == fh->head)
 	{
 		return OK;
 	}
 
 	status_code code = OK;
-	fib_node* cur = heap->head;
-	fib_node* nxt = heap->head->right;
-	size_t size = log2(1.0 * heap->size) + 3;
+	fib_node* cur = fh->head;
+	fib_node* nxt = fh->head->right;
+	size_t size = log2(1.0 * fh->size) + 3;
 
 	fib_node** arr = (fib_node**) calloc(size, sizeof(fib_node*));
 	if (arr == NULL)
@@ -302,7 +302,7 @@ status_code fib_heap_consolidate(fib_heap* heap)
 		return BAD_ALLOC;
 	}
 	
-	heap->head->left->right = NULL;
+	fh->head->left->right = NULL;
 	
 	while (!code && cur != NULL)
 	{
@@ -317,7 +317,7 @@ status_code fib_heap_consolidate(fib_heap* heap)
 		{
 			fib_node* node_tmp = arr[cur->rank];
 			arr[cur->rank] = NULL;
-			code = fib_node_merge(heap, cur, node_tmp, &cur);
+			code = fib_node_merge(fh, cur, node_tmp, &cur);
 			
 			if (code)
 			{
@@ -343,7 +343,7 @@ status_code fib_heap_consolidate(fib_heap* heap)
 		start = start != NULL ? start : arr[i];
 		top = top != NULL ? top : arr[i];
 		
-		if (heap->compare(arr[i]->req, top->req) < 0)
+		if (fh->compare(arr[i]->req, top->req) < 0)
 		{
 			top = arr[i];
 		}
@@ -359,78 +359,78 @@ status_code fib_heap_consolidate(fib_heap* heap)
 	
 	prev->right = start;
 	start->left = prev;
-	heap->head = top;
+	fh->head = top;
 	free(arr);
 	
 	return code;
 }
 
-status_code fib_heap_top(const fib_heap* heap, request** req)
+status_code fib_heap_top(const fib_heap* fh, request** req)
 {
-	if (heap == NULL || req == NULL)
+	if (fh == NULL || req == NULL)
 	{
 		return NULL_ARG;
 	}
 	
-	if (heap->head == NULL)
+	if (fh->head == NULL)
 	{
 		req = NULL;
 		return OK;
 	}
 
-	*req = heap->head->req;
+	*req = fh->head->req;
 
 	return OK;
 }
 
-status_code fib_heap_pop(fib_heap* heap, request** req)
+status_code fib_heap_pop(fib_heap* fh, request** req)
 {
-	if (heap == NULL || req == NULL)
+	if (fh == NULL || req == NULL)
 	{
 		return NULL_ARG;
 	}
 	
-	if (heap->head == NULL)
+	if (fh->head == NULL)
 	{
 		*req = NULL;
 		return OK;
 	}
 	
-	fib_node* top = heap->head;
-	*req = heap->head->req;
+	fib_node* top = fh->head;
+	*req = fh->head->req;
 	
-	if (heap->head->right == heap->head && heap->head->child == NULL)
+	if (fh->head->right == fh->head && fh->head->child == NULL)
 	{
-		heap->head = NULL;
+		fh->head = NULL;
 	}
-	else if (heap->head->right == heap->head)
+	else if (fh->head->right == fh->head)
 	{
-		heap->head = heap->head->child;
+		fh->head = fh->head->child;
 	}
-	else if (heap->head->child == NULL)
+	else if (fh->head->child == NULL)
 	{
-		heap->head->left->right = heap->head->right;
-		heap->head->right->left = heap->head->left;
-		heap->head = heap->head->left;
+		fh->head->left->right = fh->head->right;
+		fh->head->right->left = fh->head->left;
+		fh->head = fh->head->left;
 	}
 	else
 	{
-		heap->head->left->right = heap->head->child;
-		heap->head->right->left = heap->head->child->left;
-		heap->head->left->right->left = heap->head->left;
-		heap->head->right->left->right = heap->head->right;
-		heap->head = heap->head->left;
+		fh->head->left->right = fh->head->child;
+		fh->head->right->left = fh->head->child->left;
+		fh->head->left->right->left = fh->head->left;
+		fh->head->right->left->right = fh->head->right;
+		fh->head = fh->head->left;
 	}
 	
 	free(top);
-	heap->size--;
+	fh->size--;
 	
-	return fib_heap_consolidate(heap);
+	return fib_heap_consolidate(fh);
 }
 
-status_code fib_heap_insert(fib_heap* heap, request* req)
+status_code fib_heap_insert(fib_heap* fh, request* req)
 {
-	if (heap == NULL || req == NULL)
+	if (fh == NULL || req == NULL)
 	{
 		return NULL_ARG;
 	}
@@ -445,25 +445,25 @@ status_code fib_heap_insert(fib_heap* heap, request* req)
 	node->child = NULL;
 	node->rank = 0;
 	
-	if (heap->head == NULL)
+	if (fh->head == NULL)
 	{
 		node->left = node->right = node;
-		heap->head = node;
+		fh->head = node;
 	}
 	else
 	{	
-		node->left = heap->head->left;
-		node->right = heap->head;
+		node->left = fh->head->left;
+		node->right = fh->head;
 		node->left->right = node;
 		node->right->left = node;
 
-		if (heap->compare(node->req, heap->head->req) < 0)
+		if (fh->compare(node->req, fh->head->req) < 0)
 		{
-			heap->head = node;
+			fh->head = node;
 		}
 	}
 	
-	heap->size++;
+	fh->size++;
 	
 	return OK;
 }

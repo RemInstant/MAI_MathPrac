@@ -166,7 +166,7 @@ status_code skw_heap_meld(skw_heap* skw_res, skw_heap* skw_l, skw_heap* skw_r)
         return NULL_ARG;
     }
     
-    if (skw_l == skw_r)
+    if (skw_l == skw_r || skw_l->compare != skw_r->compare)
     {
         return INVALID_INPUT;
     }

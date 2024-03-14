@@ -241,6 +241,11 @@ status_code treap_meld(Treap* treap_res, Treap* treap_l, Treap* treap_r)
         return NULL_ARG;
     }
     
+    if (treap_l == treap_r || treap_l->compare != treap_r->compare)
+    {
+        return INVALID_INPUT;
+    }
+    
     Treap treap_tmp;
     
     treap_tmp.root = treap_node_meld(treap_l->root, treap_r->root, treap_l->compare);

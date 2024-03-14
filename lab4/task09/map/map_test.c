@@ -186,10 +186,10 @@ int main()
         
         assert(map_destruct(&map) == OK);
         
-        if (base == MB_HASHSET) printf("%-40s %llums\n", "Hash set passed the tests", (ull) clock() - timer);
-        if (base == MB_ARR) 	printf("%-40s %llums\n", "Dynamic array passed the tests", (ull) clock() - timer);
-        if (base == MB_BST) 	printf("%-40s %llums\n", "Binary search tree passed the tests", (ull) clock() - timer);
-        if (base == MB_TRIE) 	printf("%-40s %llums\n", "Trie passed the tests", (ull) clock() - timer);
+        if (base == MB_HASHSET) printf("%-40s %0.1lfms\n", "Hash set passed the tests", (double)(clock() - timer) / CLOCKS_PER_SEC * 1000);
+        if (base == MB_ARR) 	printf("%-40s %0.1lfms\n", "Dynamic array passed the tests", (double)(clock() - timer) / CLOCKS_PER_SEC * 1000);
+        if (base == MB_BST) 	printf("%-40s %0.1lfms\n", "Binary search tree passed the tests", (double)(clock() - timer) / CLOCKS_PER_SEC * 1000);
+        if (base == MB_TRIE) 	printf("%-40s %0.1lfms\n", "Trie passed the tests", (double)(clock() - timer) / CLOCKS_PER_SEC * 1000);
     }
     printf("All tests have been passed\n");
 }

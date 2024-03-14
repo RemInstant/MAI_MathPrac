@@ -172,7 +172,7 @@ status_code lft_heap_meld(lft_heap* lft_res, lft_heap* lft_l, lft_heap* lft_r)
         return NULL_ARG;
     }
     
-    if (lft_l == lft_r)
+    if (lft_l == lft_r || lft_l->compare != lft_r->compare)
     {
         return INVALID_INPUT;
     }

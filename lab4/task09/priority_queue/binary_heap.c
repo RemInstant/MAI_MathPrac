@@ -2,7 +2,7 @@
 
 #include "binary_heap.h"
 
-status_code bh_sift_down(bin_heap* bh, size_t i)
+status_code bin_heap_sift_down(bin_heap* bh, size_t i)
 {
     if (bh == NULL)
     {
@@ -31,7 +31,7 @@ status_code bh_sift_down(bin_heap* bh, size_t i)
     return OK;
 }
 
-status_code bh_sift_up(bin_heap* bh)
+status_code bin_heap_sift_up(bin_heap* bh)
 {
     if (bh == NULL)
     {
@@ -49,7 +49,7 @@ status_code bh_sift_up(bin_heap* bh)
     return OK;
 }
 
-status_code bh_set_null(bin_heap* bh)
+status_code bin_heap_set_null(bin_heap* bh)
 {
     if (bh == NULL)
     {
@@ -64,7 +64,7 @@ status_code bh_set_null(bin_heap* bh)
     return OK;
 }
 
-status_code bh_construct(bin_heap* bh, int (*compare)(const request*, const request*))
+status_code bin_heap_construct(bin_heap* bh, int (*compare)(const request*, const request*))
 {
     if (bh == NULL)
     {
@@ -74,7 +74,7 @@ status_code bh_construct(bin_heap* bh, int (*compare)(const request*, const requ
     bh->elems = (request**) calloc(2, sizeof(request*));
     if (bh->elems == NULL)
     {
-        bh_destruct(bh);
+        bin_heap_destruct(bh);
         return BAD_ALLOC;
     }
     
@@ -85,7 +85,7 @@ status_code bh_construct(bin_heap* bh, int (*compare)(const request*, const requ
     return OK;
 }
 
-status_code bh_copy(bin_heap* bh_dest, const bin_heap* bh_src)
+status_code bin_heap_copy(bin_heap* bh_dest, const bin_heap* bh_src)
 {
     if (bh_dest == NULL || bh_src == NULL)
     {
@@ -95,7 +95,7 @@ status_code bh_copy(bin_heap* bh_dest, const bin_heap* bh_src)
     bh_dest->elems = (request**) calloc(bh_src->capacity, sizeof(request*));
     if (bh_dest->elems == NULL)
     {
-        bh_destruct(bh_dest);
+        bin_heap_destruct(bh_dest);
         return BAD_ALLOC;
     }
     
@@ -105,7 +105,7 @@ status_code bh_copy(bin_heap* bh_dest, const bin_heap* bh_src)
         bh_dest->elems[i] = (request*) malloc(sizeof(request));
         if (bh_dest->elems[i] == NULL)
         {
-            bh_destruct(bh_dest);
+            bin_heap_destruct(bh_dest);
             return BAD_ALLOC;
         }
         
@@ -113,7 +113,7 @@ status_code bh_copy(bin_heap* bh_dest, const bin_heap* bh_src)
         if (st)
         {
             free(bh_dest->elems[i]);
-            bh_destruct(bh_dest);
+            bin_heap_destruct(bh_dest);
             return st;
         }
         bh_dest->size++;
@@ -126,7 +126,7 @@ status_code bh_copy(bin_heap* bh_dest, const bin_heap* bh_src)
     return OK;
 }
 
-status_code bh_destruct(bin_heap* bh)
+status_code bin_heap_destruct(bin_heap* bh)
 {
     if (bh == NULL)
     {
@@ -139,18 +139,18 @@ status_code bh_destruct(bin_heap* bh)
         free(bh->elems[i]);
     }
     free(bh->elems);
-    bh_set_null(bh);
+    bin_heap_set_null(bh);
     
     return OK;
 }
 
-status_code bh_meld(bin_heap* bh, bin_heap* bh_l, bin_heap* bh_r)
+status_code bin_heap_meld(bin_heap* bh, bin_heap* bh_l, bin_heap* bh_r)
 {
     if (bh == NULL || bh_l == NULL || bh_r == NULL)
     {
         return NULL_ARG;
     }
-    if (bh_l == bh_r)
+    if (bh_l == bh_r || bh_l->compare != bh_r->compare)
     {
         return INVALID_INPUT;
     }
@@ -184,7 +184,7 @@ status_code bh_meld(bin_heap* bh, bin_heap* bh_l, bin_heap* bh_r)
     
     for (size_t i = 0; i <= bh_tmp.size / 2; ++i)
     {
-        bh_sift_down(&bh_tmp, bh_tmp.size / 2 - i);
+        bin_heap_sift_down(&bh_tmp, bh_tmp.size / 2 - i);
     }
     
     bh_l->size = 0;
@@ -204,7 +204,7 @@ status_code bh_meld(bin_heap* bh, bin_heap* bh_l, bin_heap* bh_r)
     return OK;
 }
 
-status_code bh_copy_meld(bin_heap* bh, const bin_heap* bh_l, const bin_heap* bh_r)
+status_code bin_heap_copy_meld(bin_heap* bh, const bin_heap* bh_l, const bin_heap* bh_r)
 {
     if (bh == NULL || bh_l == NULL || bh_r == NULL)
     {
@@ -212,20 +212,20 @@ status_code bh_copy_meld(bin_heap* bh, const bin_heap* bh_l, const bin_heap* bh_
     }
     
     bin_heap bh_lc, bh_rc, bh_res;
-    bh_set_null(&bh_lc);
-    bh_set_null(&bh_rc);
-    bh_set_null(&bh_res);
+    bin_heap_set_null(&bh_lc);
+    bin_heap_set_null(&bh_rc);
+    bin_heap_set_null(&bh_res);
     
-    status_code st = bh_copy(&bh_lc, bh_l);
-    st = st ? st : bh_copy(&bh_rc, bh_r);
-    st = st ? st : bh_meld(&bh_res, &bh_lc, &bh_rc);
+    status_code st = bin_heap_copy(&bh_lc, bh_l);
+    st = st ? st : bin_heap_copy(&bh_rc, bh_r);
+    st = st ? st : bin_heap_meld(&bh_res, &bh_lc, &bh_rc);
     
-    bh_destruct(&bh_rc);
-    bh_destruct(&bh_lc);
+    bin_heap_destruct(&bh_rc);
+    bin_heap_destruct(&bh_lc);
     
     if (st)
     {
-        bh_destruct(&bh_res);
+        bin_heap_destruct(&bh_res);
         return st;
     }
     
@@ -234,7 +234,7 @@ status_code bh_copy_meld(bin_heap* bh, const bin_heap* bh_l, const bin_heap* bh_
     return OK;
 }
 
-status_code bh_size(const bin_heap* bh, size_t* size)
+status_code bin_heap_size(const bin_heap* bh, size_t* size)
 {
     if (size == NULL)
     {
@@ -246,7 +246,7 @@ status_code bh_size(const bin_heap* bh, size_t* size)
     return OK;
 }
 
-status_code bh_top(const bin_heap* bh, request** req)
+status_code bin_heap_top(const bin_heap* bh, request** req)
 {
     if (bh == NULL || req == NULL)
     {
@@ -264,7 +264,7 @@ status_code bh_top(const bin_heap* bh, request** req)
     return OK;
 }
 
-status_code bh_pop(bin_heap* bh, request** req)
+status_code bin_heap_pop(bin_heap* bh, request** req)
 {
     if (bh == NULL || req == NULL)
     {
@@ -281,12 +281,12 @@ status_code bh_pop(bin_heap* bh, request** req)
     
     bh->elems[0] = bh->elems[bh->size-1];
     bh->size--;
-    bh_sift_down(bh, 0);
+    bin_heap_sift_down(bh, 0);
     
     return OK;
 }
 
-status_code bh_insert(bin_heap* bh, request* req)
+status_code bin_heap_insert(bin_heap* bh, request* req)
 {
     if (bh == NULL || req == NULL)
     {
@@ -309,7 +309,7 @@ status_code bh_insert(bin_heap* bh, request* req)
     }
     
     bh->elems[bh->size] = req;
-    bh_sift_up(bh);
+    bin_heap_sift_up(bh);
     bh->size++;
     
     return OK;

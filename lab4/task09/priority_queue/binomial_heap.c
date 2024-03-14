@@ -134,7 +134,7 @@ status_code bm_heap_meld(bm_heap* bmh_res, bm_heap* bmh_l, bm_heap* bmh_r)
         return NULL_ARG;
     }
     
-    if (bmh_l == bmh_r)
+    if (bmh_l == bmh_r || bmh_l->compare != bmh_r->compare)
     {
         return INVALID_INPUT;
     }

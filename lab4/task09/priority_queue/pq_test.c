@@ -336,12 +336,12 @@ int main()
             assert(p_queue_destruct(&pq4) == OK);
         }
         
-        if (base == PQB_BINARY)  printf("%-40s %llums\n", "Binary heap passed the tests", (ull) clock() - timer);
-        if (base == PQB_LEFTIST) printf("%-40s %llums\n", "Leftist heap passed the tests", (ull) clock() - timer);
-        if (base == PQB_SKEW) 	 printf("%-40s %llums\n", "Skew heap passed the tests", (ull) clock() - timer);
-        if (base == PQB_BINOM) 	 printf("%-40s %llums\n", "Binomial heap passed the tests", (ull) clock() - timer);
-        if (base == PQB_FIB) 	 printf("%-40s %llums\n", "Fibonacci heap passed the tests", (ull) clock() - timer);
-        if (base == PQB_TREAP) 	 printf("%-40s %llums\n", "Treap passed the tests", (ull) clock() - timer);
+        if (base == PQB_BINARY)  printf("%-40s %0.1lfms\n", "Binary heap passed the tests", (double)(clock() - timer) / CLOCKS_PER_SEC * 1000);
+        if (base == PQB_LEFTIST) printf("%-40s %0.1lfms\n", "Leftist heap passed the tests", (double)(clock() - timer) / CLOCKS_PER_SEC * 1000);
+        if (base == PQB_SKEW) 	 printf("%-40s %0.1lfms\n", "Skew heap passed the tests", (double)(clock() - timer) / CLOCKS_PER_SEC * 1000);
+        if (base == PQB_BINOM) 	 printf("%-40s %0.1lfms\n", "Binomial heap passed the tests", (double)(clock() - timer) / CLOCKS_PER_SEC * 1000);
+        if (base == PQB_FIB) 	 printf("%-40s %0.1lfms\n", "Fibonacci heap passed the tests", (double)(clock() - timer) / CLOCKS_PER_SEC * 1000);
+        if (base == PQB_TREAP) 	 printf("%-40s %0.1lfms\n", "Treap passed the tests", (double)(clock() - timer) / CLOCKS_PER_SEC * 1000);
     }
     printf("All tests have been passed\n");
 }

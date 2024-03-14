@@ -47,16 +47,16 @@ status_code p_queue_construct(p_queue* pq, pq_base_t base, int (*compare)(const 
             pq->ds_size = sizeof(Binary_heap);
             pq->ds = malloc(sizeof(Binary_heap));
             
-            pq->set_null 	= (status_code (*)(void*)) 											bh_set_null;
-            pq->construct 	= (status_code (*)(void*, int (*)(const request*, const request*))) bh_construct;
-            pq->copy 		= (status_code (*)(void*, const void*)) 							bh_copy;
-            pq->destruct 	= (status_code (*)(void*)) 											bh_destruct;
-            pq->meld 		= (status_code (*)(void*, void*, void*)) 							bh_meld;
-            pq->copy_meld 	= (status_code (*)(void*, const void*, const void*))                bh_copy_meld;
-            pq->size 		= (status_code (*)(void*, size_t*))                                 bh_size;
-            pq->top 		= (status_code (*)(void*, request**))                               bh_top;
-            pq->pop 		= (status_code (*)(void*, request**))                               bh_pop;
-            pq->insert 		= (status_code (*)(void*, const request*))                          bh_insert;
+            pq->set_null 	= (status_code (*)(void*)) 											bin_heap_set_null;
+            pq->construct 	= (status_code (*)(void*, int (*)(const request*, const request*))) bin_heap_construct;
+            pq->copy 		= (status_code (*)(void*, const void*)) 							bin_heap_copy;
+            pq->destruct 	= (status_code (*)(void*)) 											bin_heap_destruct;
+            pq->meld 		= (status_code (*)(void*, void*, void*)) 							bin_heap_meld;
+            pq->copy_meld 	= (status_code (*)(void*, const void*, const void*))                bin_heap_copy_meld;
+            pq->size 		= (status_code (*)(void*, size_t*))                                 bin_heap_size;
+            pq->top 		= (status_code (*)(void*, request**))                               bin_heap_top;
+            pq->pop 		= (status_code (*)(void*, request**))                               bin_heap_pop;
+            pq->insert 		= (status_code (*)(void*, const request*))                          bin_heap_insert;
             break;
         }
         case PQB_LEFTIST:
@@ -292,7 +292,7 @@ status_code p_queue_size(p_queue* pq, size_t* size)
     return pq->size(pq->ds, size);
 }
 
-status_code p_queue_top(p_queue* pq, request** req) // mallocs result
+status_code p_queue_top(p_queue* pq, request** req)
 {
     if (pq == NULL || req == NULL)
     {
@@ -310,7 +310,7 @@ status_code p_queue_pop(p_queue* pq, request** req)
     return pq->pop(pq->ds, req);
 }
 
-status_code p_queue_insert(p_queue* pq, request* req) // mallocs copy of input
+status_code p_queue_insert(p_queue* pq, request* req)
 {
     if (pq == NULL || req == NULL)
     {
