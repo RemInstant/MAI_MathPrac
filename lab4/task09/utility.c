@@ -440,6 +440,19 @@ unsigned rand_32()
 	return x;
 }
 
+ull rand_64()
+{
+	ull x = (ull) rand() & 255;
+	x |= ((ull) rand() & 255) << 8;
+	x |= ((ull) rand() & 255) << 16;
+	x |= ((ull) rand() & 255) << 24;
+	x |= ((ull) rand() & 255) << 32;
+	x |= ((ull) rand() & 255) << 40;
+	x |= ((ull) rand() & 255) << 48;
+	x |= ((ull) rand() & 255) << 56;
+	return x;
+}
+
 
 int is_word(const char* str)
 {
@@ -923,7 +936,7 @@ status_code iso_time_convert_to_int(const char time[21], ull* time_int)
     return OK;
 }
 
-status_code iso_time_convert_to_str(ull time_int, char time[21])
+status_code iso_time_convert_to_str(ull time_int, int time_zone, char time[21])
 {
     if (time == NULL)
     {
@@ -933,10 +946,10 @@ status_code iso_time_convert_to_str(ull time_int, char time[21])
     struct tm t;
     t.tm_sec = time_int;
     t.tm_min = 0;
-    t.tm_hour = 0;
+    t.tm_hour = time_zone;
     t.tm_mday = 1;
     t.tm_mon = 0;
-    t.tm_year = 1980;
+    t.tm_year = 70;
     
     mktime(&t);
     

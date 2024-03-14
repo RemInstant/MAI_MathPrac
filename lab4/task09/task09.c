@@ -14,7 +14,6 @@
 #include "map/map.h"
 
 // TODO 
-// MAPS HEAPS
 // unify ctoi funcs in maps
 // rename dep_id to dep_name
 // check comparators equality before meld
@@ -23,12 +22,23 @@
 
 int main(int argc, char** argv)
 {
+    if (argc == 1)
+    {
+        printf("Usage: ./cmd_path <max priority> <config path> <input files>\n");
+        return OK;
+    }
+    if (argc < 4)
+    {
+        print_error(INVALID_INPUT, 1);
+        return INVALID_INPUT;
+    }
+    
     status_code code = OK;
     Map dep_map;
     Input_reader ir;
     Logger logger;
     
-    size_t max_priority = 10;
+    ull max_priority = 10;
     size_t dep_cnt = 0;
     char** dep_names = NULL;
     char cur_time[21];
@@ -40,10 +50,15 @@ int main(int argc, char** argv)
     ir_set_null(&ir);
     logger_set_null(&logger);
     
-    code = code ? code : setup_config("config", &dep_map, &dep_cnt, &dep_names, cur_time, end_time, 1e-9);
+    code = code ? code : parse_ullong(argv[1], 10, &max_priority);
+    code = code ? code : setup_config(argv[2], 1e-9, &dep_map, cur_time, end_time, &dep_cnt, &dep_names);
     code = code ? code : ir_construct(&ir, cur_time, max_priority, dep_cnt, (const char**) dep_names);
     code = code ? code : logger_construct(&logger, "log");
-    code = code ? code : ir_read_file(&ir, "request_1");
+    
+    for (size_t i = 3; !code && i < (size_t) argc; ++i)
+    {
+        code = ir_read_file(&ir, argv[i]);
+    }
     
     while (!code && strcmp(cur_time, end_time) <= 0)
     {

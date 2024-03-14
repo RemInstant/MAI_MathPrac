@@ -30,7 +30,7 @@ int request_ptr_compare_by_time(const void* lhs, const void* rhs)
 }
 
 
-status_code parse_prior_queue_name(const char* name, pq_base* base)
+status_code parse_prior_queue_name(const char* name, pq_base_t* base)
 {
     if (name == NULL || base == NULL)
     {
@@ -69,7 +69,7 @@ status_code parse_prior_queue_name(const char* name, pq_base* base)
     return OK;
 }
 
-status_code parse_map_name(const char* name, map_base* base)
+status_code parse_map_name(const char* name, map_base_t* base)
 {
     if (name == NULL || base == NULL)
     {
@@ -101,12 +101,28 @@ status_code parse_map_name(const char* name, map_base* base)
 }
 
 
-status_code setup_config(const char* path, Map* dep_map, size_t* dep_cnt, char*** dep_names,
-                                char st_time[21], char end_time[21], double eps)
+status_code read_config
+(
+    const char* path,
+    double eps,
+    pq_base_t* pq_base,
+    map_base_t* map_base,
+    char st_time[21],
+    char end_time[21],
+    ull* min_handle_time,
+    ull* max_handle_time,
+    size_t* dep_cnt,
+    char*** dep_names,
+    size_t** staff_cnts,
+    double* overload_coef)
 {
-    if (path == NULL || dep_map == NULL || dep_cnt == NULL || dep_names == NULL || st_time == NULL || end_time == NULL)
+    if (path == NULL)
     {
         return NULL_ARG;
+    }
+    if (eps <= 0)
+    {
+        return INVALID_EPSILON;
     }
     
     FILE* file = fopen(path, "r");
@@ -116,9 +132,8 @@ status_code setup_config(const char* path, Map* dep_map, size_t* dep_cnt, char**
     }
     
     status_code code = OK;
-    Map dep_map_tmp;
-    char* raw_queue_base = NULL;
-    char* raw_mp_base = NULL;
+    char* raw_pq_base = NULL;
+    char* raw_map_base = NULL;
     char* raw_st_time = NULL;
     char* raw_end_time = NULL;
     char* raw_min_handle_time = NULL;
@@ -128,20 +143,24 @@ status_code setup_config(const char* path, Map* dep_map, size_t* dep_cnt, char**
     char* raw_staff_cnts = NULL;
     char* raw_overload_coef = NULL;
     
-    pq_base queue_base;
-    map_base mp_base;
-    ull min_handle_time = 0;
-    ull max_handle_time = 0;
+    pq_base_t pq_base_tmp;
+    map_base_t map_base_tmp;
+    char st_time_tmp[21];
+    char end_time_tmp[21];
+    ull min_handle_time_tmp = 0;
+    ull max_handle_time_tmp = 0;
     ull dep_cnt_tmp = 0;
-    double overload_coef = 0;
+    char** dep_names_tmp = NULL;
+    size_t* staff_cnts_tmp = NULL;
+    double overload_coef_tmp = 0;
     
     // READ CONFIG
-    code = code ? code : fread_line(file, &raw_queue_base, 0);
-    code = code ? code : fread_line(file, &raw_mp_base, 0);
-    code = code ? code : parse_prior_queue_name(raw_queue_base, &queue_base);
-    code = code ? code : parse_map_name(raw_mp_base, &mp_base);
-    free(raw_queue_base);
-    free(raw_mp_base);
+    code = code ? code : fread_line(file, &raw_pq_base, 0);
+    code = code ? code : fread_line(file, &raw_map_base, 0);
+    code = code ? code : parse_prior_queue_name(raw_pq_base, &pq_base_tmp);
+    code = code ? code : parse_map_name(raw_map_base, &map_base_tmp);
+    free(raw_pq_base);
+    free(raw_map_base);
     
     code = code ? code : fread_line(file, &raw_st_time, 0);
     code = code ? code : fread_line(file, &raw_end_time, 0);
@@ -149,16 +168,16 @@ status_code setup_config(const char* path, Map* dep_map, size_t* dep_cnt, char**
     code = code ? code : iso_time_validate(raw_end_time);
     if (!code)
     {
-        strcpy(st_time, raw_st_time);
-        strcpy(end_time, raw_end_time);
+        strcpy(st_time_tmp, raw_st_time);
+        strcpy(end_time_tmp, raw_end_time);
     }
     free(raw_st_time);
     free(raw_end_time);
     
     code = code ? code : fread_line(file, &raw_min_handle_time, 0);
     code = code ? code : fread_line(file, &raw_max_handle_time, 0);
-    code = code ? code : parse_ullong(raw_min_handle_time, 10, &min_handle_time);
-    code = code ? code : parse_ullong(raw_max_handle_time, 10, &max_handle_time);
+    code = code ? code : parse_ullong(raw_min_handle_time, 10, &min_handle_time_tmp);
+    code = code ? code : parse_ullong(raw_max_handle_time, 10, &max_handle_time_tmp);
     free(raw_min_handle_time);
     free(raw_max_handle_time);
     
@@ -167,14 +186,14 @@ status_code setup_config(const char* path, Map* dep_map, size_t* dep_cnt, char**
     code = code ? code : fread_line(file, &raw_dep_names, 0);
     code = code ? code : fread_line(file, &raw_staff_cnts, 0);
     code = code ? code : fread_line(file, &raw_overload_coef, 0);
-    code = code ? code : parse_double(raw_overload_coef, &overload_coef);
+    code = code ? code : parse_double(raw_overload_coef, &overload_coef_tmp);
     free(raw_dep_cnt);
     free(raw_overload_coef);
     
     code = code ? code : (feof(file) ? OK : FILE_INVALID_CONFIG);
     fclose(file);
     
-    if (min_handle_time > max_handle_time || overload_coef - CONFIG_MIN_OVERLOAD_COEF < -eps ||
+    if (min_handle_time_tmp > max_handle_time_tmp || overload_coef_tmp - CONFIG_MIN_OVERLOAD_COEF < -eps ||
             dep_cnt_tmp < CONFIG_MIN_DEP_CNT || dep_cnt_tmp > CONFIG_MAX_DEP_CNT)
     {
         code = code ? code : FILE_INVALID_CONFIG;
@@ -185,12 +204,15 @@ status_code setup_config(const char* path, Map* dep_map, size_t* dep_cnt, char**
         code = FILE_INVALID_CONFIG;
     }
     
-    // CONSTRUCT DEPARTMENT MAP
-    map_set_null(&dep_map_tmp);
-    code = code ? code : map_construct(&dep_map_tmp, mp_base, calc_default_str_hash);
-    
-    char** dep_names_tmp = (char**) calloc(dep_cnt_tmp, sizeof(char*));
+    // PARSE NAMES
+    dep_names_tmp = (char**) calloc(dep_cnt_tmp, sizeof(char*));
     if (dep_names_tmp == NULL)
+    {
+        code = code ? code : BAD_ALLOC;
+    }
+    
+    staff_cnts_tmp = (size_t*) calloc(dep_cnt_tmp, sizeof(size_t));
+    if (staff_cnts_tmp == NULL)
     {
         code = code ? code : BAD_ALLOC;
     }
@@ -198,43 +220,32 @@ status_code setup_config(const char* path, Map* dep_map, size_t* dep_cnt, char**
     const char* ch_ptr1 = raw_dep_names;
     const char* ch_ptr2 = raw_staff_cnts;
     
-    for (size_t iter = 0; iter < dep_cnt_tmp && !code; ++iter)
+    for (size_t i = 0; !code && i < dep_cnt_tmp; ++i)
     {
-        char* dep_name = NULL;
         char* raw_staff_cnt = NULL;
-        ull staff_cnt = 0;
         
-        code = code ? code : sread_until(ch_ptr1, " ", 0, &ch_ptr1, &dep_name);
+        code = code ? code : sread_until(ch_ptr1, " ", 0, &ch_ptr1, &(dep_names_tmp[i]));
         code = code ? code : sread_until(ch_ptr2, " ", 0, &ch_ptr2, &raw_staff_cnt);
-        code = code ? code : parse_ullong(raw_staff_cnt, 10, &staff_cnt);
-        dep_names_tmp[iter] = code ? NULL : dep_name;
+        code = code ? code : parse_ullong(raw_staff_cnt, 10, &(staff_cnts_tmp[i]));
         
-        if (staff_cnt < CONFIG_MIN_STAFF_CNT || staff_cnt > CONFIG_MAX_STAFF_CNT)
+        for (size_t j = 0; !code && j < i; ++j)
+        {
+            if (!strcmp(dep_names_tmp[i], dep_names_tmp[j]))
+            {
+                code = FILE_INVALID_CONFIG;
+            }
+        }
+        
+        if (staff_cnts_tmp[i] < CONFIG_MIN_STAFF_CNT || staff_cnts_tmp[i] > CONFIG_MAX_STAFF_CNT)
         {
             code = code ? code : FILE_INVALID_CONFIG;
         }
         
-        char check_char = iter + 1 < dep_cnt_tmp ? ' ' : '\0';
+        char check_char = i + 1 < dep_cnt_tmp ? ' ' : '\0';
         code = code ? code : (*(ch_ptr1++) == check_char ? OK : FILE_INVALID_CONFIG);
         code = code ? code : (*(ch_ptr2++) == check_char ? OK : FILE_INVALID_CONFIG);
         
-        Department* dep = (Department*) (malloc(sizeof(Department)));;
-        if (dep == NULL)
-        {
-            code = code ? code : BAD_ALLOC;
-        }
-        
-        code = code ? code : department_construct(dep, dep_name, staff_cnt, queue_base, overload_coef, eps,
-                                                        min_handle_time, max_handle_time, compare_request);
-        code = code ? code : map_insert(&dep_map_tmp, dep_name, dep);
-        code = code == BAD_ACCESS ? FILE_INVALID_CONFIG : code;
-        
         free(raw_staff_cnt);
-        
-        if (code)
-        {
-            free(dep);
-        }
     }
     
     free(raw_dep_names);
@@ -247,13 +258,87 @@ status_code setup_config(const char* path, Map* dep_map, size_t* dep_cnt, char**
             free(dep_names_tmp[i]);
         }
         free(dep_names_tmp);
+        free(staff_cnts_tmp);
+        return code;
+    }
+    
+    if (pq_base         != NULL) *pq_base = pq_base_tmp;
+    if (map_base        != NULL) *map_base = map_base_tmp;
+    if (st_time         != NULL) strcpy(st_time, st_time_tmp);
+    if (end_time        != NULL) strcpy(end_time, end_time_tmp);
+    if (min_handle_time != NULL) *min_handle_time = min_handle_time_tmp;
+    if (max_handle_time != NULL) *max_handle_time = max_handle_time_tmp;
+    if (dep_cnt         != NULL) *dep_cnt = dep_cnt_tmp;
+    if (dep_names       != NULL) *dep_names = dep_names_tmp;
+    if (staff_cnts      != NULL) *staff_cnts = staff_cnts_tmp;
+    if (overload_coef   != NULL) *overload_coef = overload_coef_tmp;
+    
+    return OK;
+}
+
+status_code setup_config
+(
+    const char* path,
+    double eps,
+    Map* dep_map,
+    char st_time[21],
+    char end_time[21],
+    size_t* dep_cnt,
+    char*** dep_names)
+{
+    if (path == NULL || dep_map == NULL || dep_cnt == NULL || dep_names == NULL || st_time == NULL || end_time == NULL)
+    {
+        return NULL_ARG;
+    }
+    
+    status_code code = OK;
+    Map dep_map_tmp;
+    
+    pq_base_t pq_base;
+    map_base_t map_base;
+    ull min_handle_time = 0;
+    ull max_handle_time = 0;
+    double overload_coef = 0;
+    size_t* staff_cnts = NULL;
+    
+    code = code ? code : read_config(path, eps, &pq_base, &map_base, st_time, end_time,
+                                &min_handle_time, &max_handle_time, dep_cnt, dep_names, &staff_cnts, &overload_coef);
+    
+    // CONSTRUCT DEPARTMENT MAP
+    map_set_null(&dep_map_tmp);
+    code = code ? code : map_construct(&dep_map_tmp, map_base, calc_default_str_hash);
+    
+    for (size_t i = 0; !code && i < *dep_cnt; ++i)
+    {
+        Department* dep = (Department*) (malloc(sizeof(Department)));;
+        if (dep == NULL)
+        {
+            code = code ? code : BAD_ALLOC;
+        }
+        
+        code = code ? code : department_construct(dep, (*dep_names)[i], staff_cnts[i], pq_base, overload_coef, eps,
+                                                        min_handle_time, max_handle_time, compare_request);
+        code = code ? code : map_insert(&dep_map_tmp, (*dep_names)[i], dep);
+        code = code == BAD_ACCESS ? FILE_INVALID_CONFIG : code;
+        
+        if (code)
+        {
+            free(dep);
+        }
+    }
+    
+    if (code)
+    {
+        for (size_t i = 0; i < *dep_cnt; ++i)
+        {
+            free((*dep_names)[i]);
+        }
+        free(*dep_names);
         map_destruct(&dep_map_tmp);
         return code;
     }
     
     *dep_map = dep_map_tmp;
-    *dep_cnt = dep_cnt_tmp;
-    *dep_names = dep_names_tmp;
     
     return OK;
 }

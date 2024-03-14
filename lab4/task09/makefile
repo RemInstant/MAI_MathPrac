@@ -23,10 +23,10 @@ config_generator.o: config_generator.c utility.h
 	$(CC) $(CFLAGS) -c config_generator.c -o gcc_obj/config_generator.o -lm
 
 # INPUT GENERATOR
-input_generator: input_generator.o utility.o
-	$(CC) $(CFLAGS) -o input_gen gcc_obj/input_generator.o gcc_obj/utility.o -lm
+input_generator: input_generator.o utility.o readers.o
+	$(CC) $(CFLAGS) -o input_gen gcc_obj/input_generator.o $(MAP_O) $(PQ_O) $(OTHER_O) -lm
 
-input_generator.o: input_generator.c utility.h
+input_generator.o: input_generator.c utility.h readers.h
 	$(CC) $(CFLAGS) -c input_generator.c -o gcc_obj/input_generator.o -lm
 
 

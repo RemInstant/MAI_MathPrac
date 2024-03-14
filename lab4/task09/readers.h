@@ -5,8 +5,30 @@
 #include "priority_queue/priority_queue.h"
 #include "map/map.h"
 
-status_code setup_config(const char* path, Map* dep_map, size_t* dep_cnt, char*** dep_names,
-                                char st_time[21], char end_time[21], double eps);
+status_code read_config
+(
+    const char* path,
+    double eps,
+    pq_base_t* pq_base,
+    map_base_t* map_base,
+    char st_time[21],
+    char end_time[21],
+    ull* min_handle_time,
+    ull* max_handle_time,
+    size_t* dep_cnt,
+    char*** dep_names,
+    size_t** staff_cnt,
+    double* overload_coef);
+
+status_code setup_config
+(
+    const char* path,
+    double eps,
+    Map* dep_map,
+    char st_time[21],
+    char end_time[21],
+    size_t* dep_cnt,
+    char*** dep_names);
 
 // no read after get
 typedef struct Input_reader
