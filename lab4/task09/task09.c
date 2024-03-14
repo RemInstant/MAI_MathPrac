@@ -15,7 +15,7 @@
 
 // TODO 
 // unify ctoi funcs in maps
-// rename dep_id to dep_name
+// rename dep_name to dep_name
 // check comparators equality before meld
 // clever input reader?
 // turn str time into unsigned long long
@@ -83,7 +83,7 @@ int main(int argc, char** argv)
         // HANDLE TASK READING + STARTING
         for (size_t i = 0; !code && i < req_cnt; ++i)
         {
-            code = code ? code : map_get(&dep_map, reqs[i]->dep_id, &dep);
+            code = code ? code : map_get(&dep_map, reqs[i]->dep_name, &dep);
             code = code ? code : department_add_request(dep, cur_time, reqs[i], &msg_cnt, &msgs);
             
             if (!code && msg_cnt == 2 && msgs[1].code == DEPARTMENT_OVERLOADED)
@@ -102,7 +102,7 @@ int main(int argc, char** argv)
                 if (can_take)
                 {
                     code = code ? code : department_transfer(dep_taker, dep);
-                    msgs[1].transfer_dep_id = dep_taker->id;
+                    msgs[1].transfer_dep_name = dep_taker->name;
                 }
             }
             

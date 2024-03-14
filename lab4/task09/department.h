@@ -15,7 +15,7 @@ typedef struct Operator
 
 typedef struct Department
 {
-    char* id;
+    char* name;
     p_queue* queue;
     size_t staff_size;
     Operator* staff;
@@ -47,8 +47,8 @@ typedef struct department_message
 {
     dep_code code;
     unsigned req_id;
-    const char* dep_id;
-    const char* transfer_dep_id;
+    const char* dep_name;
+    const char* transfer_dep_name;
     const char* oper_name;
     unsigned handling_time;
 } department_message, dep_msg;
@@ -56,7 +56,7 @@ typedef struct department_message
 status_code department_set_null(Department* dep);
 status_code department_construct(
     Department* dep,
-    const char* dep_id,
+    const char* dep_name,
     size_t staff_size,
     pq_base_t base,
     double overload_coef,

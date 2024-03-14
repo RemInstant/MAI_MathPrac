@@ -470,7 +470,7 @@ status_code ir_read_file_line(Input_reader* ir, FILE* file, request** req)
         {
             req_tmp->id = (unsigned) req_id;
             req_tmp->prior = (unsigned) prior;
-            req_tmp->dep_id = dep_name;
+            req_tmp->dep_name = dep_name;
             req_tmp->txt = txt;
             strcpy(req_tmp->time, time);
         }

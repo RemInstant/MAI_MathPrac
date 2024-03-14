@@ -139,7 +139,7 @@ int main()
                 assert(map_contains(&map, key, &is_contained) == OK);
                 assert(is_contained == 1);
                 assert(map_get(&map, key, &dep) == OK);
-                assert(atoi(dep->id) == i);
+                assert(atoi(dep->name) == i);
                 
                 assert(map_erase(&map, key) == OK);
                 assert(map_contains(&map, key, &is_contained) == OK);

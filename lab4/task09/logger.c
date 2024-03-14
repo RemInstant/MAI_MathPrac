@@ -55,25 +55,25 @@ status_code logger_log(Logger* log, const char time[21], department_message msg)
     {
         case NEW_REQUEST:
         {
-            if (msg.dep_id == NULL)
+            if (msg.dep_name == NULL)
             {
                 return INVALID_INPUT;
             }
             
             fprintf(log->file, "[%s] [NEW_REQUEST]: Request %u was received by dep. %s.\n",
-                    time, msg.req_id, msg.dep_id);
+                    time, msg.req_id, msg.dep_name);
             
             break;
         }
         case REQUEST_HANDLING_STARTED:
         {
-            if (msg.oper_name == NULL || msg.dep_id == NULL)
+            if (msg.oper_name == NULL || msg.dep_name == NULL)
             {
                 return INVALID_INPUT;
             }
             
             fprintf(log->file, "[%s] [REQUEST_HANDLING_STARTED]: Handling of request %u was started in dep. %s by operator %s.\n",
-                    time, msg.req_id, msg.dep_id, msg.oper_name);
+                    time, msg.req_id, msg.dep_name, msg.oper_name);
             
             break;
         }
@@ -91,18 +91,18 @@ status_code logger_log(Logger* log, const char time[21], department_message msg)
         }
         case DEPARTMENT_OVERLOADED:
         {
-            if (msg.transfer_dep_id == NULL)
+            if (msg.transfer_dep_name == NULL)
             {
                 fprintf(log->file, "[%s] [DEPARTMENT_OVERLOADED]: Department %s was overloaded after receiving request %u. ",
-                        time, msg.dep_id, msg.req_id);
+                        time, msg.dep_name, msg.req_id);
                 fprintf(log->file, "No transfer can be executed.\n");
             }
             else
             {
                 fprintf(log->file, "[%s] [DEPARTMENT_OVERLOADED]: Department %s was overloaded after receiving request %u. ",
-                        time, msg.dep_id, msg.req_id);
+                        time, msg.dep_name, msg.req_id);
                 fprintf(log->file, "Its request was transfered to department %s\n",
-                        msg.transfer_dep_id);
+                        msg.transfer_dep_name);
             }
             break;
         }

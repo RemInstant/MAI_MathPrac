@@ -54,14 +54,14 @@ typedef struct pair_prior_time
 typedef struct request
 {
     ull id;
-    char* dep_id;
+    char* dep_name;
     unsigned prior;
     char time[21]; // ISO8601: YYYY-MM-DDThh:mm:ssZ
     char* txt;
 } request;
 
 status_code request_set_null(request* req);
-status_code request_construct(request* req, ull id, const char* dep_id, unsigned prior, const char time[21], const char* txt);
+status_code request_construct(request* req, ull id, const char* dep_name, unsigned prior, const char time[21], const char* txt);
 status_code request_copy(request* req_dest, const request* req_src);
 status_code request_destruct(request* req);
 

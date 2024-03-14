@@ -100,7 +100,7 @@ status_code department_set_null(Department* dep)
 
 status_code department_construct(
     Department* dep,
-    const char* dep_id,
+    const char* dep_name,
     size_t staff_size,
     pq_base_t base,
     double overload_coef,
@@ -116,8 +116,8 @@ status_code department_construct(
     
     status_code code = OK;
     
-    dep->id = (char*) malloc(sizeof(char) * (strlen(dep_id) + 1));
-    if (dep->id == NULL)
+    dep->name = (char*) malloc(sizeof(char) * (strlen(dep_name) + 1));
+    if (dep->name == NULL)
     {
         return BAD_ALLOC;
     }
@@ -125,7 +125,7 @@ status_code department_construct(
     dep->staff = (Operator*) malloc(sizeof(Operator) * staff_size);
     if (dep->staff == NULL)
     {
-        free(dep->id);
+        free(dep->name);
         return BAD_ALLOC;
     }
     for (size_t i = 0; i < staff_size; ++i)
@@ -154,7 +154,7 @@ status_code department_construct(
         return code;
     }
     
-    strcpy(dep->id, dep_id);
+    strcpy(dep->name, dep_name);
     dep->free_staff_cnt = staff_size;
     dep->load_coef = 0;
     dep->overload_coef = overload_coef;
@@ -180,7 +180,7 @@ status_code department_destruct(Department* dep)
     }
     
     p_queue_destruct(dep->queue);
-    free_all(3, dep->id, dep->queue, dep->staff);
+    free_all(3, dep->name, dep->queue, dep->staff);
     department_set_null(dep);
     return OK;
 }
@@ -253,8 +253,8 @@ status_code department_handle_finishing(Department* dep, const char time[21], si
         {
             msgs_tmp[j].code = REQUEST_HANDLING_FINISHED;
             msgs_tmp[j].req_id = op->req->id;
-            msgs_tmp[j].dep_id = dep->id;
-            msgs_tmp[j].dep_id = NULL;
+            msgs_tmp[j].dep_name = dep->name;
+            msgs_tmp[j].dep_name = NULL;
             msgs_tmp[j].handling_time = op->handling_time;
             msgs_tmp[j].oper_name = op->name;
             ++j;
@@ -292,8 +292,8 @@ status_code department_add_request(Department* dep, const char time[21], request
     
     msgs_tmp[0].code = NEW_REQUEST;
     msgs_tmp[0].req_id = req->id;
-    msgs_tmp[0].dep_id = dep->id;
-    msgs_tmp[0].transfer_dep_id = NULL;
+    msgs_tmp[0].dep_name = dep->name;
+    msgs_tmp[0].transfer_dep_name = NULL;
     
     code = code ? code : p_queue_insert(dep->queue, req);
     
@@ -307,8 +307,8 @@ status_code department_add_request(Department* dep, const char time[21], request
         code = code ? code : operator_give_task(dep, free_id, time, req);
         msgs_tmp[1].code = REQUEST_HANDLING_STARTED;
         msgs_tmp[1].req_id = req->id;
-        msgs_tmp[1].dep_id = dep->id;
-        msgs_tmp[1].transfer_dep_id = NULL;
+        msgs_tmp[1].dep_name = dep->name;
+        msgs_tmp[1].transfer_dep_name = NULL;
         msgs_tmp[1].oper_name = dep->staff[free_id].name; // <---------------------------- mb copy???????????
         msg_cnt_tmp = 2;
     }
@@ -325,8 +325,8 @@ status_code department_add_request(Department* dep, const char time[21], request
     {
         msgs_tmp[1].code = DEPARTMENT_OVERLOADED;
         msgs_tmp[1].req_id = req->id;
-        msgs_tmp[1].dep_id = dep->id;
-        msgs_tmp[1].transfer_dep_id = NULL;
+        msgs_tmp[1].dep_name = dep->name;
+        msgs_tmp[1].transfer_dep_name = NULL;
         msg_cnt_tmp = 2;
     }
     
@@ -371,8 +371,8 @@ status_code department_handle_starting(Department* dep, const char time[21], siz
         
         msgs_tmp[i].code = REQUEST_HANDLING_STARTED;
         msgs_tmp[i].req_id = req->id;
-        msgs_tmp[i].dep_id = dep->id;
-        msgs_tmp[i].transfer_dep_id = NULL;
+        msgs_tmp[i].dep_name = dep->name;
+        msgs_tmp[i].transfer_dep_name = NULL;
         msgs_tmp[i].oper_name = dep->staff[free_id].name;
     }
     
