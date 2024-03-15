@@ -151,7 +151,7 @@ status_code read_config
     ull max_handle_time_tmp = 0;
     ull dep_cnt_tmp = 0;
     char** dep_names_tmp = NULL;
-    size_t* staff_cnts_tmp = NULL;
+    ull* staff_cnts_tmp = NULL;
     double overload_coef_tmp = 0;
     
     // READ CONFIG
@@ -211,7 +211,7 @@ status_code read_config
         code = code ? code : BAD_ALLOC;
     }
     
-    staff_cnts_tmp = (size_t*) calloc(dep_cnt_tmp, sizeof(size_t));
+    staff_cnts_tmp = (ull*) calloc(dep_cnt_tmp, sizeof(ull));
     if (staff_cnts_tmp == NULL)
     {
         code = code ? code : BAD_ALLOC;
@@ -270,8 +270,22 @@ status_code read_config
     if (max_handle_time != NULL) *max_handle_time = max_handle_time_tmp;
     if (dep_cnt         != NULL) *dep_cnt = dep_cnt_tmp;
     if (dep_names       != NULL) *dep_names = dep_names_tmp;
-    if (staff_cnts      != NULL) *staff_cnts = staff_cnts_tmp;
+    if (staff_cnts      != NULL) *staff_cnts = (size_t*) staff_cnts_tmp;
     if (overload_coef   != NULL) *overload_coef = overload_coef_tmp;
+    
+    if (dep_names == NULL)
+    {
+        for (size_t i = 0; i < dep_cnt_tmp; ++i)
+        {
+            free(dep_names_tmp[i]);
+        }
+        free(dep_names_tmp);
+    }
+    
+    if (staff_cnts == NULL)
+    {
+        free(staff_cnts_tmp);
+    }
     
     return OK;
 }
@@ -326,6 +340,8 @@ status_code setup_config
             free(dep);
         }
     }
+    
+    free(staff_cnts);
     
     if (code)
     {

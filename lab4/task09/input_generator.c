@@ -49,7 +49,7 @@ int main(int argc, char** argv)
     qsort(req_ids, req_cnt, sizeof(unsigned), rand_comp);
     
     code = code ? code : parse_ullong(argv[1], 10, &max_prior);
-    code = code ? code : read_config("config", 1e-9, NULL, NULL, st_time, end_time,
+    code = code ? code : read_config(argv[2], 1e-9, NULL, NULL, st_time, end_time,
                                 NULL, NULL, &dep_cnt, &dep_names, NULL, NULL);
     
     code = code ? code : iso_time_convert_to_int(st_time, &st_time_int);

@@ -25,67 +25,67 @@ void fprint_error(FILE* file, status_code code, int nl_cnt)
             return;
         case NULL_ARG:
             fprintf(file, "Null argument");
-            return;
+            break;
         case INVALID_INPUT:
             fprintf(file, "Invalid input");
-            return;
+            break;
         case INVALID_ARG:
             fprintf(file, "Invalid argument");
-            return;
+            break;
         case INVALID_FLAG:
             fprintf(file, "Invalid flag");
-            return;
+            break;
         case INVALID_NUMBER:
             fprintf(file, "Invalid number");
-            return;
+            break;
         case INVALID_BASE:
             fprintf(file, "Invalid base");
-            return;
+            break;
         case INVALID_EPSILON:
             fprintf(file, "Invalid epsilon");
-            return;
+            break;
         case INVALID_CMD:
             fprintf(file, "Invalid command");
-            return;
+            break;
         case INVALID_BRACKET_ORDER:
             fprintf(file, "Invalid bracket order");
-            return;
+            break;
         case FILE_OPENING_ERROR:
             fprintf(file, "File cannot be opened");
-            return;
+            break;
         case FILE_INVALID_CONTENT:
             fprintf(file, "File content is invalid");
-            return;
+            break;
         case FILE_INVALID_CONFIG:
             fprintf(file, "Configuration file is invalid");
-            return;
+            break;
         case FILE_KEY_DUPLICATE:
             fprintf(file, "File contains key duplicates");
-            return;
+            break;
         case FILE_END:
             fprintf(file, "Unexpected end of file was found");
-            return;
+            break;
         case OVERFLOW:
             fprintf(file, "Attempting to overflow");
-            return;
+            break;
         case UNINITIALIZED_USAGE:
             fprintf(file, "Attempting to access uninitialized variable");
-            return;
+            break;
         case DIVISION_BY_ZERO:
             fprintf(file, "Attempting to divide by zero");
-            return;
+            break;
         case ZERO_POWERED_ZERO:
             fprintf(file, "Attempting to raize zero in the power zero");
-            return;
+            break;
         case BAD_ALLOC:
             fprintf(file, "Memory lack occurred");
-            return;
+            break;
         case BAD_ACCESS:
             fprintf(file, "Attempting to access incorrect memory");
-            return;
+            break;
         default:
             fprintf(file, "Unexpected error occurred");
-            return;
+            break;
     }
     for (int i = 0; i < nl_cnt; ++i)
     {
@@ -923,7 +923,7 @@ status_code iso_time_convert_to_int(const char time[21], ull* time_int)
     char time_tmp[21];
     strcpy(time_tmp, time);
     
-    struct tm t;
+    struct tm t = { 0 };
     t.tm_sec = atoi(time_tmp + 17);
     t.tm_min = atoi(time_tmp + 14);
     t.tm_hour = atoi(time_tmp + 11);
@@ -943,7 +943,7 @@ status_code iso_time_convert_to_str(ull time_int, int time_zone, char time[21])
         return NULL_ARG;
     }
     
-    struct tm t;
+    struct tm t = { 0 };
     t.tm_sec = time_int;
     t.tm_min = 0;
     t.tm_hour = time_zone;
@@ -968,7 +968,7 @@ status_code iso_time_add(const char time[21], ull add_s, char res[21])
     char time_tmp[21];
     strcpy(time_tmp, time);
     time_tmp[4] = time_tmp[7] = time_tmp[10] = time_tmp[13] = time_tmp[16] = time_tmp[19] = '\0';
-    struct tm t;
+    struct tm t = { 0 };
     t.tm_sec = atoi(time_tmp + 17);
     t.tm_min = atoi(time_tmp + 14);
     t.tm_hour = atoi(time_tmp + 11);

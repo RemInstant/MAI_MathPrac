@@ -259,6 +259,9 @@ status_code department_handle_finishing(Department* dep, const char time[21], si
             msgs_tmp[j].oper_name = op->name;
             ++j;
             
+            request_destruct(op->req);
+            free(op->req);
+            
             op->req = NULL;
             op->start_time[0] = '\0';
             op->finish_time[0] = '\0';
