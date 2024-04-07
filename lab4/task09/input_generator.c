@@ -55,7 +55,7 @@ int main(int argc, char** argv)
     code = code ? code : iso_time_convert_to_int(st_time, &st_time_int);
     code = code ? code : iso_time_convert_to_int(end_time, &end_time_int);
     
-    FILE* file = fopen("input", "w");
+    FILE* file = fopen(argv[3], "w");
     if (file == NULL)
     {
         code = code ? code : FILE_OPENING_ERROR;

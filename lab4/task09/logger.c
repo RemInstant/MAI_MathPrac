@@ -38,7 +38,10 @@ status_code logger_destruct(Logger* log)
         return NULL_ARG;
     }
     
-    fclose(log->file);
+    if (log->file != NULL)
+    {
+        fclose(log->file);
+    }
     
     return logger_set_null(log);
 }

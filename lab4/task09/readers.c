@@ -594,7 +594,10 @@ status_code ir_read_file(Input_reader* ir, const char* path)
         req = code ? req : NULL;
     }
     
-    fclose(file);
+    if (file != NULL)
+    {
+        fclose(file);
+    }
     if (code == FILE_END)
     {
         code = OK;
