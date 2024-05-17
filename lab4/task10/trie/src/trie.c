@@ -327,7 +327,7 @@ status_code trie_get_key_vals(const Trie* trie, ull* cnt, trie_key_val** key_val
 {
 	if (trie == NULL || cnt == NULL || key_vals == NULL)
 	{
-		return INVALID_ARG;
+		return NULL_ARG;
 	}
 	if (trie->root == NULL)
 	{

@@ -295,11 +295,11 @@ status_code fread_char(FILE* file, char* ch_res, int skip_front_spaces)
     {
         return NULL_ARG;
     }
-    char ch = getc(file);
-    while (skip_front_spaces && isspace(ch) && !feof(file))
+    if (skip_front_spaces)
     {
-        ch = getc(file);
+        skip_spaces(file);
     }
+    char ch = getc(file);
     if (feof(file))
     {
         return FILE_END;
@@ -321,11 +321,11 @@ status_code fread_line(FILE* file, char** line, int skip_front_spaces)
     {
         return BAD_ALLOC;
     }
-    char ch = getc(file);
-    while (skip_front_spaces && isspace(ch) && !feof(file))
+    if (skip_front_spaces)
     {
-        ch = getc(file);
+        skip_spaces(file);
     }
+    char ch = getc(file);
     if (feof(file))
     {
         free(line_tmp);
@@ -365,11 +365,11 @@ status_code fread_line_with_comments(FILE* file, char** line, int skip_front_spa
     {
         return BAD_ALLOC;
     }
-    char ch = getc(file);
     if (skip_front_spaces)
     {
         skip_spaces(file);
     }
+    char ch = getc(file);
     if (feof(file))
     {
         free(line_tmp);
@@ -379,19 +379,26 @@ status_code fread_line_with_comments(FILE* file, char** line, int skip_front_spa
     {
         if (ch == line_comment)
         {
+            skip_line(file);
+            
             if (iter > 0)
             {
                 break;
             }
-            else
-            {
-                skip_line(file);
-                skip_spaces(file);
-            }
+            
+            skip_spaces(file);
         }
         else if (ch == comment_begin)
         {
             skip_multi_line_comment(file, comment_begin, comment_end);
+            if (iter == 0)
+            {
+                skip_spaces(file);
+            }
+            else if (iter > 0 && line_tmp[iter-1] != ' ')
+            {
+                line_tmp[iter++] = ' ';
+            }
         }
         else
         {
@@ -428,11 +435,11 @@ status_code fread_word(FILE* file, char** word, int skip_front_spaces)
     {
         return BAD_ALLOC;
     }
-    char ch = getc(file);
-    while (skip_front_spaces && isspace(ch) && !feof(file))
+    if (skip_front_spaces)
     {
-        ch = getc(file);
+        skip_spaces(file);
     }
+    char ch = getc(file);
     if (feof(file))
     {
         free(word_tmp);

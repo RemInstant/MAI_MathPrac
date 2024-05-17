@@ -25,6 +25,10 @@ target_link_libraries(
 target_link_libraries(
         mp_4_10
         PUBLIC
+        mp_4_10_readers)
+target_link_libraries(
+        mp_4_10
+        PUBLIC
         mp_4_10_instruction_executor)
 target_link_libraries(
         mp_4_10

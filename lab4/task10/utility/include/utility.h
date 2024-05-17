@@ -65,9 +65,33 @@ typedef enum
     OP_ORDER_POSTFIX
 } operation_order;
 
+typedef enum
+{
+    ASSIGN_LEFT,
+    ASSIGN_RIGHT
+} assign_order;
+
+typedef enum
+{
+    UNARY_PREFIX,
+    UNARY_POSTFIX
+} unary_operation_order;
+
+typedef enum
+{
+    BINARY_PREFIX,
+    BINARY_INFIX,
+    BINARY_POSTFIX
+} binary_operation_order;
+
 typedef struct
 {
-    operation_order orders[OPERATION_COUNT];
+    ull assign_numeral_system;
+    ull input_numeral_system;
+    ull output_numeral_system;
+    assign_order assign;
+    unary_operation_order unary;
+    binary_operation_order binary;
     char* aliases[OPERATION_COUNT];
 } config_data;
 
@@ -77,6 +101,8 @@ status_code parse_operation_alias(const char* op_alias, config_data config, oper
 void free_all(ull cnt, ...);
 
 status_code skip_spaces(FILE* file);
+status_code skip_line(FILE* file);
+status_code skip_multi_line_comment(FILE* file, char comment_begin, char comment_end);
 status_code fread_char(FILE* file, char* ch, int skip_front_spaces);
 status_code fread_line(FILE* file, char** line, int skip_front_spaces);
 status_code fread_line_with_comments(FILE* file, char** line, int skip_front_spaces, char line_comment, char comment_begin, char comment_end);

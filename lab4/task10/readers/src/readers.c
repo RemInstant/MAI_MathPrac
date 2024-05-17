@@ -17,6 +17,40 @@ status_code read_config(FILE* file, config_data* config)
     
     status_code code = OK;
     
+    config->assign = ASSIGN_LEFT;
+    config->unary = UNARY_PREFIX;
+    config->binary = BINARY_PREFIX;
+    
+    char default_operation_names[13][7] =
+    {
+        "not",
+        "input",
+        "output",
+        "add",
+        "mult",
+        "sub",
+        "pow",
+        "div",
+        "rem",
+        "xor",
+        "and",
+        "or",
+        "="
+    };
+    
+    memset(config->aliases, 0, sizeof(char*) * OPERATION_COUNT);
+    for (int i = 0; !code && i < OPERATION_COUNT; ++i)
+    {
+        config->aliases[i] = (char*) malloc(sizeof(char) * (strlen(default_operation_names[i]) + 1));
+        if (config->aliases[i] == NULL)
+        {
+            code = BAD_ALLOC;
+            break;
+        }
+        
+        strcpy(config->aliases[i], default_operation_names[i]);
+    }
+    
     while (!code)
     {
         char* line = NULL;
@@ -41,54 +75,206 @@ status_code read_config(FILE* file, config_data* config)
             }
         }
         
-        // TODO: set default config
-        
         if (!code)
         {
             if (second_word == NULL)
             {
-                // if (!strcmp(first_word, "left="))
-                // {
-                //     config->assign = ASSIGN_LEFT;
-                // }
-                // else if (!strcmp(first_word, "right="))
-                // {
-                //     config->assign = ASSIGN_RIGHT;
-                // }
-                // else if (!strcmp(first_word, "unary()"))
-                // {
-                //     config->unary = UNARY_LEFT;
-                // }
-                // else if (!strcmp(first_word, "()unary"))
-                // {
-                //     config->unary = UNARY_RIGHT;
-                // }
-                // else if (!strcmp(first_word, "binary()"))
-                // {
-                //     config->binary = BINARY_PREFIX;
-                // }
-                // else if (!strcmp(first_word, "(binary)"))
-                // {
-                //     config->binary = BINARY_INFIX;
-                // }
-                // else if (!strcmp(first_word, "()binary"))
-                // {
-                //     config->binary = BINARY_POSTFIX;
-                // }
-                // else
-                // {
-                //     code = FILE_INVALID_CONFIG;
-                // }
+                if (!strcmp(first_word, "left="))
+                {
+                    config->assign = ASSIGN_LEFT;
+                }
+                else if (!strcmp(first_word, "right="))
+                {
+                    config->assign = ASSIGN_RIGHT;
+                }
+                else if (!strcmp(first_word, "unary()"))
+                {
+                    config->unary = UNARY_PREFIX;
+                }
+                else if (!strcmp(first_word, "()unary"))
+                {
+                    config->unary = UNARY_POSTFIX;
+                }
+                else if (!strcmp(first_word, "binary()"))
+                {
+                    config->binary = BINARY_PREFIX;
+                }
+                else if (!strcmp(first_word, "(binary)"))
+                {
+                    config->binary = BINARY_INFIX;
+                }
+                else if (!strcmp(first_word, "()binary"))
+                {
+                    config->binary = BINARY_POSTFIX;
+                }
+                else
+                {
+                    code = FILE_INVALID_CONFIG;
+                }
             }
             else
             {
+                operation op;
                 
+                code = code ? code : parse_operation(first_word, &op);
+                
+                if (!code)
+                {
+                    config->aliases[op] = second_word;
+                    second_word = NULL;
+                }
+            }
+        }
+        
+        free_all(3, line, first_word, second_word);
+    } // while end
+    
+    if (code == FILE_END)
+    {
+        code = OK;
+    }
+    
+    for (int i = 0; !code && i < OPERATION_COUNT; ++i)
+    {
+        for (int j = i+1; j < OPERATION_COUNT; ++j)
+        {
+            if (!strcmp(config->aliases[i], config->aliases[j]))
+            {
+                code = FILE_INVALID_CONFIG;
+                break;
             }
         }
     }
+    
+    if (code)
+    {
+        for (int i = 0; i < OPERATION_COUNT; ++i)
+        {
+            free(config->aliases[i]);
+        }
+    }
+    
+    return code;
+}
+
+status_code check_for_breakpoint(FILE* file, int* is_breakpoint)
+{
+    if (file == NULL || is_breakpoint == NULL)
+    {
+        return NULL_ARG;
+    }
+    
+    *is_breakpoint = 0;
+    
+    skip_spaces(file);
+    
+    char str[] = "#BREAKPOINT";
+    char* iter = str;
+    char ch = getc(file);
+    
+    while (ch == *iter && ch != EOF)
+    {
+        ++iter;
+        ch = getc(file);
+    }
+    
+    if (*iter == '#')
+    {
+        ungetc(ch, file);
+    }
+    else if (*iter == '\0')
+    {
+        *is_breakpoint = 1;
+    }
+    else
+    {
+        while (ch != '\n' && ch != EOF)
+        {
+            ch = getc(file);
+        }
+    }
+    
+    return OK;
 }
 
 status_code read_instruction(FILE* file, char** instruction)
 {
-    // TODO
+    if (file == NULL || instruction == NULL)
+    {
+        return NULL_ARG;
+    }
+    
+    status_code code = OK;
+    
+    size_t iter = 0;
+    size_t size = 16;
+    char* instruction_tmp = (char*) malloc(sizeof(char) * 16);
+    if (instruction_tmp == NULL)
+    {
+        return BAD_ALLOC;
+    }
+    
+    char ch = getc(file);
+    
+    if (ch == EOF)
+    {
+        free(instruction_tmp);
+        return FILE_END;
+    }
+    
+    while (!code && ch != ';' && ch != EOF)
+    {
+        if (isspace(ch) || ch == '#' || ch == '[')
+        {
+            if (iter != 0 && instruction_tmp[iter-1] != ' ')
+            {
+                instruction_tmp[iter++] = ' ';
+            }
+            
+            if (ch == '#')
+            {
+                code = skip_line(file);
+            }
+            else if (ch == '[')
+            {
+                code = skip_multi_line_comment(file, '[', ']');
+            }
+        }
+        else
+        {
+            instruction_tmp[iter++] = ch;
+        }
+        
+        if (iter + 2 == size)
+        {
+            size *= 2;
+            char* tmp = (char*) malloc(sizeof(char) * size);
+            if (tmp == NULL)
+            {
+                code = BAD_ALLOC;
+            }
+            else
+            {
+                instruction_tmp = tmp;
+            }
+        }
+        
+        ch = getc(file);
+    }
+    
+    if (ch != ';')
+    {
+        code = code ? code : FILE_INVALID_CONTENT;
+    }
+    
+    if (code)
+    {
+        free(instruction_tmp);
+        return code;
+    }
+    
+    instruction_tmp[iter] = '\0';
+    *instruction = instruction_tmp;
+    
+    return OK;
 }
