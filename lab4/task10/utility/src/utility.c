@@ -997,6 +997,102 @@ status_code parse_uint32(const char* src, int base, uint32_t* number)
     return OK;
 }
 
+status_code parse_zeckendorf_uint32(const char* src, uint32_t* number)
+{
+    if (src == NULL || number == NULL)
+	{
+		return NULL_ARG;
+	}
+	ll prev_fib = 1;
+	ll cur_fib = 1;
+	ll num = 0;
+	int prev_coef = 0;
+	int coef = 0;
+	
+	while (isdigit(*src))
+	{
+        coef = ctoi(*src);
+        if (coef == -1 || coef > 1)
+        {
+            return INVALID_INPUT;
+        }
+		if (coef == 1)
+		{
+			if (prev_coef == 1)
+			{
+				*number = num;
+				return OK;
+			}
+			num += cur_fib;
+		}
+		cur_fib += prev_fib;
+		prev_fib = cur_fib - prev_fib;
+		prev_coef = coef;
+		++src;
+	}
+    
+    return INVALID_INPUT;
+}
+
+int is_digit_ro(char ch)
+{
+	return ch == 'I' || ch == 'V' || ch == 'X' || ch == 'L' || ch == 'C' || ch == 'D' || ch == 'M';
+}
+
+int rotoi(char ch)
+{
+	switch (ch)
+	{
+		case 'I': return 1;
+		case 'V': return 5;
+		case 'X': return 10;
+		case 'L': return 50;
+		case 'C': return 100;
+		case 'D': return 500;
+		case 'M': return 1000;
+		default:  return 0;
+	}
+}
+
+status_code parse_roman_uint32(const char* src, uint32_t* number)
+{
+    if (src == NULL || number == NULL)
+	{
+		return NULL_ARG;
+	}
+	ll num = 0;
+	char prev = ' ';
+	
+	if(is_digit_ro(*src))
+	{
+		prev = *src;
+		++src;
+	}
+	else
+	{
+		return INVALID_INPUT;
+	}
+	
+	while(is_digit_ro(*src))
+	{
+		if (rotoi(prev) < rotoi(*src))
+		{
+			num -= rotoi(prev);
+		}
+		else
+		{
+			num += rotoi(prev);
+		}
+		prev = *src;
+		++src;
+	}
+	num += rotoi(prev);
+	
+	*number = num;
+    
+	return OK;
+}
+
 status_code parse_llong(const char* src, int base, ll* number)
 {
     if (src == NULL || number == NULL)

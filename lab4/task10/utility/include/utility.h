@@ -34,6 +34,7 @@ typedef enum status_code
     BAD_ALLOC,
     BAD_ACCESS,
     USER_INPUT_END,
+    SHUT_DOWN,
 } status_code;
 
 void print_error(status_code code, int nl_cnt);
@@ -131,6 +132,8 @@ status_code tolowern(const char* src, char** res);
 status_code touppern(const char* src, char** res);
 status_code erase_delims(const char* src, const char* delims, char** res);
 status_code parse_uint32(const char* src, int base, uint32_t* number);
+status_code parse_zeckendorf_uint32(const char* src, uint32_t* number);
+status_code parse_roman_uint32(const char* src, uint32_t* number);
 status_code parse_llong(const char* src, int base, ll* number);
 status_code parse_ullong(const char* src, int base, ull* number);
 status_code parse_double(const char* src, double* number);

@@ -184,17 +184,17 @@ status_code check_for_breakpoint(FILE* file, int* is_breakpoint)
     if (*iter == '#')
     {
         ungetc(ch, file);
+        return OK;
     }
-    else if (*iter == '\0')
+    
+    if (*iter == '\0')
     {
         *is_breakpoint = 1;
     }
-    else
+    
+    while (ch != '\n' && ch != EOF)
     {
-        while (ch != '\n' && ch != EOF)
-        {
-            ch = getc(file);
-        }
+        ch = getc(file);
     }
     
     return OK;

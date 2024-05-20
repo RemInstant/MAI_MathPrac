@@ -1,6 +1,1 @@
-print(((((155 sum 25)))));
-in(x);
-print(x);
-x = x mult 2;
-print(x);
-x = x sum y;
+a = ((+(5,5))not)print;

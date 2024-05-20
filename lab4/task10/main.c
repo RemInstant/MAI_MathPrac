@@ -44,8 +44,9 @@ int main(int argc, char** argv)
     config.assign_numeral_system = 10;
     config.input_numeral_system = 10;
     config.output_numeral_system = 10;
+    debug_flag = 1;
     
-    code = validate_input(argc, argv, &input_path, &config_path, &help_flag, &debug_flag, &config);
+    //code = validate_input(argc, argv, &input_path, &config_path, &help_flag, &debug_flag, &config);
     if (code)
     {
         print_error(code, 1);
@@ -112,11 +113,8 @@ int main(int argc, char** argv)
         
         if (is_breakpoint && debug_flag)
         {
-            run_debug_session(&environment);
-            
-            printf("BREAKPOINT");
-            
-            break;
+            code = code ? code : run_debug_session(&environment);
+            continue;
         }
         
         code = code ? code : read_instruction(input_file, &instruction);

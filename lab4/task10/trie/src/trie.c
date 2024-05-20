@@ -40,11 +40,11 @@ char ind_to_char(int ind)
     }
     if (ind > 9 && ind < 36)
     {
-        return 'a' + ind - 10;
+        return 'A' + ind - 10;
     }
     if (ind > 36 && ind < 62)
     {
-        return 'A' + ind - 36;
+        return 'a' + ind - 36;
     }
     if (ind == 62)
     {
@@ -396,12 +396,12 @@ status_code trie_get_key_vals(const Trie* trie, ull* cnt, trie_key_val** key_val
 	while (!err_code && run_flag)
 	{
 		// Select node to process
-		while (cur_node->children[ind] == NULL && ind < 36)
+		while (cur_node->children[ind] == NULL && ind < TRIE_ALPABET_SIZE)
 		{
 			++ind;
 		}
 		// No node to process, back to parent
-		if (ind >= 36)
+		if (ind >= TRIE_ALPABET_SIZE)
 		{
 			if (cur_node != trie->root)
 			{

@@ -1,6 +1,8 @@
-(binary)
-unary()
-add sum
+binary()
+()unary
+add +
+mult *
+sub -
 #mult prod и это тоже комментарий
 [sub minus
 pow ^ и это...]
