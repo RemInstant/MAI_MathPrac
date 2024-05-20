@@ -45,7 +45,7 @@ int main(int argc, char** argv)
     config.input_numeral_system = 10;
     config.output_numeral_system = 10;
     
-    //code = validate_input(argc, argv, &input_path, &config_path, &help_flag, &debug_flag, &config);
+    code = validate_input(argc, argv, &input_path, &config_path, &help_flag, &debug_flag, &config);
     if (code)
     {
         print_error(code, 1);
@@ -59,9 +59,8 @@ int main(int argc, char** argv)
         return OK;
     }
     
-    if (config_path == NULL)
+    if (!code && config_path == NULL)
     {
-        // TODO SOME GOOD ULTRA MEGA HYPE TEMP LOGIC
         tmp_config = 1;
         
         code = find_previous_config(&config_path);
@@ -131,15 +130,7 @@ int main(int argc, char** argv)
         code = OK;
     }
     
-    fclose(input_file);
-    trie_destruct(&environment);
-    
-    if (tmp_config)
-    {
-        free(config_path);
-    }
-    
-    if (!code)
+    if (!tmp_config)
     {
         status_code c = save_config(config_path);
         if (c)
@@ -147,6 +138,15 @@ int main(int argc, char** argv)
             printf("Failed to save configuration.\n");
         }
     }
+    else
+    {
+        free(config_path);
+    }
+    
+    fclose(input_file);
+    trie_destruct(&environment);
+    config_destruct(config);
+    
     
     if (code)
     {
@@ -325,8 +325,11 @@ status_code save_config(char* config_path)
         return NULL_ARG;
     }
     
-    #ifdef _WIN32
+    int flag = 1;
     char save_path[261];
+    
+    #ifdef _WIN32
+    flag = 0;
     int len = GetTempPathA(261, save_path);
     
     if (len == 0 || len + 12 > 260)
@@ -335,14 +338,25 @@ status_code save_config(char* config_path)
     }
     
     strcpy(save_path + len, "4_10_cfg.txt");
+    #endif // _WIN32
     
-    FILE* config = fopen(config_path, "r");    
+    #ifdef __linux__
+    flag = 0;
+    strcpy(save_path, "/tmp/4_10_cfg");
+    #endif // __linux__
+    
+    if (flag)
+    {
+        return FILE_OPENING_ERROR;
+    }
+    
+    FILE* config = fopen(config_path, "rb");    
     if (config == NULL)
     {
         return FILE_OPENING_ERROR;
     }
     
-    FILE* save = fopen(save_path, "w");    
+    FILE* save = fopen(save_path, "wb");    
     if (save == NULL)
     {
         fclose(config);
@@ -350,22 +364,15 @@ status_code save_config(char* config_path)
     }
     
     char ch;
-    while ((ch = getc(config) != EOF))
+    while (fread(&ch, sizeof(ch), 1, config) == 1)
     {
-        putc(ch, save);
+        fwrite(&ch, sizeof(char), 1, save);
     }
     
     fclose(config);
     fclose(save);
     
     return OK;
-    #endif // _WIN32
-    
-    #ifdef __linux__
-    
-    #endif // _WIN32
-    
-    return FILE_OPENING_ERROR;
 }
 
 status_code find_previous_config(char** config_path)
@@ -375,8 +382,9 @@ status_code find_previous_config(char** config_path)
         return NULL_ARG;
     }
     
+    char save_path[261] = "";
+    
     #ifdef _WIN32
-    char save_path[261];
     int len = GetTempPathA(261, save_path);
     
     if (len == 0 || len + 12 > 260)
@@ -385,16 +393,32 @@ status_code find_previous_config(char** config_path)
     }
     
     strcpy(save_path + len, "4_10_cfg.txt");
-    
-    *config_path = (char*) malloc(sizeof(char) * (strlen(save_path) + 1));
-    strcpy(*config_path, save_path);
-    
-    return OK;
     #endif // _WIN32
     
     #ifdef __linux__
+    strcpy(save_path, "/tmp/4_10_cfg");
+    #endif // __linux__
     
-    #endif // _WIN32
+    if (save_path[0] == '\0')
+    {
+        return FILE_OPENING_ERROR;
+    }
     
-    return FILE_OPENING_ERROR;
+    FILE* test = fopen(save_path, "r");
+    if (test == NULL)
+    {
+        return FILE_OPENING_ERROR;
+    }
+    
+    fclose(test);
+    
+    *config_path = (char*) malloc(sizeof(char) * (strlen(save_path) + 1));
+    if (*config_path == NULL)
+    {
+        return BAD_ALLOC;
+    }
+    
+    strcpy(*config_path, save_path);
+    
+    return OK;
 }
