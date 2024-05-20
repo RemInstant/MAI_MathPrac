@@ -38,6 +38,6 @@ set_target_properties(
         mp_4_10 PROPERTIES
         LANGUAGES C
         LINKER_LANGUAGE C
-        CMAKE_C_STANDARD C17
+        CMAKE_C_STANDARD C14
         VERSION 1.0
         DESCRIPTION "mp_4_10")
