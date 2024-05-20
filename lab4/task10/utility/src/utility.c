@@ -67,22 +67,22 @@ void fprint_error(FILE* file, status_code code, int nl_cnt)
             fprintf(file, "Unexpected end of file was found");
             break;
         case MATH_OVERFLOW:
-            fprintf(file, "Attempting to overflow");
+            fprintf(file, "Attempt to overflow");
             break;
         case UNINITIALIZED_USAGE:
-            fprintf(file, "Attempting to access uninitialized variable");
+            fprintf(file, "Attempt to access uninitialized variable");
             break;
         case DIVISION_BY_ZERO:
-            fprintf(file, "Attempting to divide by zero");
+            fprintf(file, "Attempt to divide by zero");
             break;
         case ZERO_POWERED_ZERO:
-            fprintf(file, "Attempting to raize zero in the power zero");
+            fprintf(file, "Attempt to raize zero in the power zero");
             break;
         case BAD_ALLOC:
             fprintf(file, "Memory lack occurred");
             break;
         case BAD_ACCESS:
-            fprintf(file, "Attempting to access incorrect memory");
+            fprintf(file, "Attempt to access incorrect memory");
             break;
         default:
             fprintf(file, "Unexpected error occurred");
@@ -94,6 +94,39 @@ void fprint_error(FILE* file, status_code code, int nl_cnt)
     }
 }
 
+
+int is_operation_unary(operation op)
+{
+    switch (op)
+    {
+        case OP_NOT:
+        case OP_INPUT:
+        case OP_OUTPUT:
+            return 1;
+        default:
+            return 0;
+    }
+}
+
+int get_operation_precedence(operation op)
+{
+    switch (op)
+    {
+        case OP_NOT:    return 1;
+        case OP_POW:    return 2;
+        case OP_MULT:   return 3;
+        case OP_DIV:    return 3;
+        case OP_REM:    return 3;
+        case OP_ADD:    return 4;
+        case OP_SUB:    return 4;
+        case OP_XOR:    return 5;
+        case OP_AND:    return 5;
+        case OP_OR:     return 5;
+        case OP_ASSIGN: return -1;
+        case OP_INPUT:  return -1;
+        case OP_OUTPUT: return -1;
+    }
+}
 
 status_code parse_operation(const char* op_name, operation* op)
 {
@@ -157,7 +190,6 @@ status_code parse_operation(const char* op_name, operation* op)
     return OK;
 }
 
-
 status_code parse_operation_alias(const char* op_alias, config_data config, operation* op)
 {
     if (op_alias == NULL)
@@ -218,6 +250,99 @@ status_code parse_operation_alias(const char* op_alias, config_data config, oper
         return INVALID_INPUT;
     }
     return OK;
+}
+
+status_code parse_operation_char(char op_char, operation* op)
+{
+    if (op == NULL)
+    {
+        return NULL_ARG;
+    }
+    
+    switch (op_char)
+    {
+        case '~': *op = OP_NOT;     return OK;
+        case '$': *op = OP_INPUT;   return OK;
+        case '#': *op = OP_OUTPUT;  return OK;
+        case '+': *op = OP_ADD;     return OK;
+        case '*': *op = OP_MULT;    return OK;
+        case '-': *op = OP_SUB;     return OK;
+        case '@': *op = OP_POW;     return OK;
+        case '/': *op = OP_DIV;     return OK;
+        case '%': *op = OP_REM;     return OK;
+        case '^': *op = OP_XOR;     return OK;
+        case '&': *op = OP_AND;     return OK;
+        case '|': *op = OP_OR;      return OK;
+        case '=': *op = OP_ASSIGN;  return OK;
+    }
+    
+    return INVALID_INPUT;
+}
+
+status_code convert_operation_to_char(operation op, char* ch)
+{
+    if (ch == NULL)
+    {
+        return NULL_ARG;
+    }
+    
+    switch (op)
+    {
+        case OP_NOT:    *ch = '~'; return OK;
+        case OP_INPUT:  *ch = '$'; return OK;
+        case OP_OUTPUT: *ch = '#'; return OK;
+        case OP_ADD:    *ch = '+'; return OK;
+        case OP_MULT:   *ch = '*'; return OK;
+        case OP_SUB:    *ch = '-'; return OK;
+        case OP_POW:    *ch = '@'; return OK;
+        case OP_DIV:    *ch = '/'; return OK;
+        case OP_REM:    *ch = '%'; return OK;
+        case OP_XOR:    *ch = '^'; return OK;
+        case OP_AND:    *ch = '&'; return OK;
+        case OP_OR:     *ch = '|'; return OK;
+        case OP_ASSIGN: *ch = '='; return OK;
+    }
+    
+    return INVALID_INPUT;
+}
+
+status_code calc_operation_uint32(operation op, uint32_t left, uint32_t right, uint32_t* res)
+{ 
+    if (res == NULL)
+    {
+        return NULL_ARG;
+    }
+    
+    switch (op)
+    {
+        case OP_NOT:
+            *res = ~left;
+            return OK;
+        case OP_ADD:
+            return add_uint32_safely(left, right, res);
+        case OP_MULT:
+            return mult_uint32_safely(left, right, res);
+        case OP_SUB:
+            return sub_uint32_safely(left, right, res);
+        case OP_POW:
+            return bpow_uint32_safely(left, right, res);
+        case OP_DIV:
+            return div_uint32_safely(left, right, res);
+        case OP_REM:
+            *res = left % right;
+            return OK;
+        case OP_XOR:
+            *res = left ^ right;
+            return OK;
+        case OP_AND:
+            *res = left && right;
+            return OK;
+        case OP_OR:
+            *res = left || right;
+            return OK;
+        default:
+            return INVALID_INPUT;
+    }
 }
 
 
@@ -377,6 +502,18 @@ status_code fread_line_with_comments(FILE* file, char** line, int skip_front_spa
     }
     while (!feof(file) && ch != '\n')
     {
+        if (iter + 1 == size)
+        {
+            size *= 2;
+            char* tmp = realloc(line_tmp, size);
+            if (tmp == NULL)
+            {
+                free(line_tmp);
+                return BAD_ALLOC;
+            }
+            line_tmp = tmp;
+        }
+        
         if (ch == line_comment)
         {
             skip_line(file);
@@ -402,17 +539,6 @@ status_code fread_line_with_comments(FILE* file, char** line, int skip_front_spa
         }
         else
         {
-            if (iter + 1 == size)
-            {
-                size *= 2;
-                char* tmp = realloc(line_tmp, size);
-                if (tmp == NULL)
-                {
-                    free(line_tmp);
-                    return BAD_ALLOC;
-                }
-                line_tmp = tmp;
-            }
             line_tmp[iter++] = ch;
         }
         ch = getc(file);
@@ -834,6 +960,35 @@ status_code erase_delims(const char* src, const char* delims, char** res)
     return OK;
 }
 
+status_code parse_uint32(const char* src, int base, uint32_t* number)
+{
+    if (src == NULL || number == NULL)
+    {
+        return NULL_ARG;
+    }
+    if (base < 0 || base == 1 || base > 36)
+    {
+        return INVALID_BASE;
+    }
+    if (src[0] == '\0')
+    {
+        return INVALID_INPUT;
+    }
+    errno = 0;
+    char* ptr;
+    ull n = strtoull(src, &ptr, base);
+    if (*ptr != '\0')
+    {
+        return INVALID_INPUT;
+    }
+    if (errno == ERANGE || (n > UINT32_MAX))
+    {
+        return MATH_OVERFLOW;
+    }
+    *number = n;
+    return OK;
+}
+
 status_code parse_llong(const char* src, int base, ll* number)
 {
     if (src == NULL || number == NULL)
@@ -909,6 +1064,25 @@ status_code parse_double(const char* src, double* number)
     return OK;
 }
 
+status_code convert_uint32(uint32_t number, int base, char res[33])
+{
+    if (res == NULL)
+    {
+        return NULL_ARG;
+    }
+    if (base < 2 || base > 36)
+    {
+        return INVALID_BASE;
+    }
+    for (ll i = 31; i >= 0; --i)
+    {
+        res[i] = itoc(number % base);
+        number /= base;
+    }
+    res[32] = '\0';
+    return OK;
+}
+
 status_code convert_ullong(ull number, int base, char res[65])
 {
     if (res == NULL)
@@ -928,6 +1102,46 @@ status_code convert_ullong(ull number, int base, char res[65])
     return OK;
 }
 
+status_code remove_leading_zero(char* str)
+{
+	if (str == NULL)
+	{
+		return NULL_ARG;
+	}
+	
+	int pos = 0;	// position of first non-zero digit
+	int is_zero = 1;
+	for (int i = 0; str[i] && is_zero; ++i)
+	{
+		if (str[i] != '0' && str[i] != '-')
+		{
+			is_zero = 0;
+		}
+		pos = i;
+	}
+	
+	if (is_zero)
+	{
+		str[0] = '0';
+		str[1] = '\0';
+		return;
+	}
+	
+	int shift = str[0] == '-' ? 1 : 0;
+	if (pos <= shift)
+	{
+		return;
+	}
+	for (int i = 0; str[i+pos]; ++i)
+	{
+		str[i + shift] = str[i+pos];
+		str[i + shift + 1] = '\0';
+	}
+    
+    return OK;
+}
+
+
 int str_comparator(const void* ptr_1, const void* ptr_2)
 {
     const char** str_ptr_1 = (const char**) ptr_1;
@@ -941,17 +1155,13 @@ int sign(ll number)
     return number == 0 ? 0 : (number > 0 ? 1 : -1);
 }
 
-status_code add_safely(ll arg_1, ll arg_2, ll* res)
+status_code add_uint32_safely(uint32_t arg_1, uint32_t arg_2, uint32_t* res)
 {
     if (res == NULL)
     {
         return NULL_ARG;
     }
-    if (arg_2 > 0 && (arg_1 > LLONG_MAX - arg_2))
-    {
-        return MATH_OVERFLOW;
-    }
-    if (arg_2 < 0 && (arg_2 < LLONG_MIN - arg_2))
+    if (arg_1 > UINT32_MAX - arg_2)
     {
         return MATH_OVERFLOW;
     }
@@ -959,17 +1169,13 @@ status_code add_safely(ll arg_1, ll arg_2, ll* res)
     return OK;
 }
 
-status_code sub_safely(ll arg_1, ll arg_2, ll* res)
+status_code sub_uint32_safely(uint32_t arg_1, uint32_t arg_2, uint32_t* res)
 {
     if (res == NULL)
     {
         return NULL_ARG;
     }
-    if (arg_2 > 0 && (arg_2 < LLONG_MIN + arg_2))
-    {
-        return MATH_OVERFLOW;
-    }
-    if (arg_2 < 0 && (arg_1 > LLONG_MAX + arg_2))
+    if (arg_2 < UINT32_MAX + arg_2)
     {
         return MATH_OVERFLOW;
     }
@@ -977,17 +1183,17 @@ status_code sub_safely(ll arg_1, ll arg_2, ll* res)
     return OK;
 }
 
-status_code mult_safely(ll arg_1, ll arg_2, ll* res)
+status_code mult_uint32_safely(uint32_t arg_1, uint32_t arg_2, uint32_t* res)
 {
     if (res == NULL)
     {
         return NULL_ARG;
     }
-    if ((arg_1 == LLONG_MIN && arg_2 != 1) || (arg_2 == LLONG_MIN && arg_1 != 1))
+    if ((arg_1 == UINT32_MAX && arg_2 != 1) || (arg_2 == UINT32_MAX && arg_1 != 1))
     {
         return MATH_OVERFLOW;
     }
-    if (llabs(arg_1) > LLONG_MAX / llabs(arg_2))
+    if (arg_1 > UINT32_MAX / arg_2)
     {
         return MATH_OVERFLOW;
     }
@@ -995,7 +1201,7 @@ status_code mult_safely(ll arg_1, ll arg_2, ll* res)
     return OK;
 }
 
-status_code div_safely(ll arg_1, ll arg_2, ll* res)
+status_code div_uint32_safely(uint32_t arg_1, uint32_t arg_2, uint32_t* res)
 {
     if (res == NULL)
     {
@@ -1009,30 +1215,26 @@ status_code div_safely(ll arg_1, ll arg_2, ll* res)
     return OK;
 }
 
-status_code bpow_safely(ll base, ll pow, ll* res)
+status_code bpow_uint32_safely(uint32_t base, uint32_t pow, uint32_t* res)
 {
     if (res == NULL)
     {
         return NULL_ARG;
     }
-    if (pow < 0)
-    {
-        return INVALID_INPUT;
-    }
     if (base == 0 && pow == 0)
     {
         return ZERO_POWERED_ZERO;
     }
-    ll res_tmp = 1;
-    ll mult = base;
+    uint32_t res_tmp = 1;
+    uint32_t mult = base;
     while (pow > 0)
     {
         if (pow & 1)
         {
-            status_code err_code = mult_safely(res_tmp, mult, &res_tmp);
-            if (err_code)
+            status_code code = mult_uint32_safely(res_tmp, mult, &res_tmp);
+            if (code)
             {
-                return err_code;
+                return code;
             }
         }
         mult *= mult;
@@ -1042,37 +1244,6 @@ status_code bpow_safely(ll base, ll pow, ll* res)
     return OK;
 }
 
-status_code fbpow_safely(double base, ll pow, double* res)
-{
-    if (res == NULL)
-    {
-        return NULL_ARG;
-    }
-    if (base == 0 && pow == 0)
-    {
-        return ZERO_POWERED_ZERO;
-    }
-    if (pow == 0)
-    {
-        *res = 1;
-        return OK;
-    }
-    int pow_sign = sign(pow);
-    pow = llabs(pow);
-    double res_tmp = 1;
-    double mult = base;
-    while (pow > 0)
-    {
-        if (pow & 1)
-        {
-            res_tmp *= mult;
-        }
-        mult *= mult;
-        pow >>= 1;
-    }
-    *res = pow_sign == 1 ? res_tmp : 1.0 / res_tmp;
-    return OK;
-}
 
 size_t calc_default_str_hash(const char* str)
 {

@@ -12,9 +12,17 @@ int char_to_int(char ch)
     {
         return ch - '0';
     }
-    if (isalpha(ch))
+    if (isupper(ch))
     {
-        return toupper(ch) - 'A' + 10;
+        return ch - 'A' + 10;
+    }
+    if (islower(ch))
+    {
+        return ch - 'a' + 36;
+    }
+    if (ch == '_')
+    {
+        return 62;
     }
     return -1;
 }
@@ -33,6 +41,14 @@ char ind_to_char(int ind)
     if (ind > 9 && ind < 36)
     {
         return 'a' + ind - 10;
+    }
+    if (ind > 36 && ind < 62)
+    {
+        return 'A' + ind - 36;
+    }
+    if (ind == 62)
+    {
+        return '_';
     }
     return '\0';
 }
@@ -241,7 +257,7 @@ status_code trie_contains(const Trie* trie, const char* key, int* is_contained)
     return OK;
 }
 
-status_code trie_insert(Trie* trie, const char* key, int32_t value)
+status_code trie_insert(Trie* trie, const char* key, uint32_t value)
 {
     if (trie == NULL || key == NULL)
     {
@@ -282,7 +298,7 @@ status_code trie_erase(Trie* trie, const char* key)
     return trie_clean_branch(trie, node, NULL);
 }
 
-status_code trie_get(const Trie* trie, const char* key, int32_t* value)
+status_code trie_get(const Trie* trie, const char* key, uint32_t* value)
 {
     if (trie == NULL || key == NULL)
     {
@@ -302,7 +318,7 @@ status_code trie_get(const Trie* trie, const char* key, int32_t* value)
     return OK;
 }
 
-status_code trie_set(Trie* trie, const char* key, int32_t value)
+status_code trie_set(Trie* trie, const char* key, uint32_t value)
 {
     if (trie == NULL || key == NULL)
     {

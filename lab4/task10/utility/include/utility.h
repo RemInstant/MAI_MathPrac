@@ -2,6 +2,7 @@
 #define _UTILITY_H_
 
 #include <stdio.h>
+#include <stdint.h>
 
 #define DEFAULT_HASH_PARAM 37
 
@@ -39,7 +40,7 @@ void print_error(status_code code, int nl_cnt);
 void fprint_error(FILE* file, status_code code, int nl_cnt);
 
 
-#define OPERATION_COUNT 12
+#define OPERATION_COUNT 13
 
 typedef enum
 {
@@ -95,8 +96,13 @@ typedef struct
     char* aliases[OPERATION_COUNT];
 } config_data;
 
+int is_operation_unary(operation op);
+int get_operation_precedence(operation op);
 status_code parse_operation(const char* op_name, operation* op);
 status_code parse_operation_alias(const char* op_alias, config_data config, operation* op);
+status_code parse_operation_char(char op_char, operation* op);
+status_code convert_operation_to_char(operation op, char* ch);
+status_code calc_operation_uint32(operation op, uint32_t left, uint32_t right, uint32_t* res);
 
 void free_all(ull cnt, ...);
 
@@ -123,20 +129,22 @@ char itoc(int number);
 status_code tolowern(const char* src, char** res);
 status_code touppern(const char* src, char** res);
 status_code erase_delims(const char* src, const char* delims, char** res);
+status_code parse_uint32(const char* src, int base, uint32_t* number);
 status_code parse_llong(const char* src, int base, ll* number);
 status_code parse_ullong(const char* src, int base, ull* number);
 status_code parse_double(const char* src, double* number);
+status_code convert_uint32(uint32_t number, int base, char res[33]);
 status_code convert_ullong(ull number, int base, char res[65]);
+status_code remove_leading_zero(char* str);
 
 int str_comparator(const void* ptr_1, const void* ptr_2);
 
 int sign(ll number);
-status_code add_safely(ll arg_1, ll arg_2, ll* res);
-status_code sub_safely(ll arg_1, ll arg_2, ll* res);
-status_code mult_safely(ll arg_1, ll arg_2, ll* res);
-status_code div_safely(ll arg_1, ll arg_2, ll* res);
-status_code bpow_safely(ll base, ll pow, ll* res);
-status_code fbpow_safely(double base, ll pow, double* res);
+status_code add_uint32_safely(uint32_t arg_1, uint32_t arg_2, uint32_t* res);
+status_code sub_uint32_safely(uint32_t arg_1, uint32_t arg_2, uint32_t* res);
+status_code mult_uint32_safely(uint32_t arg_1, uint32_t arg_2, uint32_t* res);
+status_code div_uint32_safely(uint32_t arg_1, uint32_t arg_2, uint32_t* res);
+status_code bpow_uint32_safely(uint32_t base, uint32_t pow, uint32_t* res);
 
 size_t calc_default_str_hash(const char* str);
 

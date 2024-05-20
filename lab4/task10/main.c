@@ -39,7 +39,13 @@ int main(int argc, char** argv)
     int debug_flag = 0;
     int tmp_config = 0;
     
-    code = validate_input(argc, argv, &input_path, &config_path, &help_flag, &debug_flag, &config);
+    config_path = "D:/Code/VSCode/MAI_MathPrac/lab4/task10/config";
+    input_path = "D:/Code/VSCode/MAI_MathPrac/lab4/task10/input";
+    config.assign_numeral_system = 10;
+    config.input_numeral_system = 10;
+    config.output_numeral_system = 10;
+    
+    //code = validate_input(argc, argv, &input_path, &config_path, &help_flag, &debug_flag, &config);
     if (code)
     {
         print_error(code, 1);
@@ -115,12 +121,7 @@ int main(int argc, char** argv)
         }
         
         code = code ? code : read_instruction(input_file, &instruction);
-               
         code = code ? code : execute_instruction(instruction, &environment, config);
-        if (!code)
-        {
-            printf("INSTRUCTION: %s\n", instruction);
-        }
         
         free(instruction);
     }

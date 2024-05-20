@@ -58,6 +58,7 @@ status_code read_config(FILE* file, config_data* config)
         char* second_word = NULL;
         
         code = code ? code : fread_line_with_comments(file, &line, 1, '#', '[', ']');
+        code = code ? code : (line[0] == '\0' ? FILE_END : OK);
         
         const char* iter = line;
         
@@ -126,7 +127,8 @@ status_code read_config(FILE* file, config_data* config)
             }
         }
         
-        free_all(3, line, first_word, second_word);
+        free(line);
+        free_all(2, first_word, second_word);
     } // while end
     
     if (code == FILE_END)
@@ -225,8 +227,9 @@ status_code read_instruction(FILE* file, char** instruction)
     while (!code && ch != ';' && ch != EOF)
     {
         if (isspace(ch) || ch == '#' || ch == '[')
-        {
-            if (iter != 0 && instruction_tmp[iter-1] != ' ')
+        {   
+            if (iter != 0 && instruction_tmp[iter-1] != ' ' && instruction_tmp[iter-1] != ',' &&
+                    instruction_tmp[iter-1] != '(' && instruction_tmp[iter-1] != ')')
             {
                 instruction_tmp[iter++] = ' ';
             }
@@ -242,13 +245,21 @@ status_code read_instruction(FILE* file, char** instruction)
         }
         else
         {
-            instruction_tmp[iter++] = ch;
+            if (iter != 0 && instruction_tmp[iter-1] == ' ' &&
+                    (ch == '(' || ch == ')' || ch == ','))
+            {
+                instruction_tmp[iter-1] = ch;
+            }
+            else
+            {
+                instruction_tmp[iter++] = ch;
+            }
         }
         
-        if (iter + 2 == size)
+        if (iter + 1 == size)
         {
             size *= 2;
-            char* tmp = (char*) malloc(sizeof(char) * size);
+            char* tmp = (char*) realloc(instruction_tmp, sizeof(char) * size);
             if (tmp == NULL)
             {
                 code = BAD_ALLOC;
@@ -259,7 +270,10 @@ status_code read_instruction(FILE* file, char** instruction)
             }
         }
         
-        ch = getc(file);
+        if (!code)
+        {
+            ch = getc(file);
+        }
     }
     
     if (ch != ';')
@@ -273,7 +287,15 @@ status_code read_instruction(FILE* file, char** instruction)
         return code;
     }
     
-    instruction_tmp[iter] = '\0';
+    if (iter != 0 && instruction_tmp[iter-1] == ' ')
+    {
+        instruction_tmp[iter-1] = '\0';
+    }
+    else
+    {
+        instruction_tmp[iter] = '\0';
+    }
+    
     *instruction = instruction_tmp;
     
     return OK;

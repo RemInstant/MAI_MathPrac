@@ -1,4 +1,5 @@
 (binary)
+unary()
 add sum
 #mult prod и это тоже комментарий
 [sub minus
@@ -10,4 +11,4 @@ xor[comment]><
 #xor <>
 input in
 output print
-= ->
+# = ->

@@ -3,7 +3,10 @@ project(mp_4_10_instruction_executor)
 
 add_library(
         mp_4_10_instruction_executor
-        src/instruction_executor.c)
+        src/instruction_executor.c
+        src/int_stack.c
+        src/operand_stack.c
+        src/operator_stack.c)
 target_include_directories(
         mp_4_10_instruction_executor
         PUBLIC
