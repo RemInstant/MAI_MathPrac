@@ -133,8 +133,11 @@ status_code operand_stack_pop(Operand_stack* st)
         return BAD_ACCESS;
     }
     
+    operand_stack_node* tmp = st->top;
     st->top = st->top->next;
     --st->size;
+    
+    free(tmp);
     
     return OK;
 }

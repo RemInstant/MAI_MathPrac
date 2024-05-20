@@ -105,8 +105,11 @@ status_code operator_stack_pop(Operator_stack* st)
         return BAD_ACCESS;
     }
     
+    operator_stack_node* tmp = st->top;
     st->top = st->top->next;
     --st->size;
+    
+    free(tmp);
     
     return OK;
 }

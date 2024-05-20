@@ -121,6 +121,7 @@ status_code read_config(FILE* file, config_data* config)
                 
                 if (!code)
                 {
+                    free(config->aliases[op]);
                     config->aliases[op] = second_word;
                     second_word = NULL;
                 }

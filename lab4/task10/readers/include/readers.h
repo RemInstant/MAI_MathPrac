@@ -3,7 +3,6 @@
 
 #include <utility.h>
 
-
 status_code read_config(FILE* file, config_data* config);
 
 status_code check_for_breakpoint(FILE* file, int* is_breakpoint);

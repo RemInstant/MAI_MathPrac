@@ -95,6 +95,14 @@ void fprint_error(FILE* file, status_code code, int nl_cnt)
 }
 
 
+void config_destruct(config_data config)
+{
+    for (int i = 0; i < OPERATION_COUNT; ++i)
+    {
+        free(config.aliases[i]);
+    }
+}
+
 int is_operation_unary(operation op)
 {
     switch (op)
@@ -1124,13 +1132,13 @@ status_code remove_leading_zero(char* str)
 	{
 		str[0] = '0';
 		str[1] = '\0';
-		return;
+		return OK;
 	}
 	
 	int shift = str[0] == '-' ? 1 : 0;
 	if (pos <= shift)
 	{
-		return;
+		return OK;
 	}
 	for (int i = 0; str[i+pos]; ++i)
 	{

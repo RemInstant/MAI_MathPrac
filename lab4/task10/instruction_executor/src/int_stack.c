@@ -90,7 +90,10 @@ status_code int_stack_pop(Int_stack* st)
         return BAD_ACCESS;
     }
     
+    int_stack_node* tmp = st->top;
     st->top = st->top->next;
+    
+    free(tmp);
     
     return OK;
 }

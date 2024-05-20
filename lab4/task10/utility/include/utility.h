@@ -96,6 +96,7 @@ typedef struct
     char* aliases[OPERATION_COUNT];
 } config_data;
 
+void config_destruct(config_data config);
 int is_operation_unary(operation op);
 int get_operation_precedence(operation op);
 status_code parse_operation(const char* op_name, operation* op);
