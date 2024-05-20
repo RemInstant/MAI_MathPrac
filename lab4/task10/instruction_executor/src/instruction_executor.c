@@ -1,11 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
-#include <limits.h>
 #include <string.h>
 #include <math.h>
-#include <stdarg.h>
+#include <stdint.h>
 
+#include <utility.h>
 #include <int_stack.h>
 #include <operand_stack.h>
 #include <operator_stack.h>
@@ -961,7 +961,7 @@ status_code process_input(const char* var, Trie* env, config_data config)
     
     if (!code)
     {
-        printf("Enter variable %s (%d-base): ", var, config.assign_numeral_system);
+        printf("Enter variable %s (%llu-base): ", var, config.assign_numeral_system);
     }
     
     code = code ? code : fread_word(stdin, &raw_value, 1);
@@ -1000,7 +1000,7 @@ status_code process_output(const char* expr, const Trie* env, config_data config
     
     if (!code)
     {
-        printf("Value of expr (%d-base): %s\n", config.output_numeral_system, based_value);
+        printf("Value of expr (%llu-base): %s\n", config.output_numeral_system, based_value);
     }
     
     return code;
