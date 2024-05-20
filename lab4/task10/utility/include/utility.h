@@ -34,7 +34,7 @@ typedef enum status_code
     BAD_ALLOC,
     BAD_ACCESS,
     USER_INPUT_END,
-    SHUT_DOWN,
+    SHUTDOWN,
 } status_code;
 
 void print_error(status_code code, int nl_cnt);
@@ -105,6 +105,8 @@ status_code parse_operation_alias(const char* op_alias, config_data config, oper
 status_code parse_operation_char(char op_char, operation* op);
 status_code convert_operation_to_char(operation op, char* ch);
 status_code calc_operation_uint32(operation op, uint32_t left, uint32_t right, uint32_t* res);
+
+status_code validate_var_name(const char* var_name);
 
 void free_all(ull cnt, ...);
 

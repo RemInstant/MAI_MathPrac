@@ -39,14 +39,14 @@ int main(int argc, char** argv)
     int debug_flag = 0;
     int tmp_config = 0;
     
-    config_path = "D:/Code/VSCode/MAI_MathPrac/lab4/task10/config";
-    input_path = "D:/Code/VSCode/MAI_MathPrac/lab4/task10/input";
-    config.assign_numeral_system = 10;
-    config.input_numeral_system = 10;
-    config.output_numeral_system = 10;
-    debug_flag = 1;
+    // config_path = "D:/Code/VSCode/MAI_MathPrac/lab4/task10/config";
+    // input_path = "D:/Code/VSCode/MAI_MathPrac/lab4/task10/input";
+    // config.assign_numeral_system = 10;
+    // config.input_numeral_system = 10;
+    // config.output_numeral_system = 10;
+    // debug_flag = 1;
     
-    //code = validate_input(argc, argv, &input_path, &config_path, &help_flag, &debug_flag, &config);
+    code = validate_input(argc, argv, &input_path, &config_path, &help_flag, &debug_flag, &config);
     if (code)
     {
         print_error(code, 1);
@@ -145,13 +145,12 @@ int main(int argc, char** argv)
     trie_destruct(&environment);
     config_destruct(config);
     
-    
+    code = code == SHUTDOWN ? OK : code;
     if (code)
     {
         print_error(code, 1);
     }
     
-    printf("COOL\n");
     return code;
 }
 

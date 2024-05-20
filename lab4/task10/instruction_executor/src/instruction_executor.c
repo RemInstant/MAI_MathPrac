@@ -165,26 +165,6 @@ status_code normalize_keywords(const char* instruction, config_data config, char
     return OK;
 }
 
-status_code validate_var_name(const char* var_name)
-{
-	if (var_name == NULL)
-	{
-		return NULL_ARG;
-	}
-	if (var_name[0] == '\0' || isdigit(var_name[0]))
-	{
-		return INVALID_INPUT;
-	}
-	for (ull i = 0; var_name[i]; ++i)
-	{
-		if (!isalnum(var_name[i]) && var_name[i] != '_')
-		{
-			return INVALID_INPUT;
-		}
-	}
-	return OK;
-}
-
 status_code parse_expr_word(const char* word, const Trie* env, config_data config, uint32_t* value)
 {
     if (word == NULL || env == NULL || value == NULL)
@@ -982,9 +962,9 @@ status_code process_input(const char* var, Trie* env, config_data config)
     return code;
 }
 
-status_code process_output(const char* expr, const Trie* env, config_data config)
+status_code process_output(const char* var, const Trie* env, config_data config)
 {
-    if (expr == NULL || env == NULL)
+    if (var == NULL || env == NULL)
     {
         return NULL_ARG;
     }
@@ -992,15 +972,14 @@ status_code process_output(const char* expr, const Trie* env, config_data config
     status_code code = OK;
     uint32_t value;
     char based_value[33];
-    int is_contained = 0;
     
-    code = code ? code : calc(expr, env, config, &value);
+    code = code ? code : parse_expr_word(var, env, config, &value);
     code = code ? code : convert_uint32(value, config.output_numeral_system, based_value);
     code = code ? code : remove_leading_zero(based_value);
     
     if (!code)
     {
-        printf("Value of expr (%llu-base): %s\n", config.output_numeral_system, based_value);
+        printf("Value of variable '%s' (%llu-base): %s\n", var, config.output_numeral_system, based_value);
     }
     
     return code;

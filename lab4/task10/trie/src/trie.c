@@ -38,11 +38,11 @@ char ind_to_char(int ind)
     {
         return '0' + ind;
     }
-    if (ind > 9 && ind < 36)
+    if (ind > 9 && ind <= 35)
     {
         return 'A' + ind - 10;
     }
-    if (ind > 36 && ind < 62)
+    if (ind > 35 && ind <= 61)
     {
         return 'a' + ind - 36;
     }

@@ -354,6 +354,27 @@ status_code calc_operation_uint32(operation op, uint32_t left, uint32_t right, u
 }
 
 
+status_code validate_var_name(const char* var_name)
+{
+	if (var_name == NULL)
+	{
+		return NULL_ARG;
+	}
+	if (var_name[0] == '\0' || isdigit(var_name[0]))
+	{
+		return INVALID_INPUT;
+	}
+	for (ull i = 0; var_name[i]; ++i)
+	{
+		if (!isalnum(var_name[i]) && var_name[i] != '_')
+		{
+			return INVALID_INPUT;
+		}
+	}
+	return OK;
+}
+
+
 void free_all(ull cnt, ...)
 {
 	va_list va;
